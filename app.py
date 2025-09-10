@@ -1,8 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SelectField, RadioField, SubmitField, BooleanField
-from wtforms.validators import DataRequired, Length
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_bcrypt import Bcrypt
+from wtforms import StringField, TextAreaField, SelectField, RadioField, SubmitField, BooleanField, PasswordField
+from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from datetime import datetime, timedelta
 import os
 
@@ -12,8 +14,32 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mentortrack.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'ログインが必要です。'
+login_manager.login_message_category = 'info'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 # データベースモデル
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(60), nullable=False)
+    role = db.Column(db.String(20), default='mentee')  # mentee, mentor, admin
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def set_password(self, password):
+        self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+    
+    def check_password(self, password):
+        return bcrypt.check_password_hash(self.password_hash, password)
+
 class Mentee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -22,6 +48,7 @@ class Mentee(db.Model):
     
     # リレーションシップ
     reports = db.relationship('WeeklyReport', backref='mentee', lazy=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
 class WeeklyReport(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -58,6 +85,44 @@ class WeeklyReport(db.Model):
     week_start = db.Column(db.DateTime, nullable=False)
 
 # フォームクラス
+class RegistrationForm(FlaskForm):
+    username = StringField('ユーザー名', 
+                          validators=[DataRequired(), Length(min=2, max=20)],
+                          render_kw={'placeholder': 'ユーザー名を入力してください'})
+    email = StringField('メールアドレス', 
+                       validators=[DataRequired(), Email()],
+                       render_kw={'placeholder': 'メールアドレスを入力してください'})
+    password = PasswordField('パスワード', 
+                            validators=[DataRequired(), Length(min=6)],
+                            render_kw={'placeholder': 'パスワードを入力してください'})
+    confirm_password = PasswordField('パスワード確認', 
+                                   validators=[DataRequired(), EqualTo('password')],
+                                   render_kw={'placeholder': 'パスワードを再入力してください'})
+    role = SelectField('役割', 
+                      choices=[('mentee', 'メンティ'), ('mentor', 'メンター'), ('admin', '管理者')],
+                      validators=[DataRequired()])
+    submit = SubmitField('登録')
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError('そのユーザー名は既に使用されています。別のユーザー名を選択してください。')
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user:
+            raise ValidationError('そのメールアドレスは既に登録されています。')
+
+class LoginForm(FlaskForm):
+    email = StringField('メールアドレス', 
+                       validators=[DataRequired(), Email()],
+                       render_kw={'placeholder': 'メールアドレスを入力してください'})
+    password = PasswordField('パスワード', 
+                            validators=[DataRequired()],
+                            render_kw={'placeholder': 'パスワードを入力してください'})
+    remember = BooleanField('ログイン状態を保持する')
+    submit = SubmitField('ログイン')
+
 class WeeklyReportForm(FlaskForm):
     planning_stage = SelectField('企画ステージ', 
                                 choices=[('proposal_pre', '提案前'), 
@@ -112,13 +177,60 @@ class WeeklyReportForm(FlaskForm):
 def index():
     return render_template('index.html')
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            role=form.role.data
+        )
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash('アカウントが作成されました！ログインしてください。', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('register.html', form=form)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and user.check_password(form.password.data):
+            login_user(user, remember=form.remember.data)
+            next_page = request.args.get('next')
+            flash(f'ようこそ、{user.username}さん！', 'success')
+            return redirect(next_page) if next_page else redirect(url_for('index'))
+        else:
+            flash('ログインに失敗しました。メールアドレスとパスワードを確認してください。', 'danger')
+    
+    return render_template('login.html', form=form)
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('ログアウトしました。', 'info')
+    return redirect(url_for('index'))
+
 @app.route('/mentee/<int:mentee_id>')
+@login_required
 def mentee_dashboard(mentee_id):
     mentee = Mentee.query.get_or_404(mentee_id)
     reports = WeeklyReport.query.filter_by(mentee_id=mentee_id).order_by(WeeklyReport.report_date.desc()).all()
     return render_template('mentee_dashboard.html', mentee=mentee, reports=reports)
 
 @app.route('/report/new/<int:mentee_id>', methods=['GET', 'POST'])
+@login_required
 def new_report(mentee_id):
     mentee = Mentee.query.get_or_404(mentee_id)
     form = WeeklyReportForm()
@@ -160,6 +272,7 @@ def new_report(mentee_id):
     return render_template('new_report.html', form=form, mentee=mentee)
 
 @app.route('/report/<int:report_id>')
+@login_required
 def view_report(report_id):
     report = WeeklyReport.query.get_or_404(report_id)
     
@@ -170,7 +283,14 @@ def view_report(report_id):
         week_start=previous_week_start
     ).first()
     
-    return render_template('view_report.html', report=report, previous_report=previous_report)
+    # 追加の問いかけ回答をパース
+    import json
+    try:
+        additional_responses = json.loads(report.additional_responses) if report.additional_responses else {}
+    except (json.JSONDecodeError, TypeError):
+        additional_responses = {}
+    
+    return render_template('view_report.html', report=report, previous_report=previous_report, additional_responses=additional_responses)
 
 @app.route('/create-sample-mentee', methods=['POST'])
 def create_sample_mentee():
