@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}MentorTrack - メンティ成長記録システム{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header text-center">
+                <h1 class="mb-0">
+                    <i class="fas fa-graduation-cap me-3"></i>MentorTrack
+                </h1>
+                <p class="mb-0 mt-2">メンティの成長を可視化し、対話を促進するシステム</p>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">成長の可視化</h5>
+                                <p class="card-text">週次報告を通じて、メンティの思考プロセスと成長を記録・可視化します。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <i class="fas fa-comments fa-3x text-success mb-3"></i>
+                                <h5 class="card-title">対話の促進</h5>
+                                <p class="card-text">メンターコメント機能で、自然な対話のきっかけを作ります。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <i class="fas fa-tasks fa-3x text-warning mb-3"></i>
+                                <h5 class="card-title">プロセス重視</h5>
+                                <p class="card-text">作業の記録ではなく、学びの記録として設計されています。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="text-center">
+                    <h4 class="mb-3">システムの特徴</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled text-start">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>商品企画ステージ別の報告テンプレート</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>前週との比較表示機能</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>思考を促す問いかけ設計</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled text-start">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>自己評価とメンターコメント</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>学習ログとしての自然な表示</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>負担軽減のための自動化機能</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="#" class="btn btn-primary btn-lg" onclick="createSampleMentee()">
+                        <i class="fas fa-user-plus me-2"></i>サンプルメンティで開始
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function createSampleMentee() {
+    // サンプルメンティを作成するためのAPIエンドポイントを呼び出す
+    fetch('/create-sample-mentee', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 成功メッセージを表示（既存の場合は短時間で非表示）
+            if (data.message.includes('既存')) {
+                // 既存のサンプルメンティを使用する場合は、メッセージを表示せずに直接遷移
+                window.location.href = '/mentee/' + data.mentee_id;
+            } else {
+                // 新しいサンプルメンティを作成した場合は、メッセージを表示してから遷移
+                alert(data.message);
+                window.location.href = '/mentee/' + data.mentee_id;
+            }
+        } else {
+            alert('エラーが発生しました: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('エラーが発生しました');
+    });
+}
+</script>
+{% endblock %}

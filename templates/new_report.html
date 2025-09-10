@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}新しい週次報告 - {{ mentee.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>{{ mentee.name }}の週次報告
+                </h3>
+                <p class="mb-0 mt-2 text-light">学びの記録と対話の起点として活用しましょう</p>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.planning_stage.label(class="form-label fw-bold") }}
+                                {{ form.planning_stage(class="form-select") }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.self_evaluation.label(class="form-label fw-bold") }}
+                                <div class="card mt-2">
+                                    <div class="card-body py-2">
+                                        {% for subfield in form.self_evaluation %}
+                                        <div class="form-check mb-2">
+                                            {{ subfield(class="form-check-input") }}
+                                            {{ subfield.label(class="form-check-label fw-normal") }}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        {{ form.product_group.label(class="form-label fw-bold") }}
+                        {{ form.product_group(class="form-control") }}
+                    </div>
+
+                    <div class="form-group mb-4">
+                        {{ form.progress_items.label(class="form-label fw-bold") }}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            今週完了した項目を具体的に記述してください。例：「市場調査完了」「競合分析実施」「価格設定検討」など
+                        </div>
+                        {{ form.progress_items(class="form-control") }}
+                    </div>
+
+                    <div class="form-group mb-4">
+                        {{ form.actions_taken.label(class="form-label fw-bold") }}
+                        {{ form.actions_taken(class="form-control") }}
+                    </div>
+
+                    <div class="form-group mb-4">
+                        {{ form.insights_concerns.label(class="form-label fw-bold") }}
+                        <div class="insight-box">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            <strong>思考の言語化：</strong>今週感じた気づきや悩みを自由に記述してください。これがメンターとの対話のきっかけになります。
+                        </div>
+                        {{ form.insights_concerns(class="form-control") }}
+                    </div>
+
+                    <div class="form-group mb-4">
+                        {{ form.mentor_comment.label(class="form-label fw-bold") }}
+                        <div class="alert alert-secondary">
+                            <i class="fas fa-comment me-2"></i>
+                            メンターからのコメント（任意）。評価ではなく、対話のきっかけとして活用してください。
+                        </div>
+                        {{ form.mentor_comment(class="form-control") }}
+                    </div>
+
+                    <hr class="my-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-question-circle me-2"></i>追加の問いかけ（任意）
+                    </h5>
+                    <p class="text-muted mb-4">以下の問いかけに答えることで、より深い振り返りができます。</p>
+
+                    <div class="form-group mb-3">
+                        {{ form.time_consuming_task.label(class="form-label") }}
+                        {{ form.time_consuming_task(class="form-control") }}
+                    </div>
+
+                    <div class="form-group mb-3">
+                        {{ form.difficult_decision.label(class="form-label") }}
+                        {{ form.difficult_decision(class="form-control") }}
+                    </div>
+
+                    <div class="form-group mb-3">
+                        {{ form.learned_from_senior.label(class="form-label") }}
+                        {{ form.learned_from_senior(class="form-control") }}
+                    </div>
+
+                    <div class="form-group mb-3">
+                        {{ form.own_decision.label(class="form-label") }}
+                        {{ form.own_decision(class="form-control") }}
+                    </div>
+
+                    <div class="form-group mb-4">
+                        {{ form.redid_task.label(class="form-label") }}
+                        {{ form.redid_task(class="form-control") }}
+                    </div>
+
+                    <div class="text-center">
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                        <a href="{{ url_for('mentee_dashboard', mentee_id=mentee.id) }}" class="btn btn-outline-secondary btn-lg ms-2">
+                            キャンセル
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
