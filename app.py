@@ -49,6 +49,25 @@ class Mentee(db.Model):
     # リレーションシップ
     reports = db.relationship('WeeklyReport', backref='mentee', lazy=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    todo_list = db.relationship('MenteeTodoList', backref='mentee', lazy=True, uselist=False)
+
+class MenteeTodoList(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    mentee_id = db.Column(db.Integer, db.ForeignKey('mentee.id'), nullable=False)
+    
+    # 目標カテゴリ
+    planning_goals = db.Column(db.Text)  # 企画:売上目標など
+    social_changes = db.Column(db.Text)  # 社会変化
+    
+    # 月次目標・指標
+    monthly_indicators = db.Column(db.Text)  # 何を
+    
+    # 月次目標・水準
+    monthly_standards = db.Column(db.Text)  # どのレベルまで
+    
+    # 作成・更新日時
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class WeeklyReport(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -552,7 +571,10 @@ def new_report(mentee_id):
         flash('週次報告が保存されました！', 'success')
         return redirect(url_for('mentee_dashboard', mentee_id=mentee_id))
     
-    return render_template('new_report.html', form=form, mentee=mentee)
+    # Todoリストを取得
+    todo_list = MenteeTodoList.query.filter_by(mentee_id=mentee_id).first()
+    
+    return render_template('new_report.html', form=form, mentee=mentee, todo_list=todo_list)
 
 @app.route('/report/<int:report_id>')
 @login_required
@@ -635,7 +657,10 @@ def add_mentor_comment(report_id):
     except (json.JSONDecodeError, TypeError):
         additional_responses = {}
     
-    return render_template('add_mentor_comment.html', form=form, report=report, additional_responses=additional_responses)
+    # Todoリストを取得
+    todo_list = MenteeTodoList.query.filter_by(mentee_id=report.mentee_id).first()
+    
+    return render_template('add_mentor_comment.html', form=form, report=report, additional_responses=additional_responses, todo_list=todo_list)
 
 @app.route('/mentee/profile', methods=['GET', 'POST'])
 @login_required
@@ -792,6 +817,41 @@ def mark_all_notifications_read():
     Notification.query.filter_by(user_id=current_user.id, is_read=False).update({'is_read': True})
     db.session.commit()
     return jsonify({'success': True})
+
+@app.route('/mentee/<int:mentee_id>/todo', methods=['GET', 'POST'])
+@login_required
+def manage_todo_list(mentee_id):
+    """メンティのTodoリスト管理"""
+    mentee = Mentee.query.get_or_404(mentee_id)
+    
+    # セキュリティチェック
+    if current_user.role == 'mentee' and mentee.user_id != current_user.id:
+        flash('アクセス権限がありません。', 'danger')
+        return redirect(url_for('my_dashboard'))
+    elif current_user.role not in ['mentor', 'admin'] and current_user.role != 'mentee':
+        flash('アクセス権限がありません。', 'danger')
+        return redirect(url_for('my_dashboard'))
+    
+    # 既存のTodoリストを取得または作成
+    todo_list = MenteeTodoList.query.filter_by(mentee_id=mentee_id).first()
+    if not todo_list:
+        todo_list = MenteeTodoList(mentee_id=mentee_id)
+        db.session.add(todo_list)
+        db.session.commit()
+    
+    if request.method == 'POST':
+        # Todoリストを更新
+        todo_list.planning_goals = request.form.get('planning_goals', '')
+        todo_list.social_changes = request.form.get('social_changes', '')
+        todo_list.monthly_indicators = request.form.get('monthly_indicators', '')
+        todo_list.monthly_standards = request.form.get('monthly_standards', '')
+        todo_list.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        flash('Todoリストが更新されました！', 'success')
+        return redirect(url_for('manage_todo_list', mentee_id=mentee_id))
+    
+    return render_template('manage_todo_list.html', mentee=mentee, todo_list=todo_list)
 
 if __name__ == '__main__':
     with app.app_context():

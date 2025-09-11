@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Todoリスト管理 - {{ mentee.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-tasks me-2"></i>{{ mentee.name }}の月次面談Todoリスト管理
+                </h3>
+                <p class="mb-0 mt-2 text-light">メンティの目標と進捗を管理してください</p>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <!-- 目標カテゴリ -->
+                        <div class="col-md-6">
+                            <div class="form-group mb-4">
+                                <label class="form-label fw-bold text-primary">企画目標</label>
+                                <textarea name="planning_goals" class="form-control" rows="4" 
+                                    placeholder="例：国内年間418.7億、海外3億円を達成できるよう、戦略をたて、新規企画を積み上げる。">{{ todo_list.planning_goals or '' }}</textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-4">
+                                <label class="form-label fw-bold text-primary">社会変化</label>
+                                <textarea name="social_changes" class="form-control" rows="4" 
+                                    placeholder="例：米中対立、物価高、少子高齢化、気候変動">{{ todo_list.social_changes or '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 月次目標・指標 -->
+                    <div class="form-group mb-4">
+                        <label class="form-label fw-bold text-success">月次目標・指標 (何を)</label>
+                        <textarea name="monthly_indicators" class="form-control" rows="6" 
+                            placeholder="例：
+先輩社員の仕事を奪う
+- 先輩社員の商品開発のメンバーにアサインする
+- 「仕入れメンバー」に名前を入れる
+9月目標:100SKU
+
+提案済みで発注済みの商品手配
+- 912 ゲーミングモニター
+- 発注済み 納期11/上
+- GM01 300
+- GM02 150">{{ todo_list.monthly_indicators or '' }}</textarea>
+                    </div>
+                    
+                    <!-- 月次目標・水準 -->
+                    <div class="form-group mb-4">
+                        <label class="form-label fw-bold text-warning">月次目標・水準 (どのレベルまで)</label>
+                        <textarea name="monthly_standards" class="form-control" rows="6" 
+                            placeholder="例：
+9月実績: _ (未入力)
+
+商品詳細
+- GM01 300
+- GM02 150
+
+進行状況
+- 775マットレス
+- 433転注フラッティ">{{ todo_list.monthly_standards or '' }}</textarea>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save me-2"></i>Todoリストを保存
+                        </button>
+                        <a href="{{ url_for('mentee_dashboard', mentee_id=mentee.id) }}" class="btn btn-outline-secondary btn-lg ms-2">
+                            キャンセル
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
