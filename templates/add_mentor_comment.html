@@ -230,41 +230,47 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <!-- 目標カテゴリ -->
-                    {% if todo_list.planning_goals or todo_list.social_changes %}
-                    <div class="col-md-4">
-                        <h6 class="text-primary mb-2">目標カテゴリ</h6>
-                        {% if todo_list.planning_goals %}
+                    <!-- 先輩社員の仕事を奪う -->
+                    {% if todo_list.senior_work_target or todo_list.senior_work_actual %}
+                    <div class="col-md-6">
+                        <h6 class="text-primary mb-2">先輩社員の仕事を奪う</h6>
                         <div class="todo-item mb-2">
-                            <strong>企画目標</strong><br>
-                            <small class="text-muted">{{ todo_list.planning_goals }}</small>
-                        </div>
-                        {% endif %}
-                        {% if todo_list.social_changes %}
-                        <div class="todo-item mb-2">
-                            <strong>社会変化</strong><br>
-                            <small class="text-muted">{{ todo_list.social_changes }}</small>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                    
-                    <!-- 月次目標・指標 -->
-                    {% if todo_list.monthly_indicators %}
-                    <div class="col-md-4">
-                        <h6 class="text-success mb-2">月次目標・指標 (何を)</h6>
-                        <div class="todo-item mb-2">
-                            <small class="text-muted">{{ todo_list.monthly_indicators|replace('\n', '<br>')|safe }}</small>
+                            <small class="text-muted">(=先輩社員の商品開発のメンバーにアサインする/「仕入れメンバー」に名前を入れる)</small><br>
+                            {% if todo_list.senior_work_target %}<span class="badge bg-primary me-2">{{ todo_list.senior_work_target }}</span>{% endif %}
+                            {% if todo_list.senior_work_actual %}<span class="badge bg-secondary">{{ todo_list.senior_work_actual }}</span>{% endif %}
                         </div>
                     </div>
                     {% endif %}
                     
-                    <!-- 月次目標・水準 -->
-                    {% if todo_list.monthly_standards %}
-                    <div class="col-md-4">
-                        <h6 class="text-warning mb-2">月次目標・水準 (どのレベルまで)</h6>
+                    <!-- 提案済みで発注済みの商品手配 -->
+                    {% if todo_list.ordered_products or todo_list.ordered_details %}
+                    <div class="col-md-6">
+                        <h6 class="text-success mb-2">■提案済みで発注済みの商品手配</h6>
                         <div class="todo-item mb-2">
-                            <small class="text-muted">{{ todo_list.monthly_standards|replace('\n', '<br>')|safe }}</small>
+                            {% if todo_list.ordered_products %}<small class="text-muted">{{ todo_list.ordered_products }}</small><br>{% endif %}
+                            {% if todo_list.ordered_details %}<small class="text-muted">{{ todo_list.ordered_details|replace('\n', '<br>')|safe }}</small>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- 提案済みでまだ発注できていない商品 -->
+                    {% if todo_list.pending_products or todo_list.pending_details %}
+                    <div class="col-md-6">
+                        <h6 class="text-warning mb-2">■提案済みでまだ発注できていない商品</h6>
+                        <div class="todo-item mb-2">
+                            {% if todo_list.pending_products %}<small class="text-muted">{{ todo_list.pending_products }}</small><br>{% endif %}
+                            {% if todo_list.pending_details %}<small class="text-muted">{{ todo_list.pending_details|replace('\n', '<br>')|safe }}</small>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- 未提案の商品手配 -->
+                    {% if todo_list.unproposed_products or todo_list.unproposed_details %}
+                    <div class="col-md-6">
+                        <h6 class="text-info mb-2">■未提案の商品手配</h6>
+                        <div class="todo-item mb-2">
+                            {% if todo_list.unproposed_products %}<small class="text-muted">{{ todo_list.unproposed_products }}</small><br>{% endif %}
+                            {% if todo_list.unproposed_details %}<small class="text-muted">{{ todo_list.unproposed_details|replace('\n', '<br>')|safe }}</small>{% endif %}
                         </div>
                     </div>
                     {% endif %}

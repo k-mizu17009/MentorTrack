@@ -55,15 +55,21 @@ class MenteeTodoList(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     mentee_id = db.Column(db.Integer, db.ForeignKey('mentee.id'), nullable=False)
     
-    # 目標カテゴリ
-    planning_goals = db.Column(db.Text)  # 企画:売上目標など
-    social_changes = db.Column(db.Text)  # 社会変化
+    # 先輩社員の仕事を奪う
+    senior_work_target = db.Column(db.String(200))  # 9月目標: 100SKU
+    senior_work_actual = db.Column(db.String(200))  # 9月実績: _
     
-    # 月次目標・指標
-    monthly_indicators = db.Column(db.Text)  # 何を
+    # 提案済みで発注済みの商品手配
+    ordered_products = db.Column(db.String(200))  # ■912 ゲーミングモニター
+    ordered_details = db.Column(db.Text)  # 発注済み 納期11/上、GM01 300、GM02 150
     
-    # 月次目標・水準
-    monthly_standards = db.Column(db.Text)  # どのレベルまで
+    # 提案済みでまだ発注できていない商品
+    pending_products = db.Column(db.String(200))  # ■ビジネスリュック
+    pending_details = db.Column(db.Text)  # 修正サンプル依頼→確認→発注(工藤さんに相談)、■775マットレス
+    
+    # 未提案の商品手配
+    unproposed_products = db.Column(db.String(200))  # ■キャットタワー
+    unproposed_details = db.Column(db.Text)  # 見積もり済み→構造修正9/24までに再見積もり依頼、■433転注フラッティ
     
     # 作成・更新日時
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -841,10 +847,14 @@ def manage_todo_list(mentee_id):
     
     if request.method == 'POST':
         # Todoリストを更新
-        todo_list.planning_goals = request.form.get('planning_goals', '')
-        todo_list.social_changes = request.form.get('social_changes', '')
-        todo_list.monthly_indicators = request.form.get('monthly_indicators', '')
-        todo_list.monthly_standards = request.form.get('monthly_standards', '')
+        todo_list.senior_work_target = request.form.get('senior_work_target', '')
+        todo_list.senior_work_actual = request.form.get('senior_work_actual', '')
+        todo_list.ordered_products = request.form.get('ordered_products', '')
+        todo_list.ordered_details = request.form.get('ordered_details', '')
+        todo_list.pending_products = request.form.get('pending_products', '')
+        todo_list.pending_details = request.form.get('pending_details', '')
+        todo_list.unproposed_products = request.form.get('unproposed_products', '')
+        todo_list.unproposed_details = request.form.get('unproposed_details', '')
         todo_list.updated_at = datetime.utcnow()
         
         db.session.commit()

@@ -14,55 +14,65 @@
             </div>
             <div class="card-body">
                 <form method="POST">
-                    <div class="row">
-                        <!-- 目標カテゴリ -->
-                        <div class="col-md-6">
-                            <div class="form-group mb-4">
-                                <label class="form-label fw-bold text-primary">企画目標</label>
-                                <textarea name="planning_goals" class="form-control" rows="4" 
-                                    placeholder="例：国内年間418.7億、海外3億円を達成できるよう、戦略をたて、新規企画を積み上げる。">{{ todo_list.planning_goals or '' }}</textarea>
+                    <!-- 先輩社員の仕事を奪う -->
+                    <div class="form-group mb-4">
+                        <label class="form-label fw-bold">先輩社員の仕事を奪う</label>
+                        <small class="text-muted d-block mb-2">(=先輩社員の商品開発のメンバーにアサインする/「仕入れメンバー」に名前を入れる)</small>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="text" name="senior_work_target" class="form-control" 
+                                    placeholder="9月目標: 100SKU" value="{{ todo_list.senior_work_target or '' }}">
                             </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-4">
-                                <label class="form-label fw-bold text-primary">社会変化</label>
-                                <textarea name="social_changes" class="form-control" rows="4" 
-                                    placeholder="例：米中対立、物価高、少子高齢化、気候変動">{{ todo_list.social_changes or '' }}</textarea>
+                            <div class="col-md-6">
+                                <input type="text" name="senior_work_actual" class="form-control" 
+                                    placeholder="9月実績: _" value="{{ todo_list.senior_work_actual or '' }}">
                             </div>
                         </div>
                     </div>
                     
-                    <!-- 月次目標・指標 -->
+                    <!-- 提案済みで発注済みの商品手配 -->
                     <div class="form-group mb-4">
-                        <label class="form-label fw-bold text-success">月次目標・指標 (何を)</label>
-                        <textarea name="monthly_indicators" class="form-control" rows="6" 
-                            placeholder="例：
-先輩社員の仕事を奪う
-- 先輩社員の商品開発のメンバーにアサインする
-- 「仕入れメンバー」に名前を入れる
-9月目標:100SKU
-
-提案済みで発注済みの商品手配
-- 912 ゲーミングモニター
-- 発注済み 納期11/上
-- GM01 300
-- GM02 150">{{ todo_list.monthly_indicators or '' }}</textarea>
+                        <label class="form-label fw-bold">■提案済みで発注済みの商品手配</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="text" name="ordered_products" class="form-control" 
+                                    placeholder="■912 ゲーミングモニター" value="{{ todo_list.ordered_products or '' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <textarea name="ordered_details" class="form-control" rows="3" 
+                                    placeholder="発注済み 納期11/上&#10;GM01 300&#10;GM02 150">{{ todo_list.ordered_details or '' }}</textarea>
+                            </div>
+                        </div>
                     </div>
                     
-                    <!-- 月次目標・水準 -->
+                    <!-- 提案済みでまだ発注できていない商品 -->
                     <div class="form-group mb-4">
-                        <label class="form-label fw-bold text-warning">月次目標・水準 (どのレベルまで)</label>
-                        <textarea name="monthly_standards" class="form-control" rows="6" 
-                            placeholder="例：
-9月実績: _ (未入力)
-
-商品詳細
-- GM01 300
-- GM02 150
-
-進行状況
-- 775マットレス
-- 433転注フラッティ">{{ todo_list.monthly_standards or '' }}</textarea>
+                        <label class="form-label fw-bold">■提案済みでまだ発注できていない商品</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="text" name="pending_products" class="form-control" 
+                                    placeholder="■ビジネスリュック" value="{{ todo_list.pending_products or '' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <textarea name="pending_details" class="form-control" rows="3" 
+                                    placeholder="修正サンプル依頼→確認→発注(工藤さんに相談)&#10;■775マットレス">{{ todo_list.pending_details or '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 未提案の商品手配 -->
+                    <div class="form-group mb-4">
+                        <label class="form-label fw-bold">■未提案の商品手配</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="text" name="unproposed_products" class="form-control" 
+                                    placeholder="■キャットタワー" value="{{ todo_list.unproposed_products or '' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <textarea name="unproposed_details" class="form-control" rows="3" 
+                                    placeholder="見積もり済み→構造修正9/24までに再見積もり依頼&#10;■433転注フラッティ">{{ todo_list.unproposed_details or '' }}</textarea>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="text-center">
