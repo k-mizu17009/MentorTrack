@@ -220,8 +220,10 @@ def my_dashboard():
             except Exception as e:
                 flash(f'メンティプロファイルの作成に失敗しました: {str(e)}', 'danger')
                 return redirect(url_for('index'))
-    elif current_user.role in ['mentor', 'admin']:
+    elif current_user.role == 'mentor':
         return redirect(url_for('mentor_dashboard'))
+    elif current_user.role == 'admin':
+        return redirect(url_for('admin_dashboard'))
     else:
         flash('不明な役割です。', 'danger')
         return redirect(url_for('index'))
@@ -348,6 +350,112 @@ def mentor_dashboard():
     mentees = Mentee.query.order_by(Mentee.name).all()
     
     return render_template('mentor_dashboard.html', reports=reports, mentees=mentees, selected_mentee=mentee_filter)
+
+@app.route('/admin/dashboard')
+@login_required
+def admin_dashboard():
+    """管理者用ダッシュボード"""
+    if current_user.role != 'admin':
+        flash('管理者権限が必要です。', 'danger')
+        return redirect(url_for('index'))
+    
+    # システム統計情報を取得
+    total_users = User.query.count()
+    total_mentees = Mentee.query.count()
+    total_reports = WeeklyReport.query.count()
+    total_comments = MentorComment.query.count()
+    
+    # 最近の活動
+    recent_reports = WeeklyReport.query.order_by(WeeklyReport.report_date.desc()).limit(5).all()
+    recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
+    
+    # ユーザー統計
+    users_by_role = db.session.query(User.role, db.func.count(User.id)).group_by(User.role).all()
+    
+    return render_template('admin_dashboard.html', 
+                         total_users=total_users,
+                         total_mentees=total_mentees,
+                         total_reports=total_reports,
+                         total_comments=total_comments,
+                         recent_reports=recent_reports,
+                         recent_users=recent_users,
+                         users_by_role=users_by_role)
+
+@app.route('/admin/users')
+@login_required
+def admin_users():
+    """ユーザー管理画面"""
+    if current_user.role != 'admin':
+        flash('管理者権限が必要です。', 'danger')
+        return redirect(url_for('index'))
+    
+    users = User.query.order_by(User.created_at.desc()).all()
+    return render_template('admin_users.html', users=users)
+
+@app.route('/admin/users/<int:user_id>/delete', methods=['POST'])
+@login_required
+def admin_delete_user(user_id):
+    """ユーザー削除"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': '管理者権限が必要です。'}), 403
+    
+    if user_id == current_user.id:
+        return jsonify({'success': False, 'message': '自分自身を削除することはできません。'}), 400
+    
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        # 関連するメンティレコードも削除
+        mentee = Mentee.query.filter_by(user_id=user_id).first()
+        if mentee:
+            # メンティの報告も削除
+            WeeklyReport.query.filter_by(mentee_id=mentee.id).delete()
+            db.session.delete(mentee)
+        
+        # メンターコメントも削除
+        MentorComment.query.filter_by(mentor_id=user_id).delete()
+        
+        # ユーザーを削除
+        db.session.delete(user)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'ユーザーが削除されました。'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'エラーが発生しました: {str(e)}'}), 500
+
+@app.route('/admin/mentees')
+@login_required
+def admin_mentees():
+    """メンティ管理画面"""
+    if current_user.role != 'admin':
+        flash('管理者権限が必要です。', 'danger')
+        return redirect(url_for('index'))
+    
+    mentees = Mentee.query.order_by(Mentee.created_at.desc()).all()
+    return render_template('admin_mentees.html', mentees=mentees)
+
+@app.route('/admin/mentees/<int:mentee_id>/delete', methods=['POST'])
+@login_required
+def admin_delete_mentee(mentee_id):
+    """メンティ削除"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': '管理者権限が必要です。'}), 403
+    
+    try:
+        mentee = Mentee.query.get_or_404(mentee_id)
+        
+        # 関連する報告を削除
+        WeeklyReport.query.filter_by(mentee_id=mentee_id).delete()
+        
+        # メンティを削除
+        db.session.delete(mentee)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'メンティが削除されました。'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'エラーが発生しました: {str(e)}'}), 500
 
 @app.route('/report/new/<int:mentee_id>', methods=['GET', 'POST'])
 @login_required

@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}ユーザー管理 - MentorTrack{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-users me-2"></i>ユーザー管理
+                    </h3>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>ダッシュボードに戻る
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if users %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>ユーザー名</th>
+                                <th>メールアドレス</th>
+                                <th>役割</th>
+                                <th>登録日</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.id }}</td>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'primary' if user.role == 'mentee' else 'success' if user.role == 'mentor' else 'danger' }}">
+                                        {% if user.role == 'mentee' %}メンティ
+                                        {% elif user.role == 'mentor' %}メンター
+                                        {% elif user.role == 'admin' %}管理者
+                                        {% else %}{{ user.role }}{% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ user.created_at.strftime('%Y年%m月%d日') }}</td>
+                                <td>
+                                    {% if user.id != current_user.id %}
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="confirmDeleteUser({{ user.id }}, '{{ user.username }}')">
+                                        <i class="fas fa-trash me-1"></i>削除
+                                    </button>
+                                    {% else %}
+                                    <span class="text-muted">自分自身</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">ユーザーが登録されていません</h5>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 削除確認モーダル -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteUserModalLabel">ユーザー削除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>以下のユーザーを削除してもよろしいですか？</p>
+                <p class="fw-bold" id="userToDelete"></p>
+                <p class="text-danger"><small>この操作は取り消すことができません。関連するメンティデータと報告も削除されます。</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteUserBtn">削除する</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let userIdToDelete = null;
+
+function confirmDeleteUser(userId, username) {
+    userIdToDelete = userId;
+    document.getElementById('userToDelete').textContent = username;
+    const modal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+    modal.show();
+}
+
+document.getElementById('confirmDeleteUserBtn').addEventListener('click', function() {
+    if (userIdToDelete) {
+        deleteUser(userIdToDelete);
+    }
+});
+
+function deleteUser(userId) {
+    fetch(`/admin/users/${userId}/delete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', data.message);
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showAlert('danger', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'エラーが発生しました。');
+    });
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

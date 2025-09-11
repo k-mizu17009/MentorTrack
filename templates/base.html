@@ -70,10 +70,27 @@
                     <a class="nav-link" href="{{ url_for('my_dashboard') }}">
                         {% if current_user.role == 'mentee' %}
                             <i class="fas fa-user me-1"></i>マイダッシュボード
-                        {% elif current_user.role in ['mentor', 'admin'] %}
+                        {% elif current_user.role == 'mentor' %}
                             <i class="fas fa-chalkboard-teacher me-1"></i>メンターダッシュボード
+                        {% elif current_user.role == 'admin' %}
+                            <i class="fas fa-cogs me-1"></i>管理者ダッシュボード
                         {% endif %}
                     </a>
+                    {% if current_user.role == 'admin' %}
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-tools me-1"></i>管理
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('admin_users') }}">
+                                <i class="fas fa-users me-1"></i>ユーザー管理
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin_mentees') }}">
+                                <i class="fas fa-user-graduate me-1"></i>メンティ管理
+                            </a></li>
+                        </ul>
+                    </div>
+                    {% endif %}
                     <div class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user me-1"></i>{{ current_user.username }}
