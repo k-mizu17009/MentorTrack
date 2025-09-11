@@ -94,6 +94,21 @@ class MentorComment(db.Model):
     # リレーションシップ
     mentor = db.relationship('User', backref='mentor_comments')
 
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    type = db.Column(db.String(50), nullable=False)  # 'report_created', 'comment_added', 'system'
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # 関連データのID（オプション）
+    related_id = db.Column(db.Integer, nullable=True)  # 報告IDやコメントIDなど
+    
+    # リレーションシップ
+    user = db.relationship('User', backref='notifications')
+
 # フォームクラス
 class RegistrationForm(FlaskForm):
     username = StringField('ユーザー名', 
@@ -190,6 +205,20 @@ class MenteeProfileForm(FlaskForm):
                       validators=[DataRequired(), Length(min=1, max=100)],
                       render_kw={'placeholder': 'メンティ名を入力してください'})
     submit = SubmitField('プロファイルを更新')
+
+# ヘルパー関数
+def create_notification(user_id, title, message, notification_type, related_id=None):
+    """通知を作成する"""
+    notification = Notification(
+        user_id=user_id,
+        title=title,
+        message=message,
+        type=notification_type,
+        related_id=related_id
+    )
+    db.session.add(notification)
+    db.session.commit()
+    return notification
 
 # ルート
 @app.route('/')
@@ -508,6 +537,18 @@ def new_report(mentee_id):
         
         db.session.add(report)
         db.session.commit()
+        
+        # メンターに通知を送信
+        mentors = User.query.filter(User.role.in_(['mentor', 'admin'])).all()
+        for mentor in mentors:
+            create_notification(
+                user_id=mentor.id,
+                title='新しい報告が登録されました',
+                message=f'{mentee.name}さんが新しい週次報告を登録しました。',
+                notification_type='report_created',
+                related_id=report.id
+            )
+        
         flash('週次報告が保存されました！', 'success')
         return redirect(url_for('mentee_dashboard', mentee_id=mentee_id))
     
@@ -572,6 +613,18 @@ def add_mentor_comment(report_id):
             db.session.add(comment)
         
         db.session.commit()
+        
+        # メンティに通知を送信
+        mentee_user = User.query.get(report.mentee.user_id)
+        if mentee_user:
+            create_notification(
+                user_id=mentee_user.id,
+                title='メンターからコメントが追加されました',
+                message=f'{current_user.username}さんからコメントが追加されました。',
+                notification_type='comment_added',
+                related_id=report_id
+            )
+        
         flash('コメントが保存されました！', 'success')
         return redirect(url_for('view_report', report_id=report_id))
     
@@ -690,6 +743,48 @@ def create_sample_mentee():
             'success': False,
             'message': f'エラーが発生しました: {str(e)}'
         })
+
+@app.route('/notifications')
+@login_required
+def get_notifications():
+    """通知一覧を取得"""
+    notifications = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).limit(10).all()
+    
+    notification_data = []
+    for notification in notifications:
+        notification_data.append({
+            'id': notification.id,
+            'title': notification.title,
+            'message': notification.message,
+            'type': notification.type,
+            'is_read': notification.is_read,
+            'created_at': notification.created_at.strftime('%Y年%m月%d日 %H:%M'),
+            'related_id': notification.related_id
+        })
+    
+    return jsonify({
+        'notifications': notification_data,
+        'unread_count': Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+    })
+
+@app.route('/notifications/<int:notification_id>/read', methods=['POST'])
+@login_required
+def mark_notification_read(notification_id):
+    """通知を既読にする"""
+    notification = Notification.query.filter_by(id=notification_id, user_id=current_user.id).first()
+    if notification:
+        notification.is_read = True
+        db.session.commit()
+        return jsonify({'success': True})
+    return jsonify({'success': False}), 404
+
+@app.route('/notifications/read-all', methods=['POST'])
+@login_required
+def mark_all_notifications_read():
+    """全ての通知を既読にする"""
+    Notification.query.filter_by(user_id=current_user.id, is_read=False).update({'is_read': True})
+    db.session.commit()
+    return jsonify({'success': True})
 
 if __name__ == '__main__':
     with app.app_context():

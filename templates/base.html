@@ -76,6 +76,26 @@
                             <i class="fas fa-cogs me-1"></i>管理者ダッシュボード
                         {% endif %}
                     </a>
+                    <!-- 通知 -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell me-1"></i>
+                            <span id="notification-badge" class="badge bg-danger" style="display: none;">0</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" style="min-width: 300px;">
+                            <li><h6 class="dropdown-header">通知</h6></li>
+                            <li><div id="notification-list">
+                                <div class="text-center p-3">
+                                    <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+                                </div>
+                            </div></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-center" href="#" onclick="markAllAsRead()">
+                                <i class="fas fa-check-double me-1"></i>全て既読にする
+                            </a></li>
+                        </ul>
+                    </div>
+                    
                     {% if current_user.role == 'admin' %}
                     <div class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -131,6 +151,120 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- 通知機能のJavaScript -->
+    <script>
+    let notificationInterval;
+    
+    // 通知を読み込む
+    function loadNotifications() {
+        fetch('/notifications')
+            .then(response => response.json())
+            .then(data => {
+                updateNotificationBadge(data.unread_count);
+                updateNotificationList(data.notifications);
+            })
+            .catch(error => {
+                console.error('通知の読み込みに失敗しました:', error);
+            });
+    }
+    
+    // 通知バッジを更新
+    function updateNotificationBadge(count) {
+        const badge = document.getElementById('notification-badge');
+        if (count > 0) {
+            badge.textContent = count;
+            badge.style.display = 'inline';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+    
+    // 通知リストを更新
+    function updateNotificationList(notifications) {
+        const list = document.getElementById('notification-list');
+        
+        if (notifications.length === 0) {
+            list.innerHTML = '<div class="text-center p-3 text-muted">通知はありません</div>';
+            return;
+        }
+        
+        let html = '';
+        notifications.forEach(notification => {
+            const iconClass = notification.type === 'report_created' ? 'fa-file-alt' : 
+                             notification.type === 'comment_added' ? 'fa-comment' : 'fa-info-circle';
+            const bgClass = notification.is_read ? '' : 'bg-light';
+            
+            html += `
+                <div class="dropdown-item-text p-2 ${bgClass}" onclick="markAsRead(${notification.id})">
+                    <div class="d-flex align-items-start">
+                        <i class="fas ${iconClass} me-2 mt-1 text-primary"></i>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">${notification.title}</div>
+                            <div class="small text-muted">${notification.message}</div>
+                            <div class="small text-muted">${notification.created_at}</div>
+                        </div>
+                        ${!notification.is_read ? '<i class="fas fa-circle text-primary" style="font-size: 8px;"></i>' : ''}
+                    </div>
+                </div>
+            `;
+        });
+        
+        list.innerHTML = html;
+    }
+    
+    // 通知を既読にする
+    function markAsRead(notificationId) {
+        fetch(`/notifications/${notificationId}/read`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadNotifications(); // 通知リストを再読み込み
+            }
+        })
+        .catch(error => {
+            console.error('通知の既読処理に失敗しました:', error);
+        });
+    }
+    
+    // 全ての通知を既読にする
+    function markAllAsRead() {
+        fetch('/notifications/read-all', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadNotifications(); // 通知リストを再読み込み
+            }
+        })
+        .catch(error => {
+            console.error('全ての通知の既読処理に失敗しました:', error);
+        });
+    }
+    
+    // ページ読み込み時に通知を読み込み、定期的に更新
+    document.addEventListener('DOMContentLoaded', function() {
+        loadNotifications();
+        notificationInterval = setInterval(loadNotifications, 30000); // 30秒ごとに更新
+    });
+    
+    // ページ離脱時にインターバルをクリア
+    window.addEventListener('beforeunload', function() {
+        if (notificationInterval) {
+            clearInterval(notificationInterval);
+        }
+    });
+    </script>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html>
