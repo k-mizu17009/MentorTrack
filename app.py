@@ -292,6 +292,28 @@ def view_report(report_id):
     
     return render_template('view_report.html', report=report, previous_report=previous_report, additional_responses=additional_responses)
 
+@app.route('/report/<int:report_id>', methods=['DELETE'])
+@login_required
+def delete_report(report_id):
+    try:
+        report = WeeklyReport.query.get_or_404(report_id)
+        mentee_id = report.mentee_id
+        
+        # 報告を削除
+        db.session.delete(report)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': '報告が削除されました'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'エラーが発生しました: {str(e)}'
+        }), 500
+
 @app.route('/create-sample-mentee', methods=['POST'])
 def create_sample_mentee():
     try:

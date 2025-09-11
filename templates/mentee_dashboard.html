@@ -58,9 +58,14 @@
                                             自己評価: {{ report.self_evaluation }}/3
                                         </span>
                                     </div>
-                                    <a href="{{ url_for('view_report', report_id=report.id) }}" class="btn btn-outline-primary btn-sm">
-                                        <i class="fas fa-eye me-1"></i>詳細を見る
-                                    </a>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('view_report', report_id=report.id) }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye me-1"></i>詳細を見る
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="confirmDelete({{ report.id }}, '{{ report.report_date.strftime('%Y年%m月%d日') }}の報告')">
+                                            <i class="fas fa-trash me-1"></i>削除
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -78,4 +83,88 @@
         </div>
     </div>
 </div>
+
+<!-- 削除確認モーダル -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">報告の削除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>以下の報告を削除してもよろしいですか？</p>
+                <p class="fw-bold" id="reportToDelete"></p>
+                <p class="text-danger"><small>この操作は取り消すことができません。</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">削除する</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let reportIdToDelete = null;
+
+function confirmDelete(reportId, reportTitle) {
+    reportIdToDelete = reportId;
+    document.getElementById('reportToDelete').textContent = reportTitle;
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    if (reportIdToDelete) {
+        deleteReport(reportIdToDelete);
+    }
+});
+
+function deleteReport(reportId) {
+    fetch(`/report/${reportId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 成功メッセージを表示
+            showAlert('success', data.message);
+            // ページをリロードして更新されたリストを表示
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showAlert('danger', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'エラーが発生しました。');
+    });
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // ページの上部にアラートを挿入
+    const container = document.querySelector('.container');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // 5秒後に自動でアラートを非表示
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
 {% endblock %}
