@@ -628,7 +628,14 @@ def add_mentor_comment(report_id):
         flash('コメントが保存されました！', 'success')
         return redirect(url_for('view_report', report_id=report_id))
     
-    return render_template('add_mentor_comment.html', form=form, report=report)
+    # 追加の問いかけ回答をパース
+    import json
+    try:
+        additional_responses = json.loads(report.additional_responses) if report.additional_responses else {}
+    except (json.JSONDecodeError, TypeError):
+        additional_responses = {}
+    
+    return render_template('add_mentor_comment.html', form=form, report=report, additional_responses=additional_responses)
 
 @app.route('/mentee/profile', methods=['GET', 'POST'])
 @login_required

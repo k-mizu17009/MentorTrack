@@ -1,10 +1,115 @@
 {% extends "base.html" %}
 
-{% block title %}メンターコメント追加 - MentorTrack{% endblock %}
+{% block title %}メンターコメント追加 - {{ report.mentee.name }}{% endblock %}
 
 {% block content %}
 <div class="row">
-    <div class="col-lg-8 mx-auto">
+    <!-- 報告内容表示エリア -->
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-file-alt me-2"></i>{{ report.mentee.name }}の報告内容
+                    </h3>
+                    <span class="badge bg-{{ 'success' if report.planning_stage == 'completed' else 'primary' if report.planning_stage == 'ordered' else 'warning' if report.planning_stage == 'proposal_post' else 'secondary' }} stage-badge">
+                        {% if report.planning_stage == 'proposal_pre' %}提案前
+                        {% elif report.planning_stage == 'proposal_post' %}提案済み
+                        {% elif report.planning_stage == 'ordered' %}発注済み
+                        {% elif report.planning_stage == 'completed' %}完了
+                        {% endif %}
+                    </span>
+                </div>
+                <p class="mb-0 mt-2 text-light">{{ report.report_date.strftime('%Y年%m月%d日') }}の報告</p>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-box me-2"></i>代表商品群</h5>
+                        <p class="text-muted">{{ report.product_group }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-star me-2"></i>自己評価</h5>
+                        <span class="badge bg-{{ 'success' if report.self_evaluation == 3 else 'warning' if report.self_evaluation == 2 else 'danger' }} evaluation-badge">
+                            {{ report.self_evaluation }}/3
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h5><i class="fas fa-tasks me-2"></i>今週の進捗</h5>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <pre class="mb-0">{{ report.progress_items }}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h5><i class="fas fa-running me-2"></i>実施した行動</h5>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <pre class="mb-0">{{ report.actions_taken }}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h5><i class="fas fa-lightbulb me-2"></i>気づき・悩み</h5>
+                    <div class="insight-box">
+                        <pre class="mb-0">{{ report.insights_concerns }}</pre>
+                    </div>
+                </div>
+
+                {% if additional_responses %}
+                <div class="mb-4">
+                    <h5><i class="fas fa-question-circle me-2"></i>追加の問いかけ回答</h5>
+                    <div class="card">
+                        <div class="card-body">
+                            {% if additional_responses.time_consuming_task %}
+                            <div class="mb-3">
+                                <h6 class="text-primary">今週、最も時間を使った作業は？</h6>
+                                <p class="text-muted">{{ additional_responses.time_consuming_task }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if additional_responses.difficult_decision %}
+                            <div class="mb-3">
+                                <h6 class="text-primary">今週、最も迷った判断は？</h6>
+                                <p class="text-muted">{{ additional_responses.difficult_decision }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if additional_responses.learned_from_senior %}
+                            <div class="mb-3">
+                                <h6 class="text-primary">今週、先輩から学んだことは？</h6>
+                                <p class="text-muted">{{ additional_responses.learned_from_senior }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if additional_responses.own_decision %}
+                            <div class="mb-3">
+                                <h6 class="text-primary">今週、自分の判断で進めたことは？</h6>
+                                <p class="text-muted">{{ additional_responses.own_decision }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if additional_responses.redid_task %}
+                            <div class="mb-3">
+                                <h6 class="text-primary">今週、やり直したことは？</h6>
+                                <p class="text-muted">{{ additional_responses.redid_task }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- コメント追加フォーム -->
+    <div class="col-lg-5">
         <div class="card">
             <div class="card-header">
                 <h3 class="mb-0">
@@ -12,29 +117,15 @@
                 </h3>
             </div>
             <div class="card-body">
-                <div class="mb-4">
-                    <h5>報告詳細</h5>
-                    <div class="card bg-light">
-                        <div class="card-body">
-                            <p><strong>メンティ:</strong> {{ report.mentee.name }}</p>
-                            <p><strong>報告日:</strong> {{ report.report_date.strftime('%Y年%m月%d日') }}</p>
-                            <p><strong>企画ステージ:</strong> 
-                                {% if report.planning_stage == 'proposal_pre' %}提案前
-                                {% elif report.planning_stage == 'proposal_post' %}提案済み
-                                {% elif report.planning_stage == 'ordered' %}発注済み
-                                {% elif report.planning_stage == 'completed' %}完了
-                                {% endif %}
-                            </p>
-                            <p><strong>商品群:</strong> {{ report.product_group }}</p>
-                        </div>
-                    </div>
-                </div>
-
                 <form method="POST">
                     {{ form.hidden_tag() }}
                     
                     <div class="mb-3">
-                        {{ form.comment.label(class="form-label") }}
+                        {{ form.comment.label(class="form-label fw-bold") }}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            メンティの成長を促すコメントを記入してください。評価ではなく、対話のきっかけとして活用してください。
+                        </div>
                         {{ form.comment(class="form-control") }}
                         {% if form.comment.errors %}
                             <div class="text-danger">
