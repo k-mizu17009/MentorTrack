@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}メンターコメント追加 - MentorTrack{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-comment me-2"></i>メンターコメント追加
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h5>報告詳細</h5>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <p><strong>メンティ:</strong> {{ report.mentee.name }}</p>
+                            <p><strong>報告日:</strong> {{ report.report_date.strftime('%Y年%m月%d日') }}</p>
+                            <p><strong>企画ステージ:</strong> 
+                                {% if report.planning_stage == 'proposal_pre' %}提案前
+                                {% elif report.planning_stage == 'proposal_post' %}提案済み
+                                {% elif report.planning_stage == 'ordered' %}発注済み
+                                {% elif report.planning_stage == 'completed' %}完了
+                                {% endif %}
+                            </p>
+                            <p><strong>商品群:</strong> {{ report.product_group }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.comment.label(class="form-label") }}
+                        {{ form.comment(class="form-control") }}
+                        {% if form.comment.errors %}
+                            <div class="text-danger">
+                                {% for error in form.comment.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('view_report', report_id=report.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>戻る
+                        </a>
+                        {{ form.submit(class="btn btn-success") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

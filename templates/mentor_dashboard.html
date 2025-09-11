@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}メンターダッシュボード - MentorTrack{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-chalkboard-teacher me-2"></i>メンターダッシュボード
+                </h3>
+            </div>
+            <div class="card-body">
+                <!-- フィルター機能 -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <form method="GET" class="d-flex">
+                            <select name="mentee" class="form-select me-2" onchange="this.form.submit()">
+                                <option value="">全メンティ</option>
+                                {% for mentee in mentees %}
+                                <option value="{{ mentee.name }}" {% if selected_mentee == mentee.name %}selected{% endif %}>
+                                    {{ mentee.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="fas fa-filter me-1"></i>フィルター
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <span class="text-muted">
+                            {% if selected_mentee %}
+                                「{{ selected_mentee }}」の報告: {{ reports|length }}件
+                            {% else %}
+                                全報告: {{ reports|length }}件
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                {% if reports %}
+                <h4 class="mb-3">{% if selected_mentee %}{{ selected_mentee }}の{% else %}全メンティの{% endif %}報告一覧</h4>
+                <div class="row">
+                    {% for report in reports %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="card-title mb-0">
+                                        {{ report.mentee.name }} - {{ report.report_date.strftime('%Y年%m月%d日') }}の報告
+                                    </h6>
+                                    <span class="badge bg-{{ 'success' if report.planning_stage == 'completed' else 'primary' if report.planning_stage == 'ordered' else 'warning' if report.planning_stage == 'proposal_post' else 'secondary' }} stage-badge">
+                                        {% if report.planning_stage == 'proposal_pre' %}提案前
+                                        {% elif report.planning_stage == 'proposal_post' %}提案済み
+                                        {% elif report.planning_stage == 'ordered' %}発注済み
+                                        {% elif report.planning_stage == 'completed' %}完了
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                
+                                <p class="card-text">
+                                    <strong>商品群:</strong> {{ report.product_group[:50] }}{% if report.product_group|length > 50 %}...{% endif %}
+                                </p>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="badge bg-{{ 'success' if report.self_evaluation == 3 else 'warning' if report.self_evaluation == 2 else 'danger' }} evaluation-badge">
+                                            自己評価: {{ report.self_evaluation }}/3
+                                        </span>
+                                        {% if report.mentor_comments %}
+                                        <span class="badge bg-info ms-1">
+                                            <i class="fas fa-comment me-1"></i>コメント済み
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('view_report', report_id=report.id) }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye me-1"></i>詳細を見る
+                                        </a>
+                                        <a href="{{ url_for('add_mentor_comment', report_id=report.id) }}" class="btn btn-outline-success btn-sm">
+                                            <i class="fas fa-comment me-1"></i>コメント
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">まだ報告がありません</h5>
+                    <p class="text-muted">メンティからの報告をお待ちください。</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -72,9 +72,6 @@ class WeeklyReport(db.Model):
     # 自己評価
     self_evaluation = db.Column(db.Integer)  # 1-3
     
-    # メンターコメント
-    mentor_comment = db.Column(db.Text)
-    
     # 追加の問いかけ回答（JSON形式）
     additional_responses = db.Column(db.Text)
     
@@ -83,6 +80,19 @@ class WeeklyReport(db.Model):
     
     # 週の開始日（月曜日）
     week_start = db.Column(db.DateTime, nullable=False)
+    
+    # リレーションシップ
+    mentor_comments = db.relationship('MentorComment', backref='report', lazy=True, cascade='all, delete-orphan')
+
+class MentorComment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    report_id = db.Column(db.Integer, db.ForeignKey('weekly_report.id'), nullable=False)
+    mentor_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    comment = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # リレーションシップ
+    mentor = db.relationship('User', backref='mentor_comments')
 
 # フォームクラス
 class RegistrationForm(FlaskForm):
@@ -151,9 +161,6 @@ class WeeklyReportForm(FlaskForm):
                                         (3, '3 - とても順調に進んだ')],
                                 validators=[DataRequired()])
     
-    mentor_comment = TextAreaField('メンターコメント', 
-                                  render_kw={'rows': 3, 'placeholder': 'メンターからのコメント（任意）'})
-    
     # 追加の問いかけ
     time_consuming_task = TextAreaField('今週、最も時間を使った作業は？', 
                                        render_kw={'rows': 2, 'placeholder': '（任意）'})
@@ -172,10 +179,80 @@ class WeeklyReportForm(FlaskForm):
     
     submit = SubmitField('報告を保存')
 
+class MentorCommentForm(FlaskForm):
+    comment = TextAreaField('メンターコメント', 
+                           validators=[DataRequired(), Length(min=1, max=1000)],
+                           render_kw={'rows': 4, 'placeholder': 'メンターからのコメントを入力してください'})
+    submit = SubmitField('コメントを保存')
+
+class MenteeProfileForm(FlaskForm):
+    name = StringField('メンティ名', 
+                      validators=[DataRequired(), Length(min=1, max=100)],
+                      render_kw={'placeholder': 'メンティ名を入力してください'})
+    submit = SubmitField('プロファイルを更新')
+
 # ルート
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/my-dashboard')
+@login_required
+def my_dashboard():
+    """ログインユーザーに応じたダッシュボードにリダイレクト"""
+    if current_user.role == 'mentee':
+        # メンティの場合、自分のメンティレコードを取得
+        mentee = Mentee.query.filter_by(user_id=current_user.id).first()
+        if mentee:
+            return redirect(url_for('mentee_dashboard', mentee_id=mentee.id))
+        else:
+            # メンティレコードが存在しない場合は作成
+            try:
+                mentee = Mentee(
+                    name=current_user.username,
+                    email=current_user.email,
+                    user_id=current_user.id
+                )
+                db.session.add(mentee)
+                db.session.commit()
+                flash('メンティプロファイルが作成されました。', 'success')
+                return redirect(url_for('mentee_dashboard', mentee_id=mentee.id))
+            except Exception as e:
+                flash(f'メンティプロファイルの作成に失敗しました: {str(e)}', 'danger')
+                return redirect(url_for('index'))
+    elif current_user.role in ['mentor', 'admin']:
+        return redirect(url_for('mentor_dashboard'))
+    else:
+        flash('不明な役割です。', 'danger')
+        return redirect(url_for('index'))
+
+@app.route('/debug/mentees')
+@login_required
+def debug_mentees():
+    """デバッグ用：メンティ一覧を表示"""
+    if current_user.role not in ['admin']:
+        flash('管理者権限が必要です。', 'danger')
+        return redirect(url_for('index'))
+    
+    mentees = Mentee.query.all()
+    debug_info = []
+    for mentee in mentees:
+        debug_info.append({
+            'id': mentee.id,
+            'name': mentee.name,
+            'email': mentee.email,
+            'user_id': mentee.user_id,
+            'created_at': mentee.created_at
+        })
+    
+    return jsonify({
+        'mentees': debug_info,
+        'current_user': {
+            'id': current_user.id,
+            'username': current_user.username,
+            'role': current_user.role
+        }
+    })
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -191,6 +268,17 @@ def register():
         )
         user.set_password(form.password.data)
         db.session.add(user)
+        db.session.flush()  # ユーザーIDを取得するためにflush
+        
+        # メンティの場合、メンティレコードも作成
+        if form.role.data == 'mentee':
+            mentee = Mentee(
+                name=form.username.data,  # 初期値としてユーザー名を使用
+                email=form.email.data,
+                user_id=user.id
+            )
+            db.session.add(mentee)
+        
         db.session.commit()
         flash('アカウントが作成されました！ログインしてください。', 'success')
         return redirect(url_for('login'))
@@ -226,14 +314,61 @@ def logout():
 @login_required
 def mentee_dashboard(mentee_id):
     mentee = Mentee.query.get_or_404(mentee_id)
+    
+    # セキュリティチェック：メンティは自分の報告のみ、メンター・管理者は全報告を閲覧可能
+    if current_user.role == 'mentee':
+        # メンティの場合、自分のメンティレコードのみアクセス可能
+        if mentee.user_id != current_user.id:
+            flash('アクセス権限がありません。', 'danger')
+            return redirect(url_for('my_dashboard'))
+    
     reports = WeeklyReport.query.filter_by(mentee_id=mentee_id).order_by(WeeklyReport.report_date.desc()).all()
     return render_template('mentee_dashboard.html', mentee=mentee, reports=reports)
+
+@app.route('/mentor/dashboard')
+@login_required
+def mentor_dashboard():
+    # メンター権限チェック
+    if current_user.role not in ['mentor', 'admin']:
+        flash('メンター権限が必要です。', 'danger')
+        return redirect(url_for('index'))
+    
+    # フィルターパラメータを取得
+    mentee_filter = request.args.get('mentee', '')
+    
+    # 全メンティの報告を取得（フィルター適用）
+    query = WeeklyReport.query.join(Mentee)
+    
+    if mentee_filter:
+        query = query.filter(Mentee.name.contains(mentee_filter))
+    
+    reports = query.order_by(WeeklyReport.report_date.desc()).all()
+    
+    # メンティ一覧を取得（フィルター用）
+    mentees = Mentee.query.order_by(Mentee.name).all()
+    
+    return render_template('mentor_dashboard.html', reports=reports, mentees=mentees, selected_mentee=mentee_filter)
 
 @app.route('/report/new/<int:mentee_id>', methods=['GET', 'POST'])
 @login_required
 def new_report(mentee_id):
-    mentee = Mentee.query.get_or_404(mentee_id)
-    form = WeeklyReportForm()
+    try:
+        # メンティの存在確認
+        mentee = Mentee.query.get(mentee_id)
+        if not mentee:
+            flash(f'メンティID {mentee_id} が見つかりません。', 'danger')
+            return redirect(url_for('my_dashboard'))
+        
+        # セキュリティチェック：メンティは自分の報告のみ作成可能
+        if current_user.role == 'mentee':
+            if mentee.user_id != current_user.id:
+                flash(f'アクセス権限がありません。メンティID {mentee_id} はあなたのものではありません。', 'danger')
+                return redirect(url_for('my_dashboard'))
+        
+        form = WeeklyReportForm()
+    except Exception as e:
+        flash(f'エラーが発生しました: {str(e)}', 'danger')
+        return redirect(url_for('my_dashboard'))
     
     if form.validate_on_submit():
         # 今週の月曜日を計算
@@ -259,7 +394,6 @@ def new_report(mentee_id):
             actions_taken=form.actions_taken.data,
             insights_concerns=form.insights_concerns.data,
             self_evaluation=form.self_evaluation.data,
-            mentor_comment=form.mentor_comment.data,
             additional_responses=str(additional_responses),
             week_start=week_start
         )
@@ -275,6 +409,12 @@ def new_report(mentee_id):
 @login_required
 def view_report(report_id):
     report = WeeklyReport.query.get_or_404(report_id)
+    
+    # セキュリティチェック：メンティは自分の報告のみ閲覧可能
+    if current_user.role == 'mentee':
+        if report.mentee.user_id != current_user.id:
+            flash('アクセス権限がありません。', 'danger')
+            return redirect(url_for('my_dashboard'))
     
     # 前週の報告を取得
     previous_week_start = report.week_start - timedelta(days=7)
@@ -292,11 +432,80 @@ def view_report(report_id):
     
     return render_template('view_report.html', report=report, previous_report=previous_report, additional_responses=additional_responses)
 
+@app.route('/report/<int:report_id>/comment', methods=['GET', 'POST'])
+@login_required
+def add_mentor_comment(report_id):
+    # メンター権限チェック
+    if current_user.role not in ['mentor', 'admin']:
+        flash('メンター権限が必要です。', 'danger')
+        return redirect(url_for('index'))
+    
+    report = WeeklyReport.query.get_or_404(report_id)
+    form = MentorCommentForm()
+    
+    if form.validate_on_submit():
+        # 既存のコメントをチェック（1つの報告に1つのコメントのみ）
+        existing_comment = MentorComment.query.filter_by(
+            report_id=report_id, 
+            mentor_id=current_user.id
+        ).first()
+        
+        if existing_comment:
+            # 既存のコメントを更新
+            existing_comment.comment = form.comment.data
+            existing_comment.created_at = datetime.utcnow()
+        else:
+            # 新しいコメントを作成
+            comment = MentorComment(
+                report_id=report_id,
+                mentor_id=current_user.id,
+                comment=form.comment.data
+            )
+            db.session.add(comment)
+        
+        db.session.commit()
+        flash('コメントが保存されました！', 'success')
+        return redirect(url_for('view_report', report_id=report_id))
+    
+    return render_template('add_mentor_comment.html', form=form, report=report)
+
+@app.route('/mentee/profile', methods=['GET', 'POST'])
+@login_required
+def mentee_profile():
+    """メンティプロファイル編集"""
+    if current_user.role != 'mentee':
+        flash('メンティ権限が必要です。', 'danger')
+        return redirect(url_for('index'))
+    
+    mentee = Mentee.query.filter_by(user_id=current_user.id).first()
+    if not mentee:
+        flash('メンティプロファイルが見つかりません。', 'danger')
+        return redirect(url_for('index'))
+    
+    form = MenteeProfileForm(obj=mentee)
+    
+    if form.validate_on_submit():
+        mentee.name = form.name.data
+        db.session.commit()
+        flash('プロファイルが更新されました！', 'success')
+        return redirect(url_for('mentee_dashboard', mentee_id=mentee.id))
+    
+    return render_template('mentee_profile.html', form=form, mentee=mentee)
+
 @app.route('/report/<int:report_id>', methods=['DELETE'])
 @login_required
 def delete_report(report_id):
     try:
         report = WeeklyReport.query.get_or_404(report_id)
+        
+        # セキュリティチェック：メンティは自分の報告のみ削除可能
+        if current_user.role == 'mentee':
+            if report.mentee.user_id != current_user.id:
+                return jsonify({
+                    'success': False,
+                    'message': 'アクセス権限がありません'
+                }), 403
+        
         mentee_id = report.mentee_id
         
         # 報告を削除
@@ -315,32 +524,57 @@ def delete_report(report_id):
         }), 500
 
 @app.route('/create-sample-mentee', methods=['POST'])
+@login_required
 def create_sample_mentee():
     try:
-        # 既存のサンプルメンティをチェック
-        existing_mentee = Mentee.query.filter_by(email='sample@example.com').first()
-        
-        if existing_mentee:
-            # 既存のサンプルメンティが存在する場合は、そのIDを返す
-            return jsonify({
-                'success': True,
-                'mentee_id': existing_mentee.id,
-                'message': '既存のサンプルメンティを使用します'
-            })
+        # ログインユーザーがメンティの場合、既存のメンティレコードを取得
+        if current_user.role == 'mentee':
+            existing_mentee = Mentee.query.filter_by(user_id=current_user.id).first()
+            if existing_mentee:
+                return jsonify({
+                    'success': True,
+                    'mentee_id': existing_mentee.id,
+                    'message': '既存のメンティプロファイルを使用します'
+                })
+            else:
+                # メンティレコードが存在しない場合は作成
+                mentee = Mentee(
+                    name=current_user.username,
+                    email=current_user.email,
+                    user_id=current_user.id
+                )
+                db.session.add(mentee)
+                db.session.commit()
+                
+                return jsonify({
+                    'success': True,
+                    'mentee_id': mentee.id,
+                    'message': 'メンティプロファイルが作成されました'
+                })
         else:
-            # 新しいサンプルメンティを作成
-            sample_mentee = Mentee(
-                name='サンプルメンティ',
-                email='sample@example.com'
-            )
-            db.session.add(sample_mentee)
-            db.session.commit()
+            # メンター・管理者の場合は、サンプルメンティを作成（デモ用）
+            existing_mentee = Mentee.query.filter_by(email='sample@example.com').first()
             
-            return jsonify({
-                'success': True,
-                'mentee_id': sample_mentee.id,
-                'message': 'サンプルメンティが作成されました'
-            })
+            if existing_mentee:
+                return jsonify({
+                    'success': True,
+                    'mentee_id': existing_mentee.id,
+                    'message': '既存のサンプルメンティを使用します'
+                })
+            else:
+                # 新しいサンプルメンティを作成
+                sample_mentee = Mentee(
+                    name='サンプルメンティ',
+                    email='sample@example.com'
+                )
+                db.session.add(sample_mentee)
+                db.session.commit()
+                
+                return jsonify({
+                    'success': True,
+                    'mentee_id': sample_mentee.id,
+                    'message': 'サンプルメンティが作成されました'
+                })
     except Exception as e:
         # エラーの詳細をログに出力
         print(f"Error creating sample mentee: {str(e)}")

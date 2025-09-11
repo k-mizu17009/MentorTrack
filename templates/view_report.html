@@ -60,13 +60,35 @@
                     </div>
                 </div>
 
-                {% if report.mentor_comment %}
+                {% if report.mentor_comments %}
                 <div class="mb-4">
                     <h5><i class="fas fa-comment me-2"></i>メンターコメント</h5>
-                    <div class="card border-primary">
+                    {% for comment in report.mentor_comments %}
+                    <div class="card border-primary mb-2">
                         <div class="card-body">
-                            <pre class="mb-0">{{ report.mentor_comment }}</pre>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>{{ comment.mentor.username }}
+                                </small>
+                                <small class="text-muted">
+                                    {{ comment.created_at.strftime('%Y年%m月%d日 %H:%M') }}
+                                </small>
+                            </div>
+                            <pre class="mb-0">{{ comment.comment }}</pre>
                         </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if current_user.role in ['mentor', 'admin'] %}
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-comment-dots me-2"></i>メンターコメント</h5>
+                        <a href="{{ url_for('add_mentor_comment', report_id=report.id) }}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-comment me-1"></i>
+                            {% if report.mentor_comments %}コメントを編集{% else %}コメントを追加{% endif %}
+                        </a>
                     </div>
                 </div>
                 {% endif %}

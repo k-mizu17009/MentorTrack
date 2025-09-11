@@ -67,6 +67,13 @@
                     <i class="fas fa-home me-1"></i>ホーム
                 </a>
                 {% if current_user.is_authenticated %}
+                    <a class="nav-link" href="{{ url_for('my_dashboard') }}">
+                        {% if current_user.role == 'mentee' %}
+                            <i class="fas fa-user me-1"></i>マイダッシュボード
+                        {% elif current_user.role in ['mentor', 'admin'] %}
+                            <i class="fas fa-chalkboard-teacher me-1"></i>メンターダッシュボード
+                        {% endif %}
+                    </a>
                     <div class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user me-1"></i>{{ current_user.username }}
