@@ -19,7 +19,7 @@
                     <h5 class="mb-0">新しい代表商品群を登録</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST">
+                    <form method="POST" enctype="multipart/form-data">
                         {{ form.hidden_tag() }}
                         <div class="row">
                             <div class="col-md-8">
@@ -52,6 +52,18 @@
                                 </div>
                             {% endif %}
                         </div>
+                        <div class="form-group">
+                            {{ form.images.label(class="form-label") }}
+                            {{ form.images(class="form-control") }}
+                            <small class="form-text text-muted">複数の画像を選択できます（PNG, JPG, JPEG, GIF, WebP形式）</small>
+                            {% if form.images.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.images.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
                     </form>
                 </div>
             </div>
@@ -69,6 +81,7 @@
                                     <tr>
                                         <th>代表商品群名</th>
                                         <th>説明</th>
+                                        <th>画像</th>
                                         <th>登録日</th>
                                         <th>操作</th>
                                     </tr>
@@ -81,19 +94,47 @@
                                         </td>
                                         <td>
                                             {% if pg.description %}
-                                                {{ pg.description }}
+                                                {{ pg.description[:50] }}{% if pg.description|length > 50 %}...{% endif %}
                                             {% else %}
                                                 <span class="text-muted">説明なし</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if pg.images %}
+                                                {% set images = pg.images|from_json %}
+                                                {% if images %}
+                                                    <div class="d-flex">
+                                                        {% for image in images[:3] %}
+                                                        <img src="{{ url_for('uploaded_file', filename=image) }}" 
+                                                             class="img-thumbnail me-1" 
+                                                             style="width: 40px; height: 40px; object-fit: cover;"
+                                                             alt="{{ pg.name }}">
+                                                        {% endfor %}
+                                                        {% if images|length > 3 %}
+                                                        <span class="badge bg-secondary ms-1">+{{ images|length - 3 }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                {% else %}
+                                                    <span class="text-muted">画像なし</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">画像なし</span>
                                             {% endif %}
                                         </td>
                                         <td>
                                             {{ pg.created_at.strftime('%Y年%m月%d日') }}
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm btn-danger" 
-                                                    onclick="deleteProductGroup({{ pg.id }}, '{{ pg.name }}')">
-                                                <i class="fas fa-trash"></i> 削除
-                                            </button>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('edit_product_group', product_group_id=pg.id) }}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i> 編集
+                                                </a>
+                                                <button class="btn btn-sm btn-danger" 
+                                                        onclick="deleteProductGroup({{ pg.id }}, '{{ pg.name }}')">
+                                                    <i class="fas fa-trash"></i> 削除
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}

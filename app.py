@@ -1,19 +1,31 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
-from wtforms import StringField, TextAreaField, SelectField, RadioField, SubmitField, BooleanField, PasswordField
+from wtforms import StringField, TextAreaField, SelectField, RadioField, SubmitField, BooleanField, PasswordField, FileField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from datetime import datetime, timedelta
 import os
-import shutil
-from datetime import datetime
+import json
+import uuid
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mentortrack.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# 画像アップロード設定
+UPLOAD_FOLDER = 'static/uploads/product_groups'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
+
+# アップロードフォルダを作成
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -126,6 +138,7 @@ class ProductGroup(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
+    images = db.Column(db.Text)  # JSON形式で画像パスのリストを保存
     mentee_id = db.Column(db.Integer, db.ForeignKey('mentee.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -253,9 +266,49 @@ class ProductGroupForm(FlaskForm):
                       render_kw={'placeholder': '代表商品群名を入力してください'})
     description = TextAreaField('説明', 
                                render_kw={'rows': 3, 'placeholder': '商品群の説明（任意）'})
+    images = FileField('画像ファイル', 
+                      render_kw={'multiple': True, 'accept': 'image/*'})
     submit = SubmitField('登録')
 
+class ProductGroupEditForm(FlaskForm):
+    name = StringField('代表商品群名', 
+                      validators=[DataRequired(), Length(min=1, max=200)],
+                      render_kw={'placeholder': '代表商品群名を入力してください'})
+    description = TextAreaField('説明', 
+                               render_kw={'rows': 3, 'placeholder': '商品群の説明（任意）'})
+    images = FileField('新しい画像ファイル', 
+                      render_kw={'multiple': True, 'accept': 'image/*'})
+    submit = SubmitField('更新')
+
 # ヘルパー関数
+def allowed_file(filename):
+    """アップロード可能なファイルかチェック"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def save_uploaded_files(files):
+    """アップロードされたファイルを保存"""
+    saved_files = []
+    for file in files:
+        if file and file.filename and allowed_file(file.filename):
+            # ユニークなファイル名を生成
+            filename = secure_filename(file.filename)
+            name, ext = os.path.splitext(filename)
+            unique_filename = f"{name}_{uuid.uuid4().hex[:8]}{ext}"
+            
+            # ファイルを保存
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            file.save(file_path)
+            saved_files.append(unique_filename)
+    
+    return saved_files
+
+def delete_uploaded_files(filenames):
+    """アップロードされたファイルを削除"""
+    for filename in filenames:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
 def create_notification(user_id, title, message, notification_type, related_id=None):
     """通知を作成する"""
     notification = Notification(
@@ -354,6 +407,17 @@ def get_progress_status_info(status):
         'unknown': {'class': 'secondary', 'icon': 'fas fa-question', 'text': '不明'}
     }
     return status_info.get(status, status_info['unknown'])
+
+# カスタムフィルター
+@app.template_filter('from_json')
+def from_json_filter(json_string):
+    """JSON文字列をPythonオブジェクトに変換するフィルター"""
+    if not json_string:
+        return []
+    try:
+        return json.loads(json_string)
+    except (json.JSONDecodeError, TypeError):
+        return []
 
 # テンプレートコンテキストプロセッサー
 @app.context_processor
@@ -1017,10 +1081,17 @@ def manage_product_groups(mentee_id):
     form = ProductGroupForm()
     
     if form.validate_on_submit():
+        # 画像ファイルを保存
+        saved_images = []
+        if form.images.data:
+            files = request.files.getlist('images')
+            saved_images = save_uploaded_files(files)
+        
         # 新しい代表商品群を登録
         product_group = ProductGroup(
             name=form.name.data,
             description=form.description.data,
+            images=json.dumps(saved_images) if saved_images else None,
             mentee_id=mentee_id
         )
         db.session.add(product_group)
@@ -1032,6 +1103,62 @@ def manage_product_groups(mentee_id):
     product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).order_by(ProductGroup.created_at.desc()).all()
     
     return render_template('manage_product_groups.html', mentee=mentee, form=form, product_groups=product_groups)
+
+@app.route('/product-group/<int:product_group_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_product_group(product_group_id):
+    """代表商品群編集"""
+    product_group = ProductGroup.query.get_or_404(product_group_id)
+    
+    # セキュリティチェック
+    if current_user.role == 'mentee' and product_group.mentee.user_id != current_user.id:
+        flash('アクセス権限がありません。', 'danger')
+        return redirect(url_for('my_dashboard'))
+    elif current_user.role not in ['mentor', 'admin'] and current_user.role != 'mentee':
+        flash('アクセス権限がありません。', 'danger')
+        return redirect(url_for('my_dashboard'))
+    
+    form = ProductGroupEditForm(obj=product_group)
+    
+    if form.validate_on_submit():
+        # 既存の画像を取得
+        existing_images = []
+        if product_group.images:
+            try:
+                existing_images = json.loads(product_group.images)
+            except (json.JSONDecodeError, TypeError):
+                existing_images = []
+        
+        # 新しい画像ファイルを保存
+        new_images = []
+        if form.images.data:
+            files = request.files.getlist('images')
+            new_images = save_uploaded_files(files)
+        
+        # 既存の画像と新しい画像を結合
+        all_images = existing_images + new_images
+        
+        # 代表商品群を更新
+        product_group.name = form.name.data
+        product_group.description = form.description.data
+        product_group.images = json.dumps(all_images) if all_images else None
+        
+        db.session.commit()
+        flash('代表商品群が更新されました！', 'success')
+        return redirect(url_for('manage_product_groups', mentee_id=product_group.mentee_id))
+    
+    # 既存の画像を取得
+    existing_images = []
+    if product_group.images:
+        try:
+            existing_images = json.loads(product_group.images)
+        except (json.JSONDecodeError, TypeError):
+            existing_images = []
+    
+    return render_template('edit_product_group.html', 
+                         form=form, 
+                         product_group=product_group, 
+                         existing_images=existing_images)
 
 @app.route('/product-group/<int:product_group_id>/delete', methods=['POST'])
 @login_required
@@ -1046,10 +1173,69 @@ def delete_product_group(product_group_id):
         return jsonify({'success': False, 'message': 'アクセス権限がありません'}), 403
     
     try:
+        # 関連する画像ファイルを削除
+        if product_group.images:
+            try:
+                image_filenames = json.loads(product_group.images)
+                delete_uploaded_files(image_filenames)
+            except (json.JSONDecodeError, TypeError):
+                pass
+        
         mentee_id = product_group.mentee_id
         db.session.delete(product_group)
         db.session.commit()
         return jsonify({'success': True, 'message': '代表商品群が削除されました'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'エラーが発生しました: {str(e)}'}), 500
+
+@app.route('/uploads/product_groups/<filename>')
+def uploaded_file(filename):
+    """アップロードされた画像ファイルを提供"""
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/product-group/<int:product_group_id>/remove-image', methods=['POST'])
+@login_required
+def remove_product_group_image(product_group_id):
+    """代表商品群の画像を削除"""
+    product_group = ProductGroup.query.get_or_404(product_group_id)
+    
+    # セキュリティチェック
+    if current_user.role == 'mentee' and product_group.mentee.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'アクセス権限がありません'}), 403
+    elif current_user.role not in ['mentor', 'admin'] and current_user.role != 'mentee':
+        return jsonify({'success': False, 'message': 'アクセス権限がありません'}), 403
+    
+    try:
+        data = request.get_json()
+        filename_to_remove = data.get('filename')
+        
+        if not filename_to_remove:
+            return jsonify({'success': False, 'message': 'ファイル名が指定されていません'}), 400
+        
+        # 既存の画像リストを取得
+        existing_images = []
+        if product_group.images:
+            try:
+                existing_images = json.loads(product_group.images)
+            except (json.JSONDecodeError, TypeError):
+                existing_images = []
+        
+        # 指定されたファイルをリストから削除
+        if filename_to_remove in existing_images:
+            existing_images.remove(filename_to_remove)
+            
+            # ファイルを物理的に削除
+            delete_uploaded_files([filename_to_remove])
+            
+            # データベースを更新
+            product_group.images = json.dumps(existing_images) if existing_images else None
+            db.session.commit()
+            
+            return jsonify({'success': True, 'message': '画像が削除されました'})
+        else:
+            return jsonify({'success': False, 'message': '指定されたファイルが見つかりません'}), 404
+            
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'エラーが発生しました: {str(e)}'}), 500
@@ -1084,38 +1270,7 @@ def product_group_analysis(mentee_id):
                          all_time_progress=all_time_progress,
                          selected_weeks=weeks)
 
-def backup_database():
-    """データベースのバックアップを作成"""
-    db_path = os.path.join(app.instance_path, 'mentortrack.db')
-    if os.path.exists(db_path):
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        backup_path = os.path.join(app.instance_path, f'mentortrack_backup_{timestamp}.db')
-        shutil.copy2(db_path, backup_path)
-        print(f"データベースバックアップを作成しました: {backup_path}")
-        return backup_path
-    return None
-
-def migrate_database():
-    """データベースマイグレーション"""
-    with app.app_context():
-        # バックアップを作成
-        backup_database()
-        
-        # 既存のテーブル構造を確認
-        inspector = db.inspect(db.engine)
-        existing_columns = inspector.get_columns('product_group')
-        existing_column_names = [col['name'] for col in existing_columns]
-        
-        # imagesカラムが存在しない場合は追加
-        if 'images' not in existing_column_names:
-            try:
-                db.engine.execute('ALTER TABLE product_group ADD COLUMN images TEXT')
-                print("imagesカラムを追加しました")
-            except Exception as e:
-                print(f"カラム追加エラー: {e}")
-
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        migrate_database()
     app.run(debug=True)
