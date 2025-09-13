@@ -265,6 +265,98 @@ def create_notification(user_id, title, message, notification_type, related_id=N
     db.session.commit()
     return notification
 
+def get_product_group_progress(mentee_id, weeks=4):
+    """商品群別の進捗状況を取得"""
+    from datetime import datetime, timedelta
+    
+    # 指定週数分の過去の報告を取得
+    end_date = datetime.now()
+    start_date = end_date - timedelta(weeks=weeks)
+    
+    reports = WeeklyReport.query.filter(
+        WeeklyReport.mentee_id == mentee_id,
+        WeeklyReport.report_date >= start_date
+    ).order_by(WeeklyReport.report_date.desc()).all()
+    
+    # 商品群ごとに進捗を整理
+    product_groups = {}
+    
+    for report in reports:
+        product_group_name = report.product_group
+        
+        if product_group_name not in product_groups:
+            product_groups[product_group_name] = {
+                'name': product_group_name,
+                'reports': [],
+                'current_stage': None,
+                'stage_duration': 0,
+                'progress_status': 'unknown'
+            }
+        
+        product_groups[product_group_name]['reports'].append({
+            'date': report.report_date,
+            'stage': report.planning_stage,
+            'self_evaluation': report.self_evaluation
+        })
+    
+    # 各商品群の進捗状況を分析
+    for pg_name, pg_data in product_groups.items():
+        if pg_data['reports']:
+            # 最新の報告のステージを現在のステージとする
+            latest_report = pg_data['reports'][0]
+            pg_data['current_stage'] = latest_report['stage']
+            
+            # 現在のステージにいる期間を計算
+            current_stage_start = latest_report['date']
+            for report in pg_data['reports']:
+                if report['stage'] != latest_report['stage']:
+                    current_stage_start = report['date']
+                    break
+            
+            days_in_stage = (datetime.now() - current_stage_start).days
+            pg_data['stage_duration'] = days_in_stage
+            
+            # 最後の報告からの期間を計算
+            days_since_last_report = (datetime.now() - latest_report['date']).days
+            
+            # 進捗状況を判定（報告頻度ベース）
+            if days_since_last_report <= 7:
+                pg_data['progress_status'] = 'good'  # 順調
+            elif days_since_last_report <= 14:
+                pg_data['progress_status'] = 'warning'  # 注意
+            else:
+                pg_data['progress_status'] = 'danger'  # 停滞
+    
+    return list(product_groups.values())
+
+def get_stage_display_name(stage):
+    """企画ステージの表示名を取得"""
+    stage_names = {
+        'proposal_pre': '提案前',
+        'proposal_post': '提案済み',
+        'ordered': '発注済み',
+        'completed': '完了'
+    }
+    return stage_names.get(stage, stage)
+
+def get_progress_status_info(status):
+    """進捗状況の表示情報を取得"""
+    status_info = {
+        'good': {'class': 'success', 'icon': 'fas fa-arrow-up', 'text': '順調'},
+        'warning': {'class': 'warning', 'icon': 'fas fa-pause', 'text': '注意'},
+        'danger': {'class': 'danger', 'icon': 'fas fa-exclamation-triangle', 'text': '停滞'},
+        'unknown': {'class': 'secondary', 'icon': 'fas fa-question', 'text': '不明'}
+    }
+    return status_info.get(status, status_info['unknown'])
+
+# テンプレートコンテキストプロセッサー
+@app.context_processor
+def utility_processor():
+    return dict(
+        get_stage_display_name=get_stage_display_name,
+        get_progress_status_info=get_progress_status_info
+    )
+
 # ルート
 @app.route('/')
 def index():
@@ -399,7 +491,14 @@ def mentee_dashboard(mentee_id):
             return redirect(url_for('my_dashboard'))
     
     reports = WeeklyReport.query.filter_by(mentee_id=mentee_id).order_by(WeeklyReport.report_date.desc()).all()
-    return render_template('mentee_dashboard.html', mentee=mentee, reports=reports)
+    
+    # 商品群別進捗データを取得
+    product_group_progress = get_product_group_progress(mentee_id)
+    
+    return render_template('mentee_dashboard.html', 
+                         mentee=mentee, 
+                         reports=reports, 
+                         product_group_progress=product_group_progress)
 
 @app.route('/mentor/dashboard')
 @login_required
@@ -948,6 +1047,36 @@ def delete_product_group(product_group_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'エラーが発生しました: {str(e)}'}), 500
+
+@app.route('/mentee/<int:mentee_id>/product-group-analysis')
+@login_required
+def product_group_analysis(mentee_id):
+    """商品群別詳細分析ページ"""
+    mentee = Mentee.query.get_or_404(mentee_id)
+    
+    # セキュリティチェック
+    if current_user.role == 'mentee' and mentee.user_id != current_user.id:
+        flash('アクセス権限がありません。', 'danger')
+        return redirect(url_for('my_dashboard'))
+    elif current_user.role not in ['mentor', 'admin'] and current_user.role != 'mentee':
+        flash('アクセス権限がありません。', 'danger')
+        return redirect(url_for('my_dashboard'))
+    
+    # 期間パラメータを取得（デフォルトは12週間）
+    weeks = request.args.get('weeks', 12, type=int)
+    weeks = min(max(weeks, 1), 52)  # 1-52週間に制限
+    
+    # 商品群別進捗データを取得
+    product_group_progress = get_product_group_progress(mentee_id, weeks)
+    
+    # 全期間の進捗データも取得（比較用）
+    all_time_progress = get_product_group_progress(mentee_id, 52)
+    
+    return render_template('product_group_analysis.html', 
+                         mentee=mentee, 
+                         product_group_progress=product_group_progress,
+                         all_time_progress=all_time_progress,
+                         selected_weeks=weeks)
 
 if __name__ == '__main__':
     with app.app_context():

@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}商品群別進捗分析 - {{ mentee.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-chart-line me-2"></i>商品群別進捗分析
+                </h2>
+                <a href="{{ url_for('mentee_dashboard', mentee_id=mentee.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> ダッシュボードに戻る
+                </a>
+            </div>
+
+            <!-- 期間選択 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">分析期間の選択</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <form method="GET" class="d-flex align-items-center">
+                                <label for="weeks" class="form-label me-3 mb-0">分析期間:</label>
+                                <select name="weeks" id="weeks" class="form-select me-3" style="width: auto;" onchange="this.form.submit()">
+                                    <option value="4" {% if selected_weeks == 4 %}selected{% endif %}>直近4週間</option>
+                                    <option value="8" {% if selected_weeks == 8 %}selected{% endif %}>直近8週間</option>
+                                    <option value="12" {% if selected_weeks == 12 %}selected{% endif %}>直近12週間</option>
+                                    <option value="24" {% if selected_weeks == 24 %}selected{% endif %}>直近24週間</option>
+                                    <option value="52" {% if selected_weeks == 52 %}selected{% endif %}>直近52週間（1年）</option>
+                                </select>
+                            </form>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <small class="text-muted">
+                                {{ product_group_progress|length }}個の商品群を分析中
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if product_group_progress %}
+            <!-- 進捗サマリー -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">
+                                <i class="fas fa-arrow-up"></i>
+                                {{ product_group_progress|selectattr('progress_status', 'equalto', 'good')|list|length }}
+                            </h5>
+                            <p class="card-text">順調</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-warning">
+                                <i class="fas fa-pause"></i>
+                                {{ product_group_progress|selectattr('progress_status', 'equalto', 'warning')|list|length }}
+                            </h5>
+                            <p class="card-text">注意</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ product_group_progress|selectattr('progress_status', 'equalto', 'danger')|list|length }}
+                            </h5>
+                            <p class="card-text">停滞</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">
+                                <i class="fas fa-boxes"></i>
+                                {{ product_group_progress|length }}
+                            </h5>
+                            <p class="card-text">総商品群数</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 商品群別詳細分析 -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">商品群別詳細分析</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for pg in product_group_progress %}
+                        <div class="col-lg-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">{{ pg.name }}</h6>
+                                        <span class="badge bg-{{ get_progress_status_info(pg.progress_status).class }}">
+                                            <i class="{{ get_progress_status_info(pg.progress_status).icon }} me-1"></i>
+                                            {{ get_progress_status_info(pg.progress_status).text }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- 現在のステージ情報 -->
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <strong>現在のステージ:</strong><br>
+                                            <span class="badge bg-primary">{{ get_stage_display_name(pg.current_stage) }}</span>
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>最後の報告:</strong><br>
+                                            <span class="text-{{ get_progress_status_info(pg.progress_status).class }}">
+                                                {{ pg.stage_duration }}日前
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 進捗バー -->
+                                    <div class="mb-3">
+                                        <label class="form-label small">進捗状況</label>
+                                        <div class="progress" style="height: 12px;">
+                                            {% set stage_progress = {'proposal_pre': 25, 'proposal_post': 50, 'ordered': 75, 'completed': 100} %}
+                                            <div class="progress-bar bg-{{ get_progress_status_info(pg.progress_status).class }}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ stage_progress.get(pg.current_stage, 0) }}%"
+                                                 aria-valuenow="{{ stage_progress.get(pg.current_stage, 0) }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                {{ stage_progress.get(pg.current_stage, 0) }}%
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 報告履歴 -->
+                                    <div class="mb-3">
+                                        <label class="form-label small">報告履歴（直近{{ selected_weeks }}週間）</label>
+                                        {% if pg.reports %}
+                                            <div class="timeline">
+                                                {% for report in pg.reports[:5] %}
+                                                <div class="timeline-item d-flex align-items-center mb-2">
+                                                    <div class="timeline-marker bg-{{ get_progress_status_info(pg.progress_status).class }} me-3" style="width: 8px; height: 8px; border-radius: 50%;"></div>
+                                                    <div class="flex-grow-1">
+                                                        <small class="text-muted">
+                                                            {{ report.date.strftime('%m/%d') }} - 
+                                                            {{ get_stage_display_name(report.stage) }}
+                                                            {% if report.self_evaluation %}
+                                                                (評価: {{ report.self_evaluation }}/3)
+                                                            {% endif %}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                                {% if pg.reports|length > 5 %}
+                                                <div class="text-muted small">
+                                                    ...他{{ pg.reports|length - 5 }}件
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <p class="text-muted small">報告がありません</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- 推奨アクション -->
+                                    <div class="alert alert-{{ 'success' if pg.progress_status == 'good' else 'warning' if pg.progress_status == 'warning' else 'danger' }} alert-sm">
+                                        <small>
+                                            <strong>推奨アクション:</strong>
+                                            {% if pg.progress_status == 'good' %}
+                                                定期的に報告されています。この調子で継続してください。
+                                            {% elif pg.progress_status == 'warning' %}
+                                                1週間以上報告がありません。今週中に報告することをお勧めします。
+                                            {% elif pg.progress_status == 'danger' %}
+                                                2週間以上報告がありません。早急にメンターと対策を検討してください。
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- データなしの場合 -->
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">分析データがありません</h5>
+                    <p class="text-muted">週次報告を作成すると、ここに進捗分析が表示されます。</p>
+                    <a href="{{ url_for('new_report', mentee_id=mentee.id) }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>最初の報告を作成
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 20px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.alert-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}
