@@ -119,6 +119,18 @@ class MentorComment(db.Model):
     # リレーションシップ
     mentor = db.relationship('User', backref='mentor_comments')
 
+class ProductGroup(db.Model):
+    """代表商品群マスタ"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    mentee_id = db.Column(db.Integer, db.ForeignKey('mentee.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # リレーションシップ
+    mentee = db.relationship('Mentee', backref='product_groups')
+
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -181,9 +193,9 @@ class WeeklyReportForm(FlaskForm):
                                         ('completed', '完了')],
                                 validators=[DataRequired()])
     
-    product_group = TextAreaField('代表商品群', 
-                                 validators=[DataRequired(), Length(min=1, max=500)],
-                                 render_kw={'rows': 3, 'placeholder': '今週取り組んだ商品群を記述してください'})
+    product_group = SelectField('代表商品群', 
+                               validators=[DataRequired()],
+                               coerce=int)
     
     # 進捗チェックリスト（動的に生成）
     progress_items = TextAreaField('今週の進捗', 
@@ -230,6 +242,14 @@ class MenteeProfileForm(FlaskForm):
                       validators=[DataRequired(), Length(min=1, max=100)],
                       render_kw={'placeholder': 'メンティ名を入力してください'})
     submit = SubmitField('プロファイルを更新')
+
+class ProductGroupForm(FlaskForm):
+    name = StringField('代表商品群名', 
+                      validators=[DataRequired(), Length(min=1, max=200)],
+                      render_kw={'placeholder': '代表商品群名を入力してください'})
+    description = TextAreaField('説明', 
+                               render_kw={'rows': 3, 'placeholder': '商品群の説明（任意）'})
+    submit = SubmitField('登録')
 
 # ヘルパー関数
 def create_notification(user_id, title, message, notification_type, related_id=None):
@@ -528,6 +548,14 @@ def new_report(mentee_id):
                 return redirect(url_for('my_dashboard'))
         
         form = WeeklyReportForm()
+        
+        # 代表商品群の選択肢を動的に設定
+        product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
+        form.product_group.choices = [(pg.id, pg.name) for pg in product_groups]
+        
+        # 代表商品群が登録されていない場合の警告
+        if not product_groups:
+            flash('代表商品群が登録されていません。先に代表商品群を登録してください。', 'warning')
     except Exception as e:
         flash(f'エラーが発生しました: {str(e)}', 'danger')
         return redirect(url_for('my_dashboard'))
@@ -548,10 +576,14 @@ def new_report(mentee_id):
             'redid_task': form.redid_task.data
         }
         
+        # 選択された代表商品群の名前を取得
+        selected_product_group = ProductGroup.query.get(form.product_group.data)
+        product_group_name = selected_product_group.name if selected_product_group else '不明'
+        
         report = WeeklyReport(
             mentee_id=mentee_id,
             planning_stage=form.planning_stage.data,
-            product_group=form.product_group.data,
+            product_group=product_group_name,
             progress_items=form.progress_items.data,
             actions_taken=form.actions_taken.data,
             insights_concerns=form.insights_concerns.data,
@@ -862,6 +894,60 @@ def manage_todo_list(mentee_id):
         return redirect(url_for('manage_todo_list', mentee_id=mentee_id))
     
     return render_template('manage_todo_list.html', mentee=mentee, todo_list=todo_list)
+
+@app.route('/mentee/<int:mentee_id>/product-groups', methods=['GET', 'POST'])
+@login_required
+def manage_product_groups(mentee_id):
+    """代表商品群管理"""
+    mentee = Mentee.query.get_or_404(mentee_id)
+    
+    # セキュリティチェック
+    if current_user.role == 'mentee' and mentee.user_id != current_user.id:
+        flash('アクセス権限がありません。', 'danger')
+        return redirect(url_for('my_dashboard'))
+    elif current_user.role not in ['mentor', 'admin'] and current_user.role != 'mentee':
+        flash('アクセス権限がありません。', 'danger')
+        return redirect(url_for('my_dashboard'))
+    
+    form = ProductGroupForm()
+    
+    if form.validate_on_submit():
+        # 新しい代表商品群を登録
+        product_group = ProductGroup(
+            name=form.name.data,
+            description=form.description.data,
+            mentee_id=mentee_id
+        )
+        db.session.add(product_group)
+        db.session.commit()
+        flash('代表商品群が登録されました！', 'success')
+        return redirect(url_for('manage_product_groups', mentee_id=mentee_id))
+    
+    # 既存の代表商品群を取得
+    product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).order_by(ProductGroup.created_at.desc()).all()
+    
+    return render_template('manage_product_groups.html', mentee=mentee, form=form, product_groups=product_groups)
+
+@app.route('/product-group/<int:product_group_id>/delete', methods=['POST'])
+@login_required
+def delete_product_group(product_group_id):
+    """代表商品群削除"""
+    product_group = ProductGroup.query.get_or_404(product_group_id)
+    
+    # セキュリティチェック
+    if current_user.role == 'mentee' and product_group.mentee.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'アクセス権限がありません'}), 403
+    elif current_user.role not in ['mentor', 'admin'] and current_user.role != 'mentee':
+        return jsonify({'success': False, 'message': 'アクセス権限がありません'}), 403
+    
+    try:
+        mentee_id = product_group.mentee_id
+        db.session.delete(product_group)
+        db.session.commit()
+        return jsonify({'success': True, 'message': '代表商品群が削除されました'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'エラーが発生しました: {str(e)}'}), 500
 
 if __name__ == '__main__':
     with app.app_context():
