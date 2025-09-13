@@ -75,7 +75,7 @@
                                         
                                         <!-- 進捗バー -->
                                         <div class="progress mb-2" style="height: 8px;">
-                                            {% set stage_progress = {'proposal_pre': 25, 'proposal_post': 50, 'ordered': 75, 'completed': 100} %}
+                                            {% set stage_progress = {'proposal_pre': 17, 'proposal_post': 33, 'ordered': 50, 'temporary_listing': 67, 'page_up': 83, 'second_lot_ordered': 100} %}
                                             <div class="progress-bar bg-{{ get_progress_status_info(pg.progress_status).class }}" 
                                                  role="progressbar" 
                                                  style="width: {{ stage_progress.get(pg.current_stage, 0) }}%"
@@ -123,12 +123,8 @@
                                     <h6 class="card-title mb-0">
                                         {{ report.report_date.strftime('%Y年%m月%d日') }}の報告
                                     </h6>
-                                    <span class="badge bg-{{ 'success' if report.planning_stage == 'completed' else 'primary' if report.planning_stage == 'ordered' else 'warning' if report.planning_stage == 'proposal_post' else 'secondary' }} stage-badge">
-                                        {% if report.planning_stage == 'proposal_pre' %}提案前
-                                        {% elif report.planning_stage == 'proposal_post' %}提案済み
-                                        {% elif report.planning_stage == 'ordered' %}発注済み
-                                        {% elif report.planning_stage == 'completed' %}完了
-                                        {% endif %}
+                                    <span class="badge bg-{{ 'success' if report.planning_stage == 'second_lot_ordered' else 'primary' if report.planning_stage == 'page_up' else 'info' if report.planning_stage == 'temporary_listing' else 'primary' if report.planning_stage == 'ordered' else 'warning' if report.planning_stage == 'proposal_post' else 'secondary' }} stage-badge">
+                                        {{ get_stage_display_name(report.planning_stage) }}
                                     </span>
                                 </div>
                                 

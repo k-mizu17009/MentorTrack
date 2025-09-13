@@ -130,7 +130,7 @@
                                     <div class="mb-3">
                                         <label class="form-label small">進捗状況</label>
                                         <div class="progress" style="height: 12px;">
-                                            {% set stage_progress = {'proposal_pre': 25, 'proposal_post': 50, 'ordered': 75, 'completed': 100} %}
+                                            {% set stage_progress = {'proposal_pre': 17, 'proposal_post': 33, 'ordered': 50, 'temporary_listing': 67, 'page_up': 83, 'second_lot_ordered': 100} %}
                                             <div class="progress-bar bg-{{ get_progress_status_info(pg.progress_status).class }}" 
                                                  role="progressbar" 
                                                  style="width: {{ stage_progress.get(pg.current_stage, 0) }}%"

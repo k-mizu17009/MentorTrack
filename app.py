@@ -190,7 +190,9 @@ class WeeklyReportForm(FlaskForm):
                                 choices=[('proposal_pre', '提案前'), 
                                         ('proposal_post', '提案済み'), 
                                         ('ordered', '発注済み'), 
-                                        ('completed', '完了')],
+                                        ('temporary_listing', '仮出品済み'),
+                                        ('page_up', 'ページアップ済み'),
+                                        ('second_lot_ordered', '2ロット目発注済み')],
                                 validators=[DataRequired()])
     
     product_group = SelectField('代表商品群', 
@@ -335,7 +337,9 @@ def get_stage_display_name(stage):
         'proposal_pre': '提案前',
         'proposal_post': '提案済み',
         'ordered': '発注済み',
-        'completed': '完了'
+        'temporary_listing': '仮出品済み',
+        'page_up': 'ページアップ済み',
+        'second_lot_ordered': '2ロット目発注済み'
     }
     return stage_names.get(stage, stage)
 
