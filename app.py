@@ -7,6 +7,8 @@ from wtforms import StringField, TextAreaField, SelectField, RadioField, SubmitF
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from datetime import datetime, timedelta
 import os
+import shutil
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -1082,7 +1084,38 @@ def product_group_analysis(mentee_id):
                          all_time_progress=all_time_progress,
                          selected_weeks=weeks)
 
+def backup_database():
+    """データベースのバックアップを作成"""
+    db_path = os.path.join(app.instance_path, 'mentortrack.db')
+    if os.path.exists(db_path):
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_path = os.path.join(app.instance_path, f'mentortrack_backup_{timestamp}.db')
+        shutil.copy2(db_path, backup_path)
+        print(f"データベースバックアップを作成しました: {backup_path}")
+        return backup_path
+    return None
+
+def migrate_database():
+    """データベースマイグレーション"""
+    with app.app_context():
+        # バックアップを作成
+        backup_database()
+        
+        # 既存のテーブル構造を確認
+        inspector = db.inspect(db.engine)
+        existing_columns = inspector.get_columns('product_group')
+        existing_column_names = [col['name'] for col in existing_columns]
+        
+        # imagesカラムが存在しない場合は追加
+        if 'images' not in existing_column_names:
+            try:
+                db.engine.execute('ALTER TABLE product_group ADD COLUMN images TEXT')
+                print("imagesカラムを追加しました")
+            except Exception as e:
+                print(f"カラム追加エラー: {e}")
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        migrate_database()
     app.run(debug=True)

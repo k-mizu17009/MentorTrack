@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}代表商品群編集 - {{ product_group.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>代表商品群編集</h2>
+                <a href="{{ url_for('manage_product_groups', mentee_id=mentee.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> 一覧に戻る
+                </a>
+            </div>
+
+            <div class="row">
+                <!-- 編集フォーム -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">基本情報を編集</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" enctype="multipart/form-data">
+                                {{ form.hidden_tag() }}
+                                
+                                <div class="form-group mb-3">
+                                    {{ form.name.label(class="form-label") }}
+                                    {{ form.name(class="form-control") }}
+                                    {% if form.name.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.name.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    {{ form.description.label(class="form-label") }}
+                                    {{ form.description(class="form-control") }}
+                                    {% if form.description.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.description.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    {{ form.new_images.label(class="form-label") }}
+                                    {{ form.new_images(class="form-control") }}
+                                    <small class="form-text text-muted">新しい画像を追加できます（複数選択可能）</small>
+                                    {% if form.new_images.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.new_images.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="d-grid">
+                                    {{ form.submit(class="btn btn-primary") }}
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 現在の画像一覧 -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">現在の画像</h5>
+                        </div>
+                        <div class="card-body">
+                            {% set images = get_product_group_images(product_group) %}
+                            {% if images %}
+                                <div class="row">
+                                    {% for image in images %}
+                                    <div class="col-6 col-md-4 mb-3">
+                                        <div class="position-relative">
+                                            <img src="{{ url_for('static', filename=image) }}" 
+                                                 class="img-fluid rounded" 
+                                                 style="height: 120px; object-fit: cover; width: 100%;"
+                                                 alt="{{ product_group.name }}">
+                                            <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
+                                                    onclick="deleteImage('{{ image }}')"
+                                                    style="border-radius: 50%; width: 30px; height: 30px; padding: 0;">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-image fa-3x mb-3"></i>
+                                    <p>画像が登録されていません</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteImage(imagePath) {
+    if (confirm('この画像を削除しますか？')) {
+        fetch(`/product-group/{{ product_group.id }}/delete-image`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                image_path: imagePath
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('エラー: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('エラーが発生しました。');
+        });
+    }
+}
+</script>
+{% endblock %}
