@@ -622,7 +622,26 @@ def mentor_dashboard():
     # メンティ一覧を取得（フィルター用）
     mentees = Mentee.query.order_by(Mentee.name).all()
     
-    return render_template('mentor_dashboard.html', reports=reports, mentees=mentees, selected_mentee=mentee_filter)
+    # 商品群別進捗データを取得
+    product_group_progress = []
+    if mentee_filter:
+        # 特定のメンティの進捗データ
+        selected_mentee = Mentee.query.filter(Mentee.name.contains(mentee_filter)).first()
+        if selected_mentee:
+            product_group_progress = get_product_group_progress(selected_mentee.id)
+    else:
+        # 全メンティの進捗データ
+        for mentee in mentees:
+            mentee_progress = get_product_group_progress(mentee.id)
+            for pg in mentee_progress:
+                pg['mentee_name'] = mentee.name
+            product_group_progress.extend(mentee_progress)
+    
+    return render_template('mentor_dashboard.html', 
+                         reports=reports, 
+                         mentees=mentees, 
+                         selected_mentee=mentee_filter,
+                         product_group_progress=product_group_progress)
 
 @app.route('/admin/dashboard')
 @login_required
