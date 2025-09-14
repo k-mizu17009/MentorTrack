@@ -167,33 +167,31 @@
                             <p class="section-description">今週の活動内容を詳しく記録してください</p>
                         </div>
                         
-                        <div class="form-group-modern mb-4">
-                            <label class="form-label-modern">
-                                <i class="fas fa-check-circle me-2"></i>今週の進捗
-                            </label>
-                            <div class="info-box">
-                                <i class="fas fa-info-circle me-2"></i>
-                                今週完了した項目を具体的に記述してください。例：「市場調査完了」「競合分析実施」「価格設定検討」など
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group-modern mb-4">
+                                    <label class="form-label-modern">
+                                        <i class="fas fa-check-circle me-2"></i>今週の進捗
+                                    </label>
+                                    {{ form.progress_items(class="form-control-modern", rows="4", placeholder="今週完了した項目を具体的に記述してください。例：「市場調査完了」「競合分析実施」「価格設定検討」など") }}
+                                </div>
                             </div>
-                            {{ form.progress_items(class="form-control-modern", rows="4") }}
-                        </div>
-
-                        <div class="form-group-modern mb-4">
-                            <label class="form-label-modern">
-                                <i class="fas fa-running me-2"></i>実施した行動
-                            </label>
-                            {{ form.actions_taken(class="form-control-modern", rows="4") }}
-                        </div>
-
-                        <div class="form-group-modern mb-4">
-                            <label class="form-label-modern">
-                                <i class="fas fa-lightbulb me-2"></i>気づき・悩み
-                            </label>
-                            <div class="insight-box-modern">
-                                <i class="fas fa-brain me-2"></i>
-                                <strong>思考の言語化：</strong>今週感じた気づきや悩みを自由に記述してください。これがメンターとの対話のきっかけになります。
+                            <div class="col-md-4">
+                                <div class="form-group-modern mb-4">
+                                    <label class="form-label-modern">
+                                        <i class="fas fa-running me-2"></i>実施した行動
+                                    </label>
+                                    {{ form.actions_taken(class="form-control-modern", rows="4", placeholder="今週実施した具体的な行動を記述してください") }}
+                                </div>
                             </div>
-                            {{ form.insights_concerns(class="form-control-modern", rows="4") }}
+                            <div class="col-md-4">
+                                <div class="form-group-modern mb-4">
+                                    <label class="form-label-modern">
+                                        <i class="fas fa-lightbulb me-2"></i>気づき・悩み
+                                    </label>
+                                    {{ form.insights_concerns(class="form-control-modern", rows="4", placeholder="今週感じた気づきや悩みを自由に記述してください。これがメンターとの対話のきっかけになります。") }}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -218,24 +216,9 @@
                                 
                                 <div class="form-group-modern mb-3">
                                     <label class="form-label-modern">
-                                        <i class="fas fa-balance-scale me-2"></i>{{ form.difficult_decision.label.text }}
-                                    </label>
-                                    {{ form.difficult_decision(class="form-control-modern", rows="2") }}
-                                </div>
-                                
-                                <div class="form-group-modern mb-3">
-                                    <label class="form-label-modern">
                                         <i class="fas fa-graduation-cap me-2"></i>{{ form.learned_from_senior.label.text }}
                                     </label>
                                     {{ form.learned_from_senior(class="form-control-modern", rows="2") }}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group-modern mb-3">
-                                    <label class="form-label-modern">
-                                        <i class="fas fa-user-check me-2"></i>{{ form.own_decision.label.text }}
-                                    </label>
-                                    {{ form.own_decision(class="form-control-modern", rows="2") }}
                                 </div>
                                 
                                 <div class="form-group-modern mb-3">
@@ -243,6 +226,21 @@
                                         <i class="fas fa-redo me-2"></i>{{ form.redid_task.label.text }}
                                     </label>
                                     {{ form.redid_task(class="form-control-modern", rows="2") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group-modern mb-3">
+                                    <label class="form-label-modern">
+                                        <i class="fas fa-balance-scale me-2"></i>{{ form.difficult_decision.label.text }}
+                                    </label>
+                                    {{ form.difficult_decision(class="form-control-modern", rows="2") }}
+                                </div>
+                                
+                                <div class="form-group-modern mb-3">
+                                    <label class="form-label-modern">
+                                        <i class="fas fa-user-check me-2"></i>{{ form.own_decision.label.text }}
+                                    </label>
+                                    {{ form.own_decision(class="form-control-modern", rows="2") }}
                                 </div>
                             </div>
                         </div>
@@ -481,15 +479,15 @@
 
 /* フォームセクション */
 .form-section {
-    margin-bottom: 3rem;
-    padding: 2rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
     background: #f8f9fa;
-    border-radius: 15px;
+    border-radius: 12px;
     border: 1px solid #e9ecef;
 }
 
 .section-header {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     text-align: center;
 }
 
@@ -507,7 +505,7 @@
 
 /* フォーム要素 */
 .form-group-modern {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .form-label-modern {
@@ -531,6 +529,17 @@
     border-color: #667eea;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
     background: white;
+}
+
+.form-control-modern::placeholder {
+    color: #6c757d;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+.form-control-modern:focus::placeholder {
+    color: #adb5bd;
+    opacity: 0.6;
 }
 
 .form-select-modern {
@@ -564,10 +573,10 @@
 /* 画像プレビュー */
 .image-preview-modern {
     border: 2px dashed #dee2e6;
-    border-radius: 15px;
-    padding: 1rem;
+    border-radius: 12px;
+    padding: 0.75rem;
     text-align: center;
-    min-height: 250px;
+    min-height: 180px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -592,10 +601,10 @@
 .product-image-container {
     position: relative;
     max-width: 100%;
-    max-height: 220px;
+    max-height: 160px;
     overflow: hidden;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -605,11 +614,11 @@
 
 .product-image {
     max-width: 100%;
-    max-height: 220px;
+    max-height: 160px;
     width: auto;
     height: auto;
     object-fit: contain;
-    border-radius: 8px;
+    border-radius: 6px;
 }
 
 .image-overlay {
@@ -681,26 +690,6 @@
     font-size: 1rem;
 }
 
-/* 情報ボックス */
-.info-box {
-    background: #e3f2fd;
-    border: 1px solid #bbdefb;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    color: #1565c0;
-    font-size: 0.9rem;
-}
-
-.insight-box-modern {
-    background: #fff3e0;
-    border: 1px solid #ffcc02;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    color: #e65100;
-    font-size: 0.9rem;
-}
 
 /* アクションボタン */
 .action-buttons {
@@ -876,6 +865,23 @@
     
     .card-body-modern {
         padding: 1rem;
+    }
+    
+    /* 詳細記録セクションのモバイル対応 */
+    .form-section .row .col-md-4 {
+        margin-bottom: 1rem;
+    }
+    
+    /* 追加の問いかけセクションのモバイル対応 */
+    .form-section .row .col-md-6 .form-group-modern {
+        margin-bottom: 1.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    /* タブレット表示での調整 */
+    .form-section .row .col-md-4 {
+        margin-bottom: 1.5rem;
     }
 }
 </style>
