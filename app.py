@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_bcrypt import Bcrypt
+from werkzeug.security import check_password_hash, generate_password_hash
 from wtforms import StringField, TextAreaField, SelectField, RadioField, SubmitField, BooleanField, PasswordField, FileField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from datetime import datetime, timedelta
@@ -28,7 +28,6 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 db = SQLAlchemy(app)
-bcrypt = Bcrypt(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -44,15 +43,15 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(60), nullable=False)
+    password_hash = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(20), default='mentee')  # mentee, mentor, admin
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     def set_password(self, password):
-        self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+        self.password_hash = generate_password_hash(password)
     
     def check_password(self, password):
-        return bcrypt.check_password_hash(self.password_hash, password)
+        return check_password_hash(self.password_hash, password)
 
 class Mentee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -530,7 +529,15 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
+        print(f"ログイン試行: メール={form.email.data}")
         user = User.query.filter_by(email=form.email.data).first()
+        print(f"ユーザーが見つかった: {user is not None}")
+        if user:
+            print(f"ユーザー名: {user.username}")
+            print(f"パスワードハッシュ: {user.password_hash[:50]}...")
+            password_check = user.check_password(form.password.data)
+            print(f"パスワードチェック結果: {password_check}")
+        
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
