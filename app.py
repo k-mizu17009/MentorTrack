@@ -1067,7 +1067,7 @@ def manage_todo_list(mentee_id):
         
         db.session.commit()
         flash('Todoリストが更新されました！', 'success')
-        return redirect(url_for('manage_todo_list', mentee_id=mentee_id))
+        return redirect(url_for('new_report', mentee_id=mentee_id))
     
     return render_template('manage_todo_list.html', mentee=mentee, todo_list=todo_list)
 

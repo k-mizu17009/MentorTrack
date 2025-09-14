@@ -120,7 +120,7 @@
                 <h5 class="mb-0">
                     <i class="fas fa-tasks me-2"></i>月次面談Todoリスト
                 </h5>
-                <p class="mb-0 mt-1 text-muted small">代表商品群の確認に活用してください</p>
+                <p class="mb-0 mt-1 text-white small">代表商品群の確認に活用してください</p>
             </div>
             <div class="card-body">
                 {% if todo_list %}
@@ -166,13 +166,24 @@
                 <div class="text-center text-muted">
                     <i class="fas fa-info-circle fa-2x mb-3"></i>
                     <p>Todoリストが設定されていません。</p>
-                    <a href="{{ url_for('manage_todo_list', mentee_id=mentee.id) }}" class="btn btn-outline-primary btn-sm">
-                        Todoリストを設定
+                    <a href="{{ url_for('manage_todo_list', mentee_id=mentee.id) }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>Todoリストを設定
                     </a>
                 </div>
                 {% endif %}
                 
                 <div class="mt-3">
+                    <div class="d-flex justify-content-end mb-2">
+                        {% if todo_list %}
+                        <a href="{{ url_for('manage_todo_list', mentee_id=mentee.id) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i>修正
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('manage_todo_list', mentee_id=mentee.id) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>設定
+                        </a>
+                        {% endif %}
+                    </div>
                     <small class="text-muted">
                         <i class="fas fa-info-circle me-1"></i>
                         このTodoリストを参考に、代表商品群を記入してください
