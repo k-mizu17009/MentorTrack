@@ -341,8 +341,15 @@ def get_product_group_progress(mentee_id, weeks=4):
         product_group_name = report.product_group
         
         if product_group_name not in product_groups:
+            # ProductGroupモデルから画像情報を取得
+            product_group = ProductGroup.query.filter_by(
+                name=product_group_name, 
+                mentee_id=mentee_id
+            ).first()
+            
             product_groups[product_group_name] = {
                 'name': product_group_name,
+                'images': product_group.images if product_group else None,
                 'reports': [],
                 'current_stage': None,
                 'stage_duration': 0,
