@@ -353,7 +353,8 @@ def get_product_group_progress(mentee_id, weeks=4):
                 'reports': [],
                 'current_stage': None,
                 'stage_duration': 0,
-                'progress_status': 'unknown'
+                'progress_status': 'unknown',
+                'is_completed': False
             }
         
         product_groups[product_group_name]['reports'].append({
@@ -369,6 +370,9 @@ def get_product_group_progress(mentee_id, weeks=4):
             # 最新の報告のステージを現在のステージとする
             latest_report = pg_data['reports'][0]
             pg_data['current_stage'] = latest_report['stage']
+            
+            # 完了ステージかどうかを判定
+            pg_data['is_completed'] = latest_report['stage'] == 'second_lot_ordered'
             
             # 現在のステージにいる期間を計算
             current_stage_start = latest_report['date']

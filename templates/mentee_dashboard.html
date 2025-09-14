@@ -52,59 +52,150 @@
                                     順調: 7日以内に報告 / 注意: 8-14日 / 停滞: 15日以上
                                 </small>
                             </div>
-                            <a href="{{ url_for('product_group_analysis', mentee_id=mentee.id) }}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-chart-bar me-1"></i>詳細分析
-                            </a>
+                            <div class="d-flex gap-2">
+                                <!-- フィルターボタン -->
+                                <div class="btn-group" role="group" aria-label="フィルター">
+                                    <input type="radio" class="btn-check" name="filter" id="filter-active" value="active" checked>
+                                    <label class="btn btn-outline-light btn-sm" for="filter-active">
+                                        <i class="fas fa-play me-1"></i>進行中のみ
+                                    </label>
+                                    
+                                    <input type="radio" class="btn-check" name="filter" id="filter-completed" value="completed">
+                                    <label class="btn btn-outline-light btn-sm" for="filter-completed">
+                                        <i class="fas fa-check me-1"></i>完了済みのみ
+                                    </label>
+                                    
+                                    <input type="radio" class="btn-check" name="filter" id="filter-all" value="all">
+                                    <label class="btn btn-outline-light btn-sm" for="filter-all">
+                                        <i class="fas fa-list me-1"></i>すべて表示
+                                    </label>
+                                </div>
+                                <a href="{{ url_for('product_group_analysis', mentee_id=mentee.id) }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-chart-bar me-1"></i>詳細分析
+                                </a>
+                            </div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            {% for pg in product_group_progress %}
-                            <div class="col-md-6 col-lg-4 mb-3">
-                                <div class="card h-100">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <h6 class="card-title mb-0">{{ pg.name }}</h6>
-                                            <span class="badge bg-{{ get_progress_status_info(pg.progress_status).class }}">
-                                                <i class="{{ get_progress_status_info(pg.progress_status).icon }} me-1"></i>
-                                                {{ get_progress_status_info(pg.progress_status).text }}
-                                            </span>
-                                        </div>
-                                        
-                                        <p class="card-text small text-muted mb-2">
-                                            <strong>現在のステージ:</strong> {{ get_stage_display_name(pg.current_stage) }}
-                                        </p>
-                                        
-                                        <p class="card-text small text-muted mb-2">
-                                            <strong>最後の報告:</strong> {{ pg.stage_duration }}日前
-                                        </p>
-                                        
-                                        <!-- 進捗バー -->
-                                        <div class="progress mb-2" style="height: 8px;">
-                                            {% set stage_progress = {'proposal_pre': 17, 'proposal_post': 33, 'ordered': 50, 'temporary_listing': 67, 'page_up': 83, 'second_lot_ordered': 100} %}
-                                            <div class="progress-bar bg-{{ get_progress_status_info(pg.progress_status).class }}" 
-                                                 role="progressbar" 
-                                                 style="width: {{ stage_progress.get(pg.current_stage, 0) }}%"
-                                                 aria-valuenow="{{ stage_progress.get(pg.current_stage, 0) }}" 
-                                                 aria-valuemin="0" 
-                                                 aria-valuemax="100">
+                        <!-- 進行中の商品群 -->
+                        <div id="active-products" class="product-group-section">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-play me-2"></i>進行中の商品群
+                                <span class="badge bg-primary ms-2" id="active-count">{{ product_group_progress|selectattr('is_completed', 'equalto', false)|list|length }}</span>
+                            </h6>
+                            <div class="row">
+                                {% for pg in product_group_progress %}
+                                {% if not pg.is_completed %}
+                                <div class="col-md-6 col-lg-4 mb-3 product-card" data-status="active">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="card-title mb-0">{{ pg.name }}</h6>
+                                                <span class="badge bg-{{ get_progress_status_info(pg.progress_status).class }}">
+                                                    <i class="{{ get_progress_status_info(pg.progress_status).icon }} me-1"></i>
+                                                    {{ get_progress_status_info(pg.progress_status).text }}
+                                                </span>
                                             </div>
-                                        </div>
-                                        
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <small class="text-muted">
-                                                {% if pg.reports|length > 0 %}
-                                                    {{ pg.reports|length }}回の報告
-                                                {% else %}
-                                                    報告なし
-                                                {% endif %}
-                                            </small>
+                                            
+                                            <p class="card-text small text-muted mb-2">
+                                                <strong>現在のステージ:</strong> {{ get_stage_display_name(pg.current_stage) }}
+                                            </p>
+                                            
+                                            <p class="card-text small text-muted mb-2">
+                                                <strong>最後の報告:</strong> {{ pg.stage_duration }}日前
+                                            </p>
+                                            
+                                            <!-- 進捗バー -->
+                                            <div class="progress mb-2" style="height: 8px;">
+                                                {% set stage_progress = {'proposal_pre': 17, 'proposal_post': 33, 'ordered': 50, 'temporary_listing': 67, 'page_up': 83, 'second_lot_ordered': 100} %}
+                                                <div class="progress-bar bg-{{ get_progress_status_info(pg.progress_status).class }}" 
+                                                     role="progressbar" 
+                                                     style="width: {{ stage_progress.get(pg.current_stage, 0) }}%"
+                                                     aria-valuenow="{{ stage_progress.get(pg.current_stage, 0) }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted">
+                                                    {% if pg.reports|length > 0 %}
+                                                        {{ pg.reports|length }}回の報告
+                                                    {% else %}
+                                                        報告なし
+                                                    {% endif %}
+                                                </small>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                                {% endif %}
+                                {% endfor %}
                             </div>
-                            {% endfor %}
                         </div>
+
+                        <!-- 完了済み商品群（折りたたみ可能） -->
+                        {% set completed_products = product_group_progress|selectattr('is_completed', 'equalto', true)|list %}
+                        {% if completed_products %}
+                        <div id="completed-products" class="product-group-section mt-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="text-muted mb-0">
+                                    <i class="fas fa-check-circle me-2"></i>完了済み商品群
+                                    <span class="badge bg-secondary ms-2" id="completed-count">{{ completed_products|length }}</span>
+                                </h6>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#completedCollapse" aria-expanded="false" aria-controls="completedCollapse">
+                                    <i class="fas fa-chevron-down me-1"></i>表示/非表示
+                                </button>
+                            </div>
+                            <div class="collapse" id="completedCollapse">
+                                <div class="row">
+                                    {% for pg in completed_products %}
+                                    <div class="col-md-6 col-lg-4 mb-3 product-card" data-status="completed">
+                                        <div class="card h-100 completed-card">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <h6 class="card-title mb-0 text-muted">{{ pg.name }}</h6>
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check me-1"></i>完了
+                                                    </span>
+                                                </div>
+                                                
+                                                <p class="card-text small text-muted mb-2">
+                                                    <strong>完了ステージ:</strong> {{ get_stage_display_name(pg.current_stage) }}
+                                                </p>
+                                                
+                                                <p class="card-text small text-muted mb-2">
+                                                    <strong>完了日:</strong> {{ pg.stage_duration }}日前
+                                                </p>
+                                                
+                                                <!-- 完了バー -->
+                                                <div class="progress mb-2" style="height: 8px;">
+                                                    <div class="progress-bar bg-success" 
+                                                         role="progressbar" 
+                                                         style="width: 100%"
+                                                         aria-valuenow="100" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <small class="text-muted">
+                                                        {% if pg.reports|length > 0 %}
+                                                            {{ pg.reports|length }}回の報告
+                                                        {% else %}
+                                                            報告なし
+                                                        {% endif %}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endif %}
@@ -243,5 +334,91 @@ function showAlert(type, message) {
         }
     }, 5000);
 }
+
+// フィルター機能
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('input[name="filter"]');
+    const activeSection = document.getElementById('active-products');
+    const completedSection = document.getElementById('completed-products');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('change', function() {
+            const filterValue = this.value;
+            
+            switch(filterValue) {
+                case 'active':
+                    activeSection.style.display = 'block';
+                    if (completedSection) {
+                        completedSection.style.display = 'none';
+                    }
+                    break;
+                case 'completed':
+                    activeSection.style.display = 'none';
+                    if (completedSection) {
+                        completedSection.style.display = 'block';
+                        // 完了済みセクションを展開
+                        const collapse = document.getElementById('completedCollapse');
+                        if (collapse && !collapse.classList.contains('show')) {
+                            const bsCollapse = new bootstrap.Collapse(collapse, {show: true});
+                        }
+                    }
+                    break;
+                case 'all':
+                    activeSection.style.display = 'block';
+                    if (completedSection) {
+                        completedSection.style.display = 'block';
+                    }
+                    break;
+            }
+        });
+    });
+});
 </script>
+
+<style>
+/* 完了済み商品群のスタイル */
+.completed-card {
+    opacity: 0.7;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+.completed-card .card-title {
+    color: #6c757d;
+}
+
+.completed-card .card-text {
+    color: #6c757d !important;
+}
+
+/* フィルターボタンのスタイル */
+.btn-check:checked + .btn-outline-light {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: #fff;
+    color: #fff;
+}
+
+/* セクション間のスペーシング */
+.product-group-section {
+    transition: all 0.3s ease;
+}
+
+/* 完了済みセクションのヘッダー */
+#completed-products h6 {
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.5rem;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 0.25rem;
+    }
+}
+</style>
 {% endblock %}
