@@ -65,15 +65,85 @@
                     </div>
                 </div>
 
-                <div class="text-center mt-4">
-                    <a href="#" class="btn btn-primary btn-lg" onclick="createSampleMentee()">
-                        <i class="fas fa-edit me-2"></i>報告を行う
-                    </a>
+                <div class="text-center mt-5">
+                    <div class="report-button-container">
+                        <a href="#" class="btn btn-success btn-lg report-button" onclick="createSampleMentee()">
+                            <i class="fas fa-edit me-2"></i>報告を行う
+                        </a>
+                        <div class="report-button-glow"></div>
+                    </div>
+                    <p class="mt-3 text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        クリックして週次報告を開始しましょう
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.report-button-container {
+    position: relative;
+    display: inline-block;
+}
+
+.report-button {
+    position: relative;
+    z-index: 2;
+    font-weight: bold;
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    transition: all 0.3s ease;
+    animation: pulse 2s infinite;
+}
+
+.report-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.report-button-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    background: linear-gradient(45deg, #28a745, #20c997, #28a745);
+    border-radius: 50px;
+    opacity: 0.3;
+    z-index: 1;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 25px rgba(40, 167, 69, 0.5);
+    }
+    100% {
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+}
+
+@keyframes glow {
+    0% {
+        opacity: 0.3;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0.1;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+}
+</style>
 
 <script>
 function createSampleMentee() {
