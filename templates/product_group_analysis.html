@@ -100,9 +100,9 @@
                 <div class="card-body">
                     <div class="row">
                         {% for pg in product_group_progress %}
-                        <div class="col-lg-6 mb-4">
+                        <div class="col-lg-3 col-md-6 mb-3">
                             <div class="card h-100">
-                                <div class="card-header">
+                                <div class="card-header py-2">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <h6 class="mb-0">{{ pg.name }}</h6>
                                         <span class="badge bg-{{ get_progress_status_info(pg.progress_status).class }}">
@@ -111,28 +111,28 @@
                                         </span>
                                     </div>
                                 </div>
-                                <div class="card-body">
+                                <div class="card-body py-2">
                                     <!-- 商品群画像 -->
                                     {% if pg.images %}
                                         {% set image_list = pg.images|from_json %}
                                         {% if image_list and image_list|length > 0 %}
-                                        <div class="mb-3">
+                                        <div class="text-center mb-2">
                                             <img src="{{ url_for('static', filename='uploads/product_groups/' + image_list[0]) }}" 
                                                  class="img-fluid rounded" 
-                                                 style="max-height: 150px; width: 100%; object-fit: cover;"
+                                                 style="max-height: 80px; max-width: 100%; object-fit: contain;"
                                                  alt="{{ pg.name }}の画像">
                                         </div>
                                         {% endif %}
                                     {% endif %}
                                     
                                     <!-- 現在のステージ情報 -->
-                                    <div class="row mb-3">
+                                    <div class="row mb-2">
                                         <div class="col-6">
-                                            <strong>現在のステージ:</strong><br>
+                                            <small class="text-muted">現在のステージ:</small><br>
                                             <span class="badge bg-primary">{{ get_stage_display_name(pg.current_stage) }}</span>
                                         </div>
                                         <div class="col-6">
-                                            <strong>最後の報告:</strong><br>
+                                            <small class="text-muted">最後の報告:</small><br>
                                             <span class="text-{{ get_progress_status_info(pg.progress_status).class }}">
                                                 {{ pg.stage_duration }}日前
                                             </span>
@@ -140,59 +140,74 @@
                                     </div>
 
                                     <!-- 進捗バー -->
-                                    <div class="mb-3">
-                                        <label class="form-label small">進捗状況</label>
-                                        <div class="progress" style="height: 12px;">
-                                            {% set stage_progress = {'proposal_pre': 17, 'proposal_post': 33, 'ordered': 50, 'temporary_listing': 67, 'page_up': 83, 'second_lot_ordered': 100} %}
+                                    <div class="mb-2">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <small class="text-muted">進捗状況</small>
+                                            <small class="text-muted">
+                                                {% set stage_progress = {'proposal_pre': 17, 'proposal_post': 33, 'ordered': 50, 'temporary_listing': 67, 'page_up': 83, 'second_lot_ordered': 100} %}
+                                                {{ stage_progress.get(pg.current_stage, 0) }}%
+                                            </small>
+                                        </div>
+                                        <div class="progress" style="height: 8px;">
                                             <div class="progress-bar bg-{{ get_progress_status_info(pg.progress_status).class }}" 
                                                  role="progressbar" 
                                                  style="width: {{ stage_progress.get(pg.current_stage, 0) }}%"
                                                  aria-valuenow="{{ stage_progress.get(pg.current_stage, 0) }}" 
                                                  aria-valuemin="0" 
                                                  aria-valuemax="100">
-                                                {{ stage_progress.get(pg.current_stage, 0) }}%
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- 報告履歴 -->
-                                    <div class="mb-3">
-                                        <label class="form-label small">報告履歴（直近{{ selected_weeks }}週間）</label>
+                                    <!-- 報告履歴（スクロール可能） -->
+                                    <div class="mb-2">
+                                        <small class="text-muted">報告履歴</small>
                                         {% if pg.reports %}
-                                            <div class="timeline">
-                                                {% for report in pg.reports[:5] %}
-                                                <div class="timeline-item d-flex align-items-center mb-2">
-                                                    <div class="timeline-marker bg-{{ get_progress_status_info(pg.progress_status).class }} me-3" style="width: 8px; height: 8px; border-radius: 50%;"></div>
-                                                    <div class="flex-grow-1">
-                                                        <small class="text-muted">
-                                                            {{ report.date.strftime('%m/%d') }} - 
-                                                            {{ get_stage_display_name(report.stage) }}
-                                                            {% if report.self_evaluation %}
-                                                                (評価: {{ report.self_evaluation }}/3)
-                                                            {% endif %}
-                                                        </small>
-                                                    </div>
+                                            <div class="mt-1 report-history-scroll">
+                                                {% for report in pg.reports %}
+                                                <div class="d-flex align-items-center mb-1 report-item" 
+                                                     style="cursor: pointer; padding: 4px; border-radius: 4px; transition: background-color 0.2s; {% if report.self_evaluation and report.self_evaluation == 1 %}border-left: 3px solid #dc3545;{% elif report.self_evaluation and report.self_evaluation == 2 %}border-left: 3px solid #ffc107;{% endif %}" 
+                                                     onmouseover="this.style.backgroundColor='#f8f9fa'" 
+                                                     onmouseout="this.style.backgroundColor='transparent'"
+                                                     onclick="window.location.href='{{ url_for('view_report', report_id=report.id) }}'">
+                                                    <div class="bg-{{ get_progress_status_info(pg.progress_status).class }} me-2" style="width: 4px; height: 4px; border-radius: 50%;"></div>
+                                                    <small class="text-muted flex-grow-1">
+                                                        {{ report.date.strftime('%m/%d') }} - 
+                                                        {{ get_stage_display_name(report.stage) }}
+                                                        {% if report.self_evaluation %}
+                                                            <span class="ms-1">
+                                                                {% for i in range(1, 4) %}
+                                                                    {% if i <= report.self_evaluation %}
+                                                                        {% if report.self_evaluation == 1 %}
+                                                                            <span class="text-danger">★</span>
+                                                                        {% else %}
+                                                                            <span class="text-warning">★</span>
+                                                                        {% endif %}
+                                                                    {% else %}
+                                                                        <span class="text-muted">☆</span>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                            </span>
+                                                        {% endif %}
+                                                    </small>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-external-link-alt" style="font-size: 10px;"></i>
+                                                    </small>
                                                 </div>
                                                 {% endfor %}
-                                                {% if pg.reports|length > 5 %}
-                                                <div class="text-muted small">
-                                                    ...他{{ pg.reports|length - 5 }}件
-                                                </div>
-                                                {% endif %}
                                             </div>
                                         {% else %}
-                                            <p class="text-muted small">報告がありません</p>
+                                            <small class="text-muted">報告なし</small>
                                         {% endif %}
                                     </div>
 
-                                    <!-- 推奨アクション -->
-                                    <div class="alert alert-{{ 'success' if pg.progress_status == 'good' else 'warning' if pg.progress_status == 'warning' else 'danger' }} alert-sm">
+                                    <!-- 推奨アクション（簡略化） -->
+                                    <div class="alert alert-{{ 'success' if pg.progress_status == 'good' else 'warning' if pg.progress_status == 'warning' else 'danger' }} alert-sm py-1">
                                         <small>
-                                            <strong>推奨アクション:</strong>
                                             {% if pg.progress_status == 'good' %}
-                                                定期的に報告されています。この調子で継続してください。
+                                                定期的に報告されています。継続してください。
                                             {% elif pg.progress_status == 'warning' %}
-                                                1週間以上報告がありません。今週中に報告することをお勧めします。
+                                                1週間以上報告がありません。今週中に報告をお勧めします。
                                             {% elif pg.progress_status == 'danger' %}
                                                 2週間以上報告がありません。早急にメンターと対策を検討してください。
                                             {% endif %}
@@ -252,6 +267,33 @@
 .alert-sm {
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
+}
+
+/* 報告履歴のスクロールバーをカスタマイズ */
+.report-history-scroll {
+    max-height: 80px;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 8px;
+}
+
+.report-history-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+
+.report-history-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+}
+
+.report-history-scroll::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+.report-history-scroll::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 </style>
 {% endblock %}

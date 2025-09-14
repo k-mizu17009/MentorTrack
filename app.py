@@ -357,6 +357,7 @@ def get_product_group_progress(mentee_id, weeks=4):
             }
         
         product_groups[product_group_name]['reports'].append({
+            'id': report.id,
             'date': report.report_date,
             'stage': report.planning_stage,
             'self_evaluation': report.self_evaluation
