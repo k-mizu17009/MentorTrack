@@ -218,8 +218,14 @@ class WeeklyReportForm(FlaskForm):
                                render_kw={'placeholder': '商品群を選択してください'})
     
     def validate_product_group(self, field):
-        if field.data == 0:
+        if field.data == 0 or field.data is None:
             raise ValidationError('商品群を選択してください。')
+        
+        # 選択された商品群が存在するかチェック
+        if field.data and field.data != 0:
+            product_group = ProductGroup.query.get(field.data)
+            if not product_group:
+                raise ValidationError('選択された商品群が見つかりません。')
     
     # 進捗チェックリスト（動的に生成）
     progress_items = TextAreaField('今週の進捗', 
@@ -803,7 +809,6 @@ def new_report(mentee_id):
         # 代表商品群の選択肢を動的に設定
         product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
         form.product_group.choices = [(0, '商品群を選択してください')] + [(pg.id, pg.name) for pg in product_groups]
-        form.product_group.data = 0  # デフォルト値を設定
         
         # 代表商品群が登録されていない場合の警告
         if not product_groups:
@@ -813,53 +818,68 @@ def new_report(mentee_id):
         return redirect(url_for('my_dashboard'))
     
     if form.validate_on_submit():
-        # 今週の月曜日を計算
-        today = datetime.now()
-        days_since_monday = today.weekday()
-        week_start = today - timedelta(days=days_since_monday)
-        week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
-        
-        # 追加の問いかけ回答をJSON形式で保存
-        additional_responses = {
-            'time_consuming_task': form.time_consuming_task.data,
-            'difficult_decision': form.difficult_decision.data,
-            'learned_from_senior': form.learned_from_senior.data,
-            'own_decision': form.own_decision.data,
-            'redid_task': form.redid_task.data
-        }
-        
-        # 選択された代表商品群の名前を取得
-        selected_product_group = ProductGroup.query.get(form.product_group.data)
-        product_group_name = selected_product_group.name if selected_product_group else '不明'
-        
-        report = WeeklyReport(
-            mentee_id=mentee_id,
-            planning_stage=form.planning_stage.data,
-            product_group=product_group_name,
-            progress_items=form.progress_items.data,
-            actions_taken=form.actions_taken.data,
-            insights_concerns=form.insights_concerns.data,
-            self_evaluation=form.self_evaluation.data,
-            additional_responses=str(additional_responses),
-            week_start=week_start
-        )
-        
-        db.session.add(report)
-        db.session.commit()
-        
-        # メンターに通知を送信
-        mentors = User.query.filter(User.role.in_(['mentor', 'admin'])).all()
-        for mentor in mentors:
-            create_notification(
-                user_id=mentor.id,
-                title='新しい報告が登録されました',
-                message=f'{mentee.name}さんが新しい週次報告を登録しました。',
-                notification_type='report_created',
-                related_id=report.id
+        try:
+            # 今週の月曜日を計算
+            today = datetime.now()
+            days_since_monday = today.weekday()
+            week_start = today - timedelta(days=days_since_monday)
+            week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+            
+            # 追加の問いかけ回答をJSON形式で保存
+            additional_responses = {
+                'time_consuming_task': form.time_consuming_task.data,
+                'difficult_decision': form.difficult_decision.data,
+                'learned_from_senior': form.learned_from_senior.data,
+                'own_decision': form.own_decision.data,
+                'redid_task': form.redid_task.data
+            }
+            
+            # 選択された代表商品群の名前を取得
+            selected_product_group = ProductGroup.query.get(form.product_group.data)
+            if not selected_product_group:
+                flash('選択された商品群が見つかりません。商品群を再選択してください。', 'danger')
+                return render_template('new_report.html', form=form, mentee=mentee, todo_list=todo_list, product_groups=product_groups)
+            
+            product_group_name = selected_product_group.name
+            
+            report = WeeklyReport(
+                mentee_id=mentee_id,
+                planning_stage=form.planning_stage.data,
+                product_group=product_group_name,
+                progress_items=form.progress_items.data,
+                actions_taken=form.actions_taken.data,
+                insights_concerns=form.insights_concerns.data,
+                self_evaluation=form.self_evaluation.data,
+                additional_responses=str(additional_responses),
+                week_start=week_start
             )
-        
-        flash('週次報告が保存されました！', 'success')
-        return redirect(url_for('mentee_dashboard', mentee_id=mentee_id))
+            
+            db.session.add(report)
+            db.session.commit()
+            
+            # メンターに通知を送信
+            mentors = User.query.filter(User.role.in_(['mentor', 'admin'])).all()
+            for mentor in mentors:
+                create_notification(
+                    user_id=mentor.id,
+                    title='新しい報告が登録されました',
+                    message=f'{mentee.name}さんが新しい週次報告を登録しました。',
+                    notification_type='report_created',
+                    related_id=report.id
+                )
+            
+            flash('週次報告が保存されました！', 'success')
+            return redirect(url_for('mentee_dashboard', mentee_id=mentee_id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'報告の保存中にエラーが発生しました: {str(e)}', 'danger')
+            # フォームの選択肢を再設定
+            product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
+            form.product_group.choices = [(0, '商品群を選択してください')] + [(pg.id, pg.name) for pg in product_groups]
+    else:
+        # バリデーションエラーがある場合、フォームの選択肢を再設定
+        product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
+        form.product_group.choices = [(0, '商品群を選択してください')] + [(pg.id, pg.name) for pg in product_groups]
     
     # Todoリストを取得
     todo_list = MenteeTodoList.query.filter_by(mentee_id=mentee_id).first()

@@ -438,7 +438,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const productGroupImage = document.getElementById('product-group-image');
     
     // 商品群データを取得
-    const productGroupsData = JSON.parse(document.getElementById('product-groups-data').textContent);
+    let productGroupsData = {};
+    try {
+        const dataElement = document.getElementById('product-groups-data');
+        if (dataElement && dataElement.textContent) {
+            productGroupsData = JSON.parse(dataElement.textContent);
+        }
+    } catch (e) {
+        console.error('商品群データの解析エラー:', e);
+        productGroupsData = {};
+    }
+    
     console.log('商品群データ:', productGroupsData);
     
     // 商品群選択時のイベントリスナー
@@ -488,6 +498,20 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         }
     });
+    
+    // フォーム送信時のバリデーション
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const selectedProductGroup = productGroupSelect.value;
+            if (!selectedProductGroup || selectedProductGroup === '0') {
+                e.preventDefault();
+                alert('商品群を選択してください。');
+                productGroupSelect.focus();
+                return false;
+            }
+        });
+    }
 });
 </script>
 {% endblock %}
