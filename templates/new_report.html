@@ -17,6 +17,38 @@
                 <form method="POST">
                     {{ form.hidden_tag() }}
                     
+                    <!-- 商品群画像データをJavaScriptで利用できるように埋め込み -->
+                    <script type="application/json" id="product-groups-data">
+                    {
+                        {% for pg in product_groups %}
+                        "{{ pg.id }}": {
+                            "name": "{{ pg.name }}",
+                            "images": {{ pg.images|safe if pg.images else '[]' }}
+                        }{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    }
+                    </script>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.product_group.label(class="form-label fw-bold") }}
+                                {{ form.product_group(class="form-control", placeholder="商品群を選択してください", id="product-group-select") }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label fw-bold">商品群画像</label>
+                                <div id="product-group-image" class="product-image-preview">
+                                    <div class="image-placeholder">
+                                        <i class="fas fa-image fa-3x text-muted"></i>
+                                        <p class="text-muted mt-2">商品群を選択してください</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <div class="form-group mb-3">
@@ -52,11 +84,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="form-group mb-4">
-                        {{ form.product_group.label(class="form-label fw-bold") }}
-                        {{ form.product_group(class="form-control") }}
                     </div>
 
                     <div class="form-group mb-4">
@@ -334,6 +361,16 @@
     100% { transform: scale(1.05) rotate(360deg); }
 }
 
+/* セレクトボックスのプレースホルダースタイル */
+.form-control option[value="0"] {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.form-control:invalid {
+    border-color: #dc3545;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
     .star-evaluation-body {
@@ -352,5 +389,105 @@
         font-size: 12px;
     }
 }
+
+/* 商品群画像プレビューのスタイル */
+.product-image-preview {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-placeholder {
+    color: #6c757d;
+}
+
+.product-image-container {
+    position: relative;
+    max-width: 100%;
+    max-height: 200px;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.product-image {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+.image-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    padding: 10px;
+    color: white;
+}
 </style>
+
+<script>
+// 商品群画像表示機能
+document.addEventListener('DOMContentLoaded', function() {
+    const productGroupSelect = document.getElementById('product-group-select');
+    const productGroupImage = document.getElementById('product-group-image');
+    
+    // 商品群データを取得
+    const productGroupsData = JSON.parse(document.getElementById('product-groups-data').textContent);
+    console.log('商品群データ:', productGroupsData);
+    
+    // 商品群選択時のイベントリスナー
+    productGroupSelect.addEventListener('change', function() {
+        const selectedId = this.value;
+        console.log('選択されたID:', selectedId);
+        
+        if (selectedId && selectedId !== '0' && productGroupsData[selectedId]) {
+            const productGroup = productGroupsData[selectedId];
+            const images = productGroup.images;
+            
+            if (images && images.length > 0) {
+                // 1枚目の画像を表示
+                const firstImage = images[0];
+                const imageUrl = `/uploads/product_groups/${firstImage}`;
+                console.log('画像URL:', imageUrl);
+                console.log('画像データ:', images);
+                
+                productGroupImage.innerHTML = `
+                    <div class="product-image-container">
+                        <img src="${imageUrl}" 
+                             alt="${productGroup.name}" 
+                             class="img-fluid rounded product-image"
+                             onerror="console.log('画像読み込みエラー:', this.src); this.style.display='none';">
+                        <div class="image-overlay">
+                            <small class="text-white">${productGroup.name}</small>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 画像がない場合
+                productGroupImage.innerHTML = `
+                    <div class="image-placeholder">
+                        <i class="fas fa-image fa-3x text-muted"></i>
+                        <p class="text-muted mt-2">${productGroup.name}</p>
+                        <small class="text-muted">画像が登録されていません</small>
+                    </div>
+                `;
+            }
+        } else {
+            // デフォルト表示
+            productGroupImage.innerHTML = `
+                <div class="image-placeholder">
+                    <i class="fas fa-image fa-3x text-muted"></i>
+                    <p class="text-muted mt-2">商品群を選択してください</p>
+                </div>
+            `;
+        }
+    });
+});
+</script>
 {% endblock %}

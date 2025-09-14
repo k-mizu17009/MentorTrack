@@ -202,16 +202,24 @@ class LoginForm(FlaskForm):
 class WeeklyReportForm(FlaskForm):
     planning_stage = SelectField('企画ステージ', 
                                 choices=[('proposal_pre', '提案前'), 
-                                        ('proposal_post', '提案済み'), 
-                                        ('ordered', '発注済み'), 
-                                        ('temporary_listing', '仮出品済み'),
-                                        ('page_up', 'ページアップ済み'),
+                                        ('estimate_completed', '見積書対応　済'), 
+                                        ('s_creation_approved', 'S作成承認　済'), 
+                                        ('proposal_decision_obtained', '提案決裁取得　済'),
+                                        ('pre_production_s_confirmed', '量産前S確認　済'),
+                                        ('first_order', '初回発注　済'),
+                                        ('temporary_listing', '仮出品　済'),
+                                        ('page_up', 'ページアップ　済'),
                                         ('second_lot_ordered', '2ロット目発注済')],
                                 validators=[DataRequired()])
     
     product_group = SelectField('代表商品群', 
                                validators=[DataRequired()],
-                               coerce=int)
+                               coerce=int,
+                               render_kw={'placeholder': '商品群を選択してください'})
+    
+    def validate_product_group(self, field):
+        if field.data == 0:
+            raise ValidationError('商品群を選択してください。')
     
     # 進捗チェックリスト（動的に生成）
     progress_items = TextAreaField('今週の進捗', 
@@ -401,10 +409,13 @@ def get_stage_display_name(stage):
     """企画ステージの表示名を取得"""
     stage_names = {
         'proposal_pre': '提案前',
-        'proposal_post': '提案済み',
-        'ordered': '発注済み',
-        'temporary_listing': '仮出品済み',
-        'page_up': 'ページアップ済み',
+        'estimate_completed': '見積書対応　済',
+        's_creation_approved': 'S作成承認　済',
+        'proposal_decision_obtained': '提案決裁取得　済',
+        'pre_production_s_confirmed': '量産前S確認　済',
+        'first_order': '初回発注　済',
+        'temporary_listing': '仮出品　済',
+        'page_up': 'ページアップ　済',
         'second_lot_ordered': '2ロット目発注済'
     }
     return stage_names.get(stage, stage)
@@ -739,7 +750,8 @@ def new_report(mentee_id):
         
         # 代表商品群の選択肢を動的に設定
         product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
-        form.product_group.choices = [(pg.id, pg.name) for pg in product_groups]
+        form.product_group.choices = [(0, '商品群を選択してください')] + [(pg.id, pg.name) for pg in product_groups]
+        form.product_group.data = 0  # デフォルト値を設定
         
         # 代表商品群が登録されていない場合の警告
         if not product_groups:
@@ -800,7 +812,10 @@ def new_report(mentee_id):
     # Todoリストを取得
     todo_list = MenteeTodoList.query.filter_by(mentee_id=mentee_id).first()
     
-    return render_template('new_report.html', form=form, mentee=mentee, todo_list=todo_list)
+    # 商品群データを取得（画像表示用）
+    product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
+    
+    return render_template('new_report.html', form=form, mentee=mentee, todo_list=todo_list, product_groups=product_groups)
 
 @app.route('/report/<int:report_id>')
 @login_required

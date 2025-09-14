@@ -11,12 +11,8 @@
                     <h3 class="mb-0">
                         <i class="fas fa-file-alt me-2"></i>{{ report.mentee.name }}の週次報告
                     </h3>
-                    <span class="badge bg-{{ 'success' if report.planning_stage == 'completed' else 'primary' if report.planning_stage == 'ordered' else 'warning' if report.planning_stage == 'proposal_post' else 'secondary' }} stage-badge">
-                        {% if report.planning_stage == 'proposal_pre' %}提案前
-                        {% elif report.planning_stage == 'proposal_post' %}提案済み
-                        {% elif report.planning_stage == 'ordered' %}発注済み
-                        {% elif report.planning_stage == 'completed' %}完了
-                        {% endif %}
+                    <span class="badge bg-{{ 'success' if report.planning_stage == 'second_lot_ordered' else 'primary' if report.planning_stage in ['page_up', 'first_order'] else 'info' if report.planning_stage in ['temporary_listing', 'pre_production_s_confirmed'] else 'warning' if report.planning_stage in ['proposal_decision_obtained', 's_creation_approved', 'estimate_completed'] else 'secondary' }} stage-badge">
+                        {{ get_stage_display_name(report.planning_stage) }}
                     </span>
                 </div>
                 <p class="mb-0 mt-2 text-light">{{ report.report_date.strftime('%Y年%m月%d日') }}の報告</p>
@@ -205,22 +201,14 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <h6 class="text-primary">前週の企画ステージ</h6>
-                                <span class="badge bg-{{ 'success' if previous_report.planning_stage == 'completed' else 'primary' if previous_report.planning_stage == 'ordered' else 'warning' if previous_report.planning_stage == 'proposal_post' else 'secondary' }} stage-badge">
-                                    {% if previous_report.planning_stage == 'proposal_pre' %}提案前
-                                    {% elif previous_report.planning_stage == 'proposal_post' %}提案済み
-                                    {% elif previous_report.planning_stage == 'ordered' %}発注済み
-                                    {% elif previous_report.planning_stage == 'completed' %}完了
-                                    {% endif %}
+                                <span class="badge bg-{{ 'success' if previous_report.planning_stage == 'second_lot_ordered' else 'primary' if previous_report.planning_stage in ['page_up', 'first_order'] else 'info' if previous_report.planning_stage in ['temporary_listing', 'pre_production_s_confirmed'] else 'warning' if previous_report.planning_stage in ['proposal_decision_obtained', 's_creation_approved', 'estimate_completed'] else 'secondary' }} stage-badge">
+                                    {{ get_stage_display_name(previous_report.planning_stage) }}
                                 </span>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="text-primary">今週の企画ステージ</h6>
-                                <span class="badge bg-{{ 'success' if report.planning_stage == 'completed' else 'primary' if report.planning_stage == 'ordered' else 'warning' if report.planning_stage == 'proposal_post' else 'secondary' }} stage-badge">
-                                    {% if report.planning_stage == 'proposal_pre' %}提案前
-                                    {% elif report.planning_stage == 'proposal_post' %}提案済み
-                                    {% elif report.planning_stage == 'ordered' %}発注済み
-                                    {% elif report.planning_stage == 'completed' %}完了
-                                    {% endif %}
+                                <span class="badge bg-{{ 'success' if report.planning_stage == 'second_lot_ordered' else 'primary' if report.planning_stage in ['page_up', 'first_order'] else 'info' if report.planning_stage in ['temporary_listing', 'pre_production_s_confirmed'] else 'warning' if report.planning_stage in ['proposal_decision_obtained', 's_creation_approved', 'estimate_completed'] else 'secondary' }} stage-badge">
+                                    {{ get_stage_display_name(report.planning_stage) }}
                                 </span>
                             </div>
                         </div>
