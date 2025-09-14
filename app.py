@@ -817,10 +817,10 @@ def view_report(report_id):
     ).first()
     
     # 追加の問いかけ回答をパース
-    import json
+    import ast
     try:
-        additional_responses = json.loads(report.additional_responses) if report.additional_responses else {}
-    except (json.JSONDecodeError, TypeError):
+        additional_responses = ast.literal_eval(report.additional_responses) if report.additional_responses else {}
+    except (ValueError, SyntaxError, TypeError):
         additional_responses = {}
     
     return render_template('view_report.html', report=report, previous_report=previous_report, additional_responses=additional_responses)
@@ -873,10 +873,10 @@ def add_mentor_comment(report_id):
         return redirect(url_for('view_report', report_id=report_id))
     
     # 追加の問いかけ回答をパース
-    import json
+    import ast
     try:
-        additional_responses = json.loads(report.additional_responses) if report.additional_responses else {}
-    except (json.JSONDecodeError, TypeError):
+        additional_responses = ast.literal_eval(report.additional_responses) if report.additional_responses else {}
+    except (ValueError, SyntaxError, TypeError):
         additional_responses = {}
     
     # Todoリストを取得
