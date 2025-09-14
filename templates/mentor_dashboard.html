@@ -40,6 +40,50 @@
                     </div>
                 </div>
 
+                <!-- 週次サマリー -->
+                <div class="card mb-4 border-info">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>今週の指導サマリー
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="weekly-summary">
+                            <!-- サマリー内容はJavaScriptで動的に生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 指導優先度アラート -->
+                <div class="card mb-4 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>指導が必要なメンティ
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="mentor-alerts">
+                            <!-- アラート内容はJavaScriptで動的に生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- メンティ比較分析 -->
+                {% if mentees|length > 1 %}
+                <div class="card mb-4 border-secondary">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-balance-scale me-2"></i>メンティ比較分析
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="mentee-comparison">
+                            <!-- 比較分析内容はJavaScriptで動的に生成 -->
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 <!-- 商品群別進捗サマリー -->
                 {% if product_group_progress %}
                 <div class="card mb-4">
@@ -351,6 +395,263 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // 指導アラート機能
+    generateMentorAlerts();
+    
+    // 週次サマリー機能
+    generateWeeklySummary();
+    
+    // メンティ比較機能
+    generateMenteeComparison();
 });
+
+// 指導アラート生成
+function generateMentorAlerts() {
+    const alertsContainer = document.getElementById('mentor-alerts');
+    const alerts = [];
+    
+    // 商品群データからアラートを生成
+    const productGroups = {{ product_group_progress|tojson|safe }};
+    
+    // 停滞している商品群（15日以上報告なし）
+    const stagnantGroups = productGroups.filter(pg => 
+        pg.progress_status === 'danger' && !pg.is_completed
+    );
+    
+    // 注意が必要な商品群（8-14日報告なし）
+    const warningGroups = productGroups.filter(pg => 
+        pg.progress_status === 'warning' && !pg.is_completed
+    );
+    
+    // アラート生成
+    if (stagnantGroups.length > 0) {
+        alerts.push({
+            type: 'danger',
+            icon: 'fas fa-exclamation-triangle',
+            title: '停滞中の商品群',
+            count: stagnantGroups.length,
+            message: '15日以上報告がない商品群があります',
+            groups: stagnantGroups
+        });
+    }
+    
+    if (warningGroups.length > 0) {
+        alerts.push({
+            type: 'warning',
+            icon: 'fas fa-clock',
+            title: '注意が必要な商品群',
+            count: warningGroups.length,
+            message: '8-14日報告がない商品群があります',
+            groups: warningGroups
+        });
+    }
+    
+    // 完了おめでとうアラート
+    const completedGroups = productGroups.filter(pg => 
+        pg.is_completed && pg.stage_duration <= 7
+    );
+    
+    if (completedGroups.length > 0) {
+        alerts.push({
+            type: 'success',
+            icon: 'fas fa-celebration',
+            title: '完了おめでとう！',
+            count: completedGroups.length,
+            message: '今週完了した商品群があります',
+            groups: completedGroups
+        });
+    }
+    
+    // アラート表示
+    if (alerts.length === 0) {
+        alertsContainer.innerHTML = `
+            <div class="col-12 text-center text-muted">
+                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                <p>現在、特別な指導が必要なメンティはありません</p>
+            </div>
+        `;
+    } else {
+        alertsContainer.innerHTML = alerts.map(alert => `
+            <div class="col-md-4 mb-3">
+                <div class="alert alert-${alert.type} alert-dismissible fade show" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="${alert.icon} fa-2x me-3"></i>
+                        <div class="flex-grow-1">
+                            <h6 class="alert-heading mb-1">${alert.title}</h6>
+                            <p class="mb-1">${alert.message}</p>
+                            <small class="text-muted">${alert.count}件</small>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+}
+
+// 週次サマリー生成
+function generateWeeklySummary() {
+    const summaryContainer = document.getElementById('weekly-summary');
+    const productGroups = {{ product_group_progress|tojson|safe }};
+    
+    // 統計データを計算
+    const totalGroups = productGroups.length;
+    const activeGroups = productGroups.filter(pg => !pg.is_completed).length;
+    const completedGroups = productGroups.filter(pg => pg.is_completed).length;
+    const stagnantGroups = productGroups.filter(pg => 
+        pg.progress_status === 'danger' && !pg.is_completed
+    ).length;
+    const warningGroups = productGroups.filter(pg => 
+        pg.progress_status === 'warning' && !pg.is_completed
+    ).length;
+    
+    // 完了率を計算
+    const completionRate = totalGroups > 0 ? Math.round((completedGroups / totalGroups) * 100) : 0;
+    
+    // サマリー表示
+    summaryContainer.innerHTML = `
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-tasks fa-2x mb-2"></i>
+                    <h4 class="card-title">${totalGroups}</h4>
+                    <p class="card-text mb-0">総商品群数</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <h4 class="card-title">${completedGroups}</h4>
+                    <p class="card-text mb-0">完了済み</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-2x mb-2"></i>
+                    <h4 class="card-title">${warningGroups}</h4>
+                    <p class="card-text mb-0">注意が必要</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                    <h4 class="card-title">${stagnantGroups}</h4>
+                    <p class="card-text mb-0">停滞中</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 mt-3">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="mb-1">全体の完了率</h6>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: ${completionRate}%" 
+                                     aria-valuenow="${completionRate}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    ${completionRate}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h4 class="text-success mb-0">${completionRate}%</h4>
+                            <small class="text-muted">完了率</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// メンティ比較分析生成
+function generateMenteeComparison() {
+    const comparisonContainer = document.getElementById('mentee-comparison');
+    if (!comparisonContainer) return;
+    
+    const productGroups = {{ product_group_progress|tojson|safe }};
+    const mentees = {{ mentees|tojson|safe }};
+    
+    if (mentees.length <= 1) return;
+    
+    // メンティ別の統計を計算
+    const menteeStats = mentees.map(mentee => {
+        const menteeGroups = productGroups.filter(pg => pg.mentee_name === mentee.name);
+        const totalGroups = menteeGroups.length;
+        const completedGroups = menteeGroups.filter(pg => pg.is_completed).length;
+        const activeGroups = totalGroups - completedGroups;
+        const completionRate = totalGroups > 0 ? Math.round((completedGroups / totalGroups) * 100) : 0;
+        
+        // 平均進捗率を計算
+        const avgProgress = menteeGroups.length > 0 ? 
+            Math.round(menteeGroups.reduce((sum, pg) => sum + pg.progress_percentage, 0) / menteeGroups.length) : 0;
+        
+        return {
+            name: mentee.name,
+            totalGroups,
+            completedGroups,
+            activeGroups,
+            completionRate,
+            avgProgress
+        };
+    });
+    
+    // 比較表示
+    comparisonContainer.innerHTML = menteeStats.map(stat => `
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">${stat.name}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="text-primary">
+                                <i class="fas fa-tasks fa-2x mb-2"></i>
+                                <h5>${stat.totalGroups}</h5>
+                                <small>総数</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-success">
+                                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                <h5>${stat.completedGroups}</h5>
+                                <small>完了</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-warning">
+                                <i class="fas fa-clock fa-2x mb-2"></i>
+                                <h5>${stat.activeGroups}</h5>
+                                <small>進行中</small>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <h6>完了率: ${stat.completionRate}%</h6>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-success" style="width: ${stat.completionRate}%"></div>
+                        </div>
+                        <h6>平均進捗: ${stat.avgProgress}%</h6>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" style="width: ${stat.avgProgress}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
 </script>
 {% endblock %}

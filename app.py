@@ -637,9 +637,12 @@ def mentor_dashboard():
                 pg['mentee_name'] = mentee.name
             product_group_progress.extend(mentee_progress)
     
+    # メンティデータを辞書形式に変換（JavaScript用）
+    mentees_data = [{'id': mentee.id, 'name': mentee.name} for mentee in mentees]
+    
     return render_template('mentor_dashboard.html', 
                          reports=reports, 
-                         mentees=mentees, 
+                         mentees=mentees_data, 
                          selected_mentee=mentee_filter,
                          product_group_progress=product_group_progress)
 
