@@ -256,8 +256,6 @@ class WeeklyReportForm(FlaskForm):
     own_decision = TextAreaField('今週、自分の判断で進めたことは？', 
                                 render_kw={'rows': 2, 'placeholder': '（任意）'})
     
-    redid_task = TextAreaField('今週、やり直したことは？', 
-                              render_kw={'rows': 2, 'placeholder': '（任意）'})
     
     submit = SubmitField('報告を保存')
 
@@ -830,8 +828,7 @@ def new_report(mentee_id):
                 'time_consuming_task': form.time_consuming_task.data,
                 'difficult_decision': form.difficult_decision.data,
                 'learned_from_senior': form.learned_from_senior.data,
-                'own_decision': form.own_decision.data,
-                'redid_task': form.redid_task.data
+                'own_decision': form.own_decision.data
             }
             
             # 選択された代表商品群の名前を取得
