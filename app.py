@@ -206,7 +206,7 @@ class WeeklyReportForm(FlaskForm):
                                         ('ordered', '発注済み'), 
                                         ('temporary_listing', '仮出品済み'),
                                         ('page_up', 'ページアップ済み'),
-                                        ('second_lot_ordered', '2ロット目発注済み')],
+                                        ('second_lot_ordered', '2ロット目発注済')],
                                 validators=[DataRequired()])
     
     product_group = SelectField('代表商品群', 
@@ -224,9 +224,9 @@ class WeeklyReportForm(FlaskForm):
                                      render_kw={'rows': 4, 'placeholder': '今週感じた気づきや悩みを自由に記述してください'})
     
     self_evaluation = RadioField('自己評価', 
-                                choices=[(1, '1 - 思うように進まなかった'), 
-                                        (2, '2 - まあまあ進んだ'), 
-                                        (3, '3 - とても順調に進んだ')],
+                                choices=[(1, '☆ - 思うように進まなかった'), 
+                                        (2, '☆☆ - まあまあ進んだ'), 
+                                        (3, '☆☆☆ - とても順調に進んだ')],
                                 validators=[DataRequired()])
     
     # 追加の問いかけ
@@ -401,7 +401,7 @@ def get_stage_display_name(stage):
         'ordered': '発注済み',
         'temporary_listing': '仮出品済み',
         'page_up': 'ページアップ済み',
-        'second_lot_ordered': '2ロット目発注済み'
+        'second_lot_ordered': '2ロット目発注済'
     }
     return stage_names.get(stage, stage)
 

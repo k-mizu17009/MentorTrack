@@ -27,12 +27,25 @@
                         <div class="col-md-6">
                             <div class="form-group mb-3">
                                 {{ form.self_evaluation.label(class="form-label fw-bold") }}
-                                <div class="card mt-2">
-                                    <div class="card-body py-2">
+                                <div class="star-evaluation-card mt-2">
+                                    <div class="star-evaluation-body">
                                         {% for subfield in form.self_evaluation %}
-                                        <div class="form-check mb-2">
-                                            {{ subfield(class="form-check-input") }}
-                                            {{ subfield.label(class="form-check-label fw-normal") }}
+                                        <div class="star-option">
+                                            <input type="radio" name="{{ subfield.name }}" value="{{ subfield.data }}" id="star-{{ loop.index }}" class="star-radio">
+                                            <label for="star-{{ loop.index }}" class="star-label">
+                                                <div class="star-display">
+                                                    {% if subfield.data == 1 %}
+                                                        <span class="stars">⭐</span>
+                                                        <span class="star-text">思うように進まなかった</span>
+                                                    {% elif subfield.data == 2 %}
+                                                        <span class="stars">⭐⭐</span>
+                                                        <span class="star-text">まあまあ進んだ</span>
+                                                    {% elif subfield.data == 3 %}
+                                                        <span class="stars">⭐⭐⭐</span>
+                                                        <span class="star-text">とても順調に進んだ</span>
+                                                    {% endif %}
+                                                </div>
+                                            </label>
                                         </div>
                                         {% endfor %}
                                     </div>
@@ -232,6 +245,112 @@
 
 .todo-standards h6 {
     border-color: #fd7e14;
+}
+
+/* 星評価のカスタムスタイル */
+.star-evaluation-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.star-evaluation-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+.star-evaluation-body {
+    padding: 12px;
+}
+
+.star-option {
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.star-radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.star-label {
+    display: block;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid transparent;
+}
+
+.star-label:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(3px);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.star-radio:checked + .star-label {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: #ffd700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+    transform: translateX(5px) scale(1.01);
+}
+
+.star-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stars {
+    font-size: 16px;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+    animation: twinkle 3s ease-in-out infinite alternate;
+}
+
+.star-text {
+    color: white;
+    font-weight: 500;
+    font-size: 13px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.star-radio:checked + .star-label .stars {
+    animation: sparkle 0.8s ease-in-out;
+}
+
+@keyframes twinkle {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.05); }
+}
+
+@keyframes sparkle {
+    0% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.2) rotate(180deg); }
+    100% { transform: scale(1.05) rotate(360deg); }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .star-evaluation-body {
+        padding: 10px;
+    }
+    
+    .star-label {
+        padding: 6px 10px;
+    }
+    
+    .stars {
+        font-size: 14px;
+    }
+    
+    .star-text {
+        font-size: 12px;
+    }
 }
 </style>
 {% endblock %}
