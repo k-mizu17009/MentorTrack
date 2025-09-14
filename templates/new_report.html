@@ -565,9 +565,9 @@
 .image-preview-modern {
     border: 2px dashed #dee2e6;
     border-radius: 15px;
-    padding: 2rem;
+    padding: 1rem;
     text-align: center;
-    min-height: 200px;
+    min-height: 250px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -592,16 +592,24 @@
 .product-image-container {
     position: relative;
     max-width: 100%;
-    max-height: 200px;
+    max-height: 220px;
     overflow: hidden;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    width: 100%;
 }
 
 .product-image {
-    width: 100%;
+    max-width: 100%;
+    max-height: 220px;
+    width: auto;
     height: auto;
-    object-fit: cover;
+    object-fit: contain;
+    border-radius: 8px;
 }
 
 .image-overlay {
