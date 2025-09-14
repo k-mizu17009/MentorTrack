@@ -130,7 +130,8 @@
                                 {% for pg in product_group_progress %}
                                 {% if not pg.is_completed %}
                                 <div class="col-md-6 col-lg-4 mb-3 product-card" data-status="active" data-warning-level="{{ pg.time_warning_level or 0 }}">
-                                    <div class="card h-100 time-warning-card warning-level-{{ pg.time_warning_level or 0 }}">
+                                    <div class="card h-100 time-warning-card warning-level-{{ pg.time_warning_level or 0 }} clickable-card" 
+                                         {% if pg.id %}onclick="window.location.href='{{ url_for('product_group_details', product_group_id=pg.id) }}'"{% endif %}>
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between align-items-start mb-2">
                                                 <h6 class="card-title mb-0">
@@ -203,7 +204,8 @@
                                 <div class="row">
                                     {% for pg in completed_products %}
                                     <div class="col-md-6 col-lg-4 mb-3 product-card" data-status="completed">
-                                        <div class="card h-100 completed-card">
+                                        <div class="card h-100 completed-card clickable-card" 
+                                             {% if pg.id %}onclick="window.location.href='{{ url_for('product_group_details', product_group_id=pg.id) }}'"{% endif %}>
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                                     <h6 class="card-title mb-0 text-muted">
@@ -423,6 +425,17 @@
     100% {
         box-shadow: 0 5px 10px rgba(139, 0, 0, 0.5);
     }
+}
+
+/* クリック可能なカード */
+.clickable-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.clickable-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 /* ホバー効果 */

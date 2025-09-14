@@ -360,6 +360,7 @@ def get_product_group_progress(mentee_id, weeks=16):
             ).first()
             
             product_groups[product_group_name] = {
+                'id': product_group.id if product_group else None,
                 'name': product_group_name,
                 'images': product_group.images if product_group else None,
                 'reports': [],
@@ -1372,6 +1373,37 @@ def product_group_analysis(mentee_id):
                          product_group_progress=product_group_progress,
                          all_time_progress=all_time_progress,
                          selected_weeks=weeks)
+
+@app.route('/product-group/<int:product_group_id>/details')
+@login_required
+def product_group_details(product_group_id):
+    """商品群詳細ページ"""
+    product_group = ProductGroup.query.get_or_404(product_group_id)
+    mentee = product_group.mentee
+    
+    # セキュリティチェック
+    if current_user.role == 'mentee' and mentee.user_id != current_user.id:
+        flash('アクセス権限がありません。', 'danger')
+        return redirect(url_for('my_dashboard'))
+    elif current_user.role not in ['mentor', 'admin'] and current_user.role != 'mentee':
+        flash('アクセス権限がありません。', 'danger')
+        return redirect(url_for('my_dashboard'))
+    
+    # この商品群の報告を取得
+    reports = WeeklyReport.query.filter_by(
+        mentee_id=mentee.id,
+        product_group=product_group.name
+    ).order_by(WeeklyReport.report_date.desc()).all()
+    
+    # 商品群の進捗データを取得
+    product_group_progress = get_product_group_progress(mentee.id, 52)
+    current_progress = next((pg for pg in product_group_progress if pg['name'] == product_group.name), None)
+    
+    return render_template('product_group_details.html',
+                         product_group=product_group,
+                         mentee=mentee,
+                         reports=reports,
+                         current_progress=current_progress)
 
 if __name__ == '__main__':
     with app.app_context():
