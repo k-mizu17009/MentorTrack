@@ -86,8 +86,8 @@
                             <div class="row">
                                 {% for pg in product_group_progress %}
                                 {% if not pg.is_completed %}
-                                <div class="col-md-6 col-lg-4 mb-3 product-card" data-status="active">
-                                    <div class="card h-100">
+                                <div class="col-md-6 col-lg-4 mb-3 product-card" data-status="active" data-warning-level="{{ pg.time_warning_level or 0 }}">
+                                    <div class="card h-100 time-warning-card warning-level-{{ pg.time_warning_level or 0 }}">
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between align-items-start mb-2">
                                                 <h6 class="card-title mb-0">{{ pg.name }}</h6>
@@ -103,6 +103,10 @@
                                             
                                             <p class="card-text small text-muted mb-2">
                                                 <strong>最後の報告:</strong> {{ pg.stage_duration }}日前
+                                            </p>
+                                            
+                                            <p class="card-text small text-muted mb-2">
+                                                <strong>経過週数:</strong> {{ pg.weeks_since_start or 0 }}週間
                                             </p>
                                             
                                             <!-- 進捗バー -->
@@ -396,6 +400,105 @@ document.addEventListener('DOMContentLoaded', function() {
     background-color: rgba(255, 255, 255, 0.2);
     border-color: #fff;
     color: #fff;
+}
+
+/* 時間ベースの警告レベルスタイル */
+.time-warning-card {
+    transition: all 0.3s ease;
+    border-width: 2px;
+}
+
+/* 警告レベル0（正常） */
+.warning-level-0 {
+    border-color: #28a745;
+    background-color: #f8fff9;
+}
+
+.warning-level-0 .card-title {
+    color: #155724;
+}
+
+/* 警告レベル1（軽度の警告 - 黄色） */
+.warning-level-1 {
+    border-color: #ffc107;
+    background-color: #fffdf0;
+    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.2);
+}
+
+.warning-level-1 .card-title {
+    color: #856404;
+}
+
+/* 警告レベル2（中程度の警告 - オレンジ） */
+.warning-level-2 {
+    border-color: #fd7e14;
+    background-color: #fff5f0;
+    box-shadow: 0 3px 6px rgba(253, 126, 20, 0.3);
+}
+
+.warning-level-2 .card-title {
+    color: #a0522d;
+}
+
+/* 警告レベル3（高度の警告 - 赤） */
+.warning-level-3 {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+    animation: pulse-warning 2s infinite;
+}
+
+.warning-level-3 .card-title {
+    color: #721c24;
+}
+
+/* 警告レベル4（最高度の警告 - 濃い赤） */
+.warning-level-4 {
+    border-color: #8b0000;
+    background-color: #ffebee;
+    box-shadow: 0 5px 10px rgba(139, 0, 0, 0.5);
+    animation: pulse-danger 1.5s infinite;
+}
+
+.warning-level-4 .card-title {
+    color: #4a0000;
+    font-weight: bold;
+}
+
+/* アニメーション */
+@keyframes pulse-warning {
+    0% {
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+    }
+    50% {
+        box-shadow: 0 6px 12px rgba(220, 53, 69, 0.6);
+    }
+    100% {
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+    }
+}
+
+@keyframes pulse-danger {
+    0% {
+        box-shadow: 0 5px 10px rgba(139, 0, 0, 0.5);
+    }
+    50% {
+        box-shadow: 0 8px 16px rgba(139, 0, 0, 0.7);
+    }
+    100% {
+        box-shadow: 0 5px 10px rgba(139, 0, 0, 0.5);
+    }
+}
+
+/* ホバー効果 */
+.time-warning-card:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease;
+}
+
+.warning-level-3:hover,
+.warning-level-4:hover {
+    transform: translateY(-3px);
 }
 
 /* セクション間のスペーシング */

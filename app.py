@@ -329,11 +329,11 @@ def create_notification(user_id, title, message, notification_type, related_id=N
     db.session.commit()
     return notification
 
-def get_product_group_progress(mentee_id, weeks=4):
-    """商品群別の進捗状況を取得"""
+def get_product_group_progress(mentee_id, weeks=16):
+    """商品群別の進捗状況を取得（4か月=16週間の開発期間を想定）"""
     from datetime import datetime, timedelta
     
-    # 指定週数分の過去の報告を取得
+    # 4か月分の過去の報告を取得
     end_date = datetime.now()
     start_date = end_date - timedelta(weeks=weeks)
     
@@ -395,13 +395,43 @@ def get_product_group_progress(mentee_id, weeks=4):
             # 最後の報告からの期間を計算
             days_since_last_report = (datetime.now() - latest_report['date']).days
             
-            # 進捗状況を判定（報告頻度ベース）
-            if days_since_last_report <= 7:
-                pg_data['progress_status'] = 'good'  # 順調
-            elif days_since_last_report <= 14:
-                pg_data['progress_status'] = 'warning'  # 注意
+            # 初回登録時からの経過週数で警告レベルを判定（4週間ごとに段階的変化）
+            if pg_data['reports']:
+                # 最初の報告日を初回登録日とする
+                first_report_date = min(report['date'] for report in pg_data['reports'])
+                weeks_since_start = (datetime.now() - first_report_date).days // 7
             else:
-                pg_data['progress_status'] = 'danger'  # 停滞
+                weeks_since_start = 0
+            
+            # 経過週数をデータに追加
+            pg_data['weeks_since_start'] = weeks_since_start
+            
+            # 完了済みの場合は警告なし
+            if pg_data['is_completed']:
+                pg_data['progress_status'] = 'completed'
+                pg_data['time_warning_level'] = 0
+            else:
+                # 4週間ごとに段階的に警告レベルを上げる
+                if weeks_since_start < 4:
+                    # 0-3週間：緑（正常）
+                    pg_data['progress_status'] = 'good'
+                    pg_data['time_warning_level'] = 0
+                elif weeks_since_start < 8:
+                    # 4-7週間：黄色（軽度警告）
+                    pg_data['progress_status'] = 'warning'
+                    pg_data['time_warning_level'] = 1
+                elif weeks_since_start < 12:
+                    # 8-11週間：オレンジ（中程度警告）
+                    pg_data['progress_status'] = 'warning'
+                    pg_data['time_warning_level'] = 2
+                elif weeks_since_start < 16:
+                    # 12-15週間：赤（高度警告）
+                    pg_data['progress_status'] = 'danger'
+                    pg_data['time_warning_level'] = 3
+                else:
+                    # 16週間以上：濃い赤（最高度警告）
+                    pg_data['progress_status'] = 'danger'
+                    pg_data['time_warning_level'] = 4
     
     return list(product_groups.values())
 
