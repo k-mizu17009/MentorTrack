@@ -196,7 +196,7 @@
             const bgClass = notification.is_read ? '' : 'bg-light';
             
             html += `
-                <div class="dropdown-item-text p-2 ${bgClass}" onclick="markAsRead(${notification.id})">
+                <div class="dropdown-item-text p-2 ${bgClass} notification-item" onclick="handleNotificationClick(${notification.id}, '${notification.type}', ${notification.related_id || 'null'})" style="cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='${notification.is_read ? '' : '#f8f9fa'}'">
                     <div class="d-flex align-items-start">
                         <i class="fas ${iconClass} me-2 mt-1 text-primary"></i>
                         <div class="flex-grow-1">
@@ -211,6 +211,24 @@
         });
         
         list.innerHTML = html;
+    }
+    
+    // 通知クリック時の処理
+    function handleNotificationClick(notificationId, notificationType, relatedId) {
+        // 通知を既読にする
+        markAsRead(notificationId);
+        
+        // 通知タイプに応じて適切なページに遷移
+        if (notificationType === 'comment_added' && relatedId) {
+            // メンターコメントの場合は報告画面に遷移
+            window.location.href = `/report/${relatedId}`;
+        } else if (notificationType === 'report_created' && relatedId) {
+            // 報告作成の場合は報告画面に遷移
+            window.location.href = `/report/${relatedId}`;
+        } else {
+            // その他の場合はダッシュボードに遷移
+            window.location.href = '/my-dashboard';
+        }
     }
     
     // 通知を既読にする
