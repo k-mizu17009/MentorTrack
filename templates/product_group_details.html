@@ -159,8 +159,14 @@
                                         </p>
                                         <p class="text-muted mb-1">
                                             <strong>自己評価:</strong> 
-                                            <span class="badge bg-{{ 'success' if report.self_evaluation == 3 else 'warning' if report.self_evaluation == 2 else 'danger' }}">
-                                                {{ report.self_evaluation }}/3
+                                            <span class="star-evaluation">
+                                                {% for i in range(1, 4) %}
+                                                    {% if i <= report.self_evaluation %}
+                                                        <i class="fas fa-star text-warning"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star text-muted"></i>
+                                                    {% endif %}
+                                                {% endfor %}
                                             </span>
                                         </p>
                                     </div>
@@ -374,6 +380,25 @@
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* 星評価のスタイル */
+.star-evaluation {
+    display: inline-block;
+    margin-left: 0.5rem;
+}
+
+.star-evaluation i {
+    font-size: 1.1em;
+    margin-right: 0.2rem;
+}
+
+.star-evaluation .fa-star {
+    color: #ffc107;
+}
+
+.star-evaluation .fa-star.text-muted {
+    color: #6c757d;
 }
 
 /* レスポンシブ対応 */

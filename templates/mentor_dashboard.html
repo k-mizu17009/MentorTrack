@@ -140,10 +140,22 @@
                                                         <small class="text-muted d-block">{{ pg.mentee_name }}</small>
                                                     {% endif %}
                                                 </h6>
-                                                <span class="badge bg-{{ get_progress_status_info(pg.progress_status).class }}">
-                                                    <i class="{{ get_progress_status_info(pg.progress_status).icon }} me-1"></i>
-                                                    {{ get_progress_status_info(pg.progress_status).text }}
-                                                </span>
+                                                <div class="text-end">
+                                                    <span class="badge bg-{{ get_progress_status_info(pg.progress_status).class }}">
+                                                        <i class="{{ get_progress_status_info(pg.progress_status).icon }} me-1"></i>
+                                                        {{ get_progress_status_info(pg.progress_status).text }}
+                                                    </span>
+                                                    {% if pg.images %}
+                                                        {% set images = pg.images|from_json %}
+                                                        {% if images %}
+                                                            <div class="mt-2">
+                                                                <img src="{{ url_for('uploaded_file', filename=images[0]) }}" 
+                                                                     alt="{{ pg.name }}" 
+                                                                     class="card-product-image">
+                                                            </div>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </div>
                                             </div>
                                             
                                             <p class="card-text small text-muted mb-2">
@@ -214,9 +226,21 @@
                                                             <small class="text-muted d-block">{{ pg.mentee_name }}</small>
                                                         {% endif %}
                                                     </h6>
-                                                    <span class="badge bg-success">
-                                                        <i class="fas fa-check me-1"></i>完了
-                                                    </span>
+                                                    <div class="text-end">
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check me-1"></i>完了
+                                                        </span>
+                                                        {% if pg.images %}
+                                                            {% set images = pg.images|from_json %}
+                                                            {% if images %}
+                                                                <div class="mt-2">
+                                                                    <img src="{{ url_for('uploaded_file', filename=images[0]) }}" 
+                                                                         alt="{{ pg.name }}" 
+                                                                         class="card-product-image">
+                                                                </div>
+                                                            {% endif %}
+                                                        {% endif %}
+                                                    </div>
                                                 </div>
                                                 
                                                 <p class="card-text small text-muted mb-2">
@@ -458,6 +482,17 @@
 #completed-products h6 {
     border-bottom: 1px solid #dee2e6;
     padding-bottom: 0.5rem;
+}
+
+/* カード内の商品画像 */
+.card-product-image {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    object-position: center;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    background: #f8f9fa;
 }
 
 /* クリック可能なアラート */
