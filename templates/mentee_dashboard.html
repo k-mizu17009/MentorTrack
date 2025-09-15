@@ -88,6 +88,19 @@
                                 {% if not pg.is_completed %}
                                 <div class="col-md-6 col-lg-4 mb-3 product-card" data-status="active" data-warning-level="{{ pg.time_warning_level or 0 }}">
                                     <div class="card h-100 time-warning-card warning-level-{{ pg.time_warning_level or 0 }}">
+                                        <!-- 商品群画像 -->
+                                        {% if pg.images %}
+                                        <div class="product-group-image-container">
+                                            {% set image_list = pg.images|from_json if pg.images is string else pg.images %}
+                                            {% if image_list and image_list|length > 0 %}
+                                                <img src="/uploads/product_groups/{{ image_list[0] }}" 
+                                                     alt="{{ pg.name }}" 
+                                                     class="product-group-image"
+                                                     onerror="this.style.display='none';">
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                        
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between align-items-start mb-2">
                                                 <h6 class="card-title mb-0">{{ pg.name }}</h6>
@@ -156,6 +169,19 @@
                                     {% for pg in completed_products %}
                                     <div class="col-md-6 col-lg-4 mb-3 product-card" data-status="completed">
                                         <div class="card h-100 completed-card">
+                                            <!-- 商品群画像 -->
+                                            {% if pg.images %}
+                                            <div class="product-group-image-container">
+                                                {% set image_list = pg.images|from_json if pg.images is string else pg.images %}
+                                                {% if image_list and image_list|length > 0 %}
+                                                    <img src="/uploads/product_groups/{{ image_list[0] }}" 
+                                                         alt="{{ pg.name }}" 
+                                                         class="product-group-image"
+                                                         onerror="this.style.display='none';">
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
+                                            
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                                     <h6 class="card-title mb-0 text-muted">{{ pg.name }}</h6>
@@ -512,6 +538,26 @@ document.addEventListener('DOMContentLoaded', function() {
     padding-bottom: 0.5rem;
 }
 
+/* 商品群画像表示 */
+.product-group-image-container {
+    width: 100%;
+    height: 60px;
+    overflow: hidden;
+    border-radius: 6px 6px 0 0;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.product-group-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 0;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
     .btn-group {
@@ -521,6 +567,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     .btn-group .btn {
         margin-bottom: 0.25rem;
+    }
+    
+    .product-group-image-container {
+        height: 50px;
     }
 }
 </style>
