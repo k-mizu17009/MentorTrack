@@ -10,6 +10,16 @@ import os
 import json
 import uuid
 from werkzeug.utils import secure_filename
+import re
+
+# AI機能のためのインポート（オプション）
+try:
+    from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
+    import torch
+    AI_AVAILABLE = True
+except ImportError:
+    AI_AVAILABLE = False
+    print("AI機能を使用するには transformers と torch をインストールしてください")
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -131,6 +141,31 @@ class MentorComment(db.Model):
     
     # リレーションシップ
     mentor = db.relationship('User', backref='mentor_comments')
+
+class DailyReport(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    mentee_id = db.Column(db.Integer, db.ForeignKey('mentee.id'), nullable=False)
+    weekly_report_id = db.Column(db.Integer, db.ForeignKey('weekly_report.id'), nullable=True)
+    
+    # 日報の基本情報
+    report_date = db.Column(db.DateTime, nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    summary = db.Column(db.Text, nullable=False)  # 3行程度の要約
+    
+    # 生成された内容
+    generated_content = db.Column(db.Text, nullable=False)  # AI生成された日報内容
+    manual_edits = db.Column(db.Text)  # 手動で編集された内容
+    
+    # ステータス
+    status = db.Column(db.String(20), default='draft')  # draft, published, archived
+    
+    # 作成・更新日時
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # リレーションシップ
+    mentee = db.relationship('Mentee', backref='daily_reports')
+    weekly_report = db.relationship('WeeklyReport', backref='daily_reports')
 
 class ProductGroup(db.Model):
     """代表商品群マスタ"""
@@ -291,10 +326,384 @@ class ProductGroupEditForm(FlaskForm):
                       render_kw={'multiple': True, 'accept': 'image/*'})
     submit = SubmitField('更新')
 
+class DailyReportForm(FlaskForm):
+    title = StringField('タイトル', 
+                       validators=[DataRequired(), Length(min=1, max=200)],
+                       render_kw={'placeholder': '日報のタイトルを入力してください'})
+    summary = TextAreaField('要約（3行程度）', 
+                           validators=[DataRequired(), Length(min=1, max=500)],
+                           render_kw={'rows': 3, 'placeholder': '日報の要約を3行程度で入力してください'})
+    content = TextAreaField('詳細内容', 
+                           validators=[DataRequired()],
+                           render_kw={'rows': 15, 'placeholder': '日報の詳細内容を入力してください'})
+    submit = SubmitField('日報を保存')
+
+# AI機能のクラス
+class AIDailyReportGenerator:
+    """AI機能を使った日報生成クラス"""
+    
+    def __init__(self):
+        self.model = None
+        self.tokenizer = None
+        self.is_initialized = False
+        
+        if AI_AVAILABLE:
+            self.initialize_model()
+    
+    def initialize_model(self):
+        """AIモデルを初期化"""
+        try:
+            # 軽量な日本語モデルを使用
+            model_name = "rinna/japanese-gpt2-medium"
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+            self.model = AutoModelForCausalLM.from_pretrained(model_name)
+            self.is_initialized = True
+            print("AI機能が初期化されました")
+        except Exception as e:
+            print(f"AI機能の初期化に失敗しました: {e}")
+            self.is_initialized = False
+    
+    def generate_ai_summary(self, progress, actions, insights):
+        """AIを使った要約生成"""
+        if not self.is_initialized:
+            return self.generate_fallback_summary(progress, actions, insights)
+        
+        try:
+            prompt = f"""
+            以下の週次報告データを基に、3行程度の要約を作成してください。
+            
+            進捗: {progress}
+            実施した行動: {actions}
+            気づき: {insights}
+            
+            要約:
+            """
+            
+            inputs = self.tokenizer.encode(prompt, return_tensors="pt", max_length=512, truncation=True)
+            
+            with torch.no_grad():
+                outputs = self.model.generate(
+                    inputs,
+                    max_length=inputs.shape[1] + 100,
+                    num_return_sequences=1,
+                    temperature=0.7,
+                    do_sample=True,
+                    pad_token_id=self.tokenizer.eos_token_id
+                )
+            
+            generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            return self.extract_summary_from_ai_output(generated_text)
+            
+        except Exception as e:
+            print(f"AI生成中にエラーが発生しました: {e}")
+            return self.generate_fallback_summary(progress, actions, insights)
+    
+    def generate_fallback_summary(self, progress, actions, insights):
+        """AIが使用できない場合のフォールバック要約"""
+        return generate_ai_enhanced_summary(progress, actions, insights, "未評価")
+    
+    def extract_summary_from_ai_output(self, ai_output):
+        """AI出力から要約を抽出"""
+        # AI出力から要約部分を抽出
+        lines = ai_output.split('\n')
+        summary_lines = []
+        
+        for line in lines:
+            line = line.strip()
+            if line and not line.startswith('進捗:') and not line.startswith('実施した行動:') and not line.startswith('気づき:'):
+                summary_lines.append(line)
+                if len(summary_lines) >= 3:
+                    break
+        
+        return '\n'.join(summary_lines) if summary_lines else self.generate_fallback_summary("", "", "")
+
+# グローバルAI生成器インスタンス
+ai_generator = AIDailyReportGenerator()
+
 # ヘルパー関数
 def allowed_file(filename):
     """アップロード可能なファイルかチェック"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def generate_daily_report_from_weekly(weekly_report, report_date=None):
+    """
+    週次報告データから日報を自動生成する関数（品質重視版）
+    """
+    if report_date is None:
+        report_date = datetime.now()
+    
+    # 週次報告のデータを取得
+    mentee = weekly_report.mentee
+    planning_stage = weekly_report.planning_stage
+    product_group = weekly_report.product_group
+    progress_items = weekly_report.progress_items or ""
+    actions_taken = weekly_report.actions_taken or ""
+    insights_concerns = weekly_report.insights_concerns or ""
+    self_evaluation = weekly_report.self_evaluation
+    
+    # 追加の問いかけ回答を取得
+    additional_responses = {}
+    if weekly_report.additional_responses:
+        try:
+            additional_responses = eval(weekly_report.additional_responses)
+        except:
+            additional_responses = {}
+    
+    # 企画ステージの日本語名を取得
+    stage_names = {
+        'proposal_pre': '提案前',
+        'estimate_completed': '見積書対応済',
+        's_creation_approved': 'S作成承認済',
+        'proposal_decision_obtained': '提案決裁取得済',
+        'pre_production_s_confirmed': '量産前S確認済',
+        'first_order': '初回発注済',
+        'temporary_listing': '仮出品済',
+        'page_up': 'ページアップ済',
+        'second_lot_ordered': '2ロット目発注済'
+    }
+    stage_name = stage_names.get(planning_stage, planning_stage)
+    
+    # 自己評価の日本語名を取得
+    evaluation_names = {
+        1: '思うように進まなかった',
+        2: 'まあまあ進んだ',
+        3: 'とても順調に進んだ'
+    }
+    evaluation_name = evaluation_names.get(self_evaluation, '未評価')
+    
+    # 日報のタイトルを生成
+    title = f"{report_date.strftime('%m月%d日')}の業務報告 - {product_group}"
+    
+    # 要約生成（元の文章を尊重）
+    summary = generate_quality_summary(progress_items, actions_taken, insights_concerns, evaluation_name)
+    
+    # 詳細な日報内容を生成（元の文章を保持）
+    content_parts = []
+    
+    # ヘッダー
+    content_parts.append(f"# {title}")
+    content_parts.append(f"**報告者**: {mentee.name}")
+    content_parts.append(f"**報告日**: {report_date.strftime('%Y年%m月%d日')}")
+    content_parts.append(f"**商品群**: {product_group}")
+    content_parts.append(f"**現在のステージ**: {stage_name}")
+    content_parts.append("")
+    
+    # 今週の進捗（元の文章を保持）
+    if progress_items:
+        content_parts.append("## 今週の進捗")
+        content_parts.append(progress_items)
+        content_parts.append("")
+    
+    # 実施した行動（元の文章を保持）
+    if actions_taken:
+        content_parts.append("## 実施した行動")
+        content_parts.append(actions_taken)
+        content_parts.append("")
+    
+    # 気づき・悩み（元の文章を保持）
+    if insights_concerns:
+        content_parts.append("## 気づき・悩み")
+        content_parts.append(insights_concerns)
+        content_parts.append("")
+    
+    # 自己評価（自然な表現で生成）
+    content_parts.append("## 自己評価")
+    evaluation_text = generate_evaluation_text(evaluation_name, self_evaluation)
+    content_parts.append(evaluation_text)
+    content_parts.append("")
+    
+    # 追加の問いかけ回答（元の文章を保持）
+    if additional_responses.get('time_consuming_task'):
+        content_parts.append("## 今週の重点作業")
+        content_parts.append(additional_responses['time_consuming_task'])
+        content_parts.append("")
+    
+    if additional_responses.get('learned_from_senior'):
+        content_parts.append("## 学んだこと")
+        content_parts.append(additional_responses['learned_from_senior'])
+        content_parts.append("")
+    
+    # 来週への展望（自然な表現で生成）
+    content_parts.append("## 来週への展望")
+    outlook_text = generate_outlook_text(planning_stage, product_group, insights_concerns)
+    content_parts.append(outlook_text)
+    
+    generated_content = '\n'.join(content_parts)
+    
+    return {
+        'title': title,
+        'summary': summary,
+        'generated_content': generated_content
+    }
+
+def generate_quality_summary(progress, actions, insights, evaluation):
+    """
+    品質重視の要約を生成する関数（元の文章を尊重）
+    """
+    summary_parts = []
+    
+    # 進捗の要約（元の文章をそのまま使用）
+    if progress:
+        progress_lines = [line.strip() for line in progress.split('\n') if line.strip()]
+        if progress_lines:
+            summary_parts.append(f"【進捗】{progress_lines[0]}")
+    
+    # 実施した行動の要約（元の文章をそのまま使用）
+    if actions:
+        action_lines = [line.strip() for line in actions.split('\n') if line.strip()]
+        if action_lines:
+            summary_parts.append(f"【実施】{action_lines[0]}")
+    
+    # 気づきや評価の要約（元の文章をそのまま使用）
+    if insights:
+        insight_lines = [line.strip() for line in insights.split('\n') if line.strip()]
+        if insight_lines:
+            summary_parts.append(f"【気づき】{insight_lines[0]}")
+    else:
+        summary_parts.append(f"【自己評価】{evaluation}")
+    
+    return '\n'.join(summary_parts[:3])
+
+def generate_evaluation_text(evaluation_name, evaluation_score):
+    """
+    自己評価のテキストを自然に生成
+    """
+    if evaluation_score == 1:
+        return f"今週は{evaluation_name}が、来週はより効率的に進められるよう改善を図ります。"
+    elif evaluation_score == 2:
+        return f"今週は{evaluation_name}が、来週はさらに成果を上げられるよう取り組みます。"
+    elif evaluation_score == 3:
+        return f"今週は{evaluation_name}が、この調子で来週も継続していきます。"
+    else:
+        return f"今週の自己評価は{evaluation_name}です。"
+
+def generate_outlook_text(planning_stage, product_group, insights):
+    """
+    来週への展望を自然に生成
+    """
+    outlook_templates = {
+        'second_lot_ordered': f"{product_group}の企画が完了しました。次の商品群の企画に取り組み、さらなる成長を目指します。",
+        'page_up': f"{product_group}の販売開始に向けて、マーケティング活動を強化し、売上向上に努めます。",
+        'first_order': f"{product_group}の初回発注を完了し、品質管理と販売準備を進めます。",
+        'temporary_listing': f"{product_group}の仮出品に向けて、商品の品質確認と発注準備を着実に進めます。",
+        'pre_production_s_confirmed': f"{product_group}の量産前確認を完了し、次のステップに向けた準備を進めます。",
+        'proposal_decision_obtained': f"{product_group}の提案決裁を取得し、量産準備に取り組みます。",
+        's_creation_approved': f"{product_group}のS作成承認を取得し、提案決裁に向けて進めます。",
+        'estimate_completed': f"{product_group}の見積書対応を完了し、S作成承認に向けて進めます。",
+        'proposal_pre': f"{product_group}の企画を進め、見積書対応に向けて準備を進めます。"
+    }
+    
+    base_outlook = outlook_templates.get(planning_stage, f"{product_group}の企画を進め、次のステップに向けて準備を進めます。")
+    
+    # 気づきに基づく追加の展望
+    if insights:
+        insight_lines = [line.strip() for line in insights.split('\n') if line.strip()]
+        if insight_lines:
+            base_outlook += f" また、今週の気づき「{insight_lines[0]}」を活かして、より効果的な取り組みを心がけます。"
+    
+    return base_outlook
+
+def generate_ai_enhanced_summary(progress, actions, insights, evaluation):
+    """
+    AI風の要約を生成する関数（レガシー）
+    """
+    return generate_quality_summary(progress, actions, insights, evaluation)
+
+def enhance_progress_description(progress_text):
+    """
+    進捗記述をより自然な表現に変換（改善版）
+    """
+    # 元の文章を保持し、最小限の改善のみ行う
+    enhanced_text = progress_text.strip()
+    
+    # 文末の調整のみ（重複を避ける）
+    if not enhanced_text.endswith(('。', 'ました', 'ています', 'です', 'です。', 'ました。')):
+        enhanced_text += '。'
+    
+    return enhanced_text
+
+def enhance_actions_description(actions_text):
+    """
+    実施した行動の記述をより自然な表現に変換（改善版）
+    """
+    # 元の文章を保持し、最小限の改善のみ行う
+    enhanced_text = actions_text.strip()
+    
+    # 文末の調整のみ（重複を避ける）
+    if not enhanced_text.endswith(('。', 'ました', 'ています', 'です', 'です。', 'ました。')):
+        enhanced_text += '。'
+    
+    return enhanced_text
+
+def enhance_insights_description(insights_text):
+    """
+    気づき・悩みの記述をより自然な表現に変換（改善版）
+    """
+    # 元の文章を保持し、最小限の改善のみ行う
+    enhanced_text = insights_text.strip()
+    
+    # 文末の調整のみ（重複を避ける）
+    if not enhanced_text.endswith(('。', 'ました', 'ています', 'です', 'です。', 'ました。')):
+        enhanced_text += '。'
+    
+    return enhanced_text
+
+def enhance_evaluation_description(evaluation_name, evaluation_score):
+    """
+    自己評価の記述をより自然な表現に変換（改善版）
+    """
+    if evaluation_score == 1:
+        return f"今週は{evaluation_name}が、来週はより効率的に進められるよう改善を図ります。"
+    elif evaluation_score == 2:
+        return f"今週は{evaluation_name}が、来週はさらに成果を上げられるよう取り組みます。"
+    elif evaluation_score == 3:
+        return f"今週は{evaluation_name}が、この調子で来週も継続していきます。"
+    else:
+        return f"今週の自己評価は{evaluation_name}です。"
+
+def enhance_task_description(task_text):
+    """
+    重点作業の記述をより自然な表現に変換（改善版）
+    """
+    enhanced_text = task_text.strip()
+    if not enhanced_text.endswith(('。', 'ました', 'ています', 'です', 'です。', 'ました。')):
+        enhanced_text += '。'
+    return enhanced_text
+
+def enhance_learning_description(learning_text):
+    """
+    学んだことの記述をより自然な表現に変換（改善版）
+    """
+    enhanced_text = learning_text.strip()
+    if not enhanced_text.endswith(('。', 'ました', 'ています', 'です', 'です。', 'ました。')):
+        enhanced_text += '。'
+    return enhanced_text
+
+def generate_enhanced_outlook(planning_stage, product_group, insights):
+    """
+    来週への展望をより自然で具体的な表現で生成
+    """
+    outlook_templates = {
+        'second_lot_ordered': f"{product_group}の企画が完了しました。次の商品群の企画に取り組み、さらなる成長を目指します。",
+        'page_up': f"{product_group}の販売開始に向けて、マーケティング活動を強化し、売上向上に努めます。",
+        'first_order': f"{product_group}の初回発注を完了し、品質管理と販売準備を進めます。",
+        'temporary_listing': f"{product_group}の仮出品に向けて、商品の品質確認と発注準備を着実に進めます。",
+        'pre_production_s_confirmed': f"{product_group}の量産前確認を完了し、次のステップに向けた準備を進めます。",
+        'proposal_decision_obtained': f"{product_group}の提案決裁を取得し、量産準備に取り組みます。",
+        's_creation_approved': f"{product_group}のS作成承認を取得し、提案決裁に向けて進めます。",
+        'estimate_completed': f"{product_group}の見積書対応を完了し、S作成承認に向けて進めます。",
+        'proposal_pre': f"{product_group}の企画を進め、見積書対応に向けて準備を進めます。"
+    }
+    
+    base_outlook = outlook_templates.get(planning_stage, f"{product_group}の企画を進め、次のステップに向けて準備を進めます。")
+    
+    # 気づきに基づく追加の展望
+    if insights:
+        insight_lines = [line.strip() for line in insights.split('\n') if line.strip()]
+        if insight_lines:
+            base_outlook += f" また、今週の気づき「{insight_lines[0]}」を活かして、より効果的な取り組みを心がけます。"
+    
+    return base_outlook
 
 def save_uploaded_files(files):
     """アップロードされたファイルを保存"""
@@ -1479,6 +1888,129 @@ def product_group_details(product_group_id):
                          mentee=mentee,
                          reports=reports,
                          current_progress=current_progress)
+
+# 日報関連のルート
+@app.route('/daily-report/generate/<int:weekly_report_id>')
+@login_required
+def generate_daily_report(weekly_report_id):
+    """週次報告から日報を生成"""
+    try:
+        weekly_report = WeeklyReport.query.get_or_404(weekly_report_id)
+        
+        # 権限チェック
+        if current_user.role not in ['admin'] and weekly_report.mentee.user_id != current_user.id:
+            flash('この報告から日報を生成する権限がありません。', 'danger')
+            return redirect(url_for('my_dashboard'))
+        
+        # 日報を生成
+        generated_data = generate_daily_report_from_weekly(weekly_report)
+        
+        # フォームに初期値を設定
+        form = DailyReportForm()
+        form.title.data = generated_data['title']
+        form.summary.data = generated_data['summary']
+        form.content.data = generated_data['generated_content']
+        
+        return render_template('generate_daily_report.html', 
+                             form=form, 
+                             weekly_report=weekly_report,
+                             generated_data=generated_data)
+        
+    except Exception as e:
+        flash(f'日報の生成中にエラーが発生しました: {str(e)}', 'danger')
+        return redirect(url_for('my_dashboard'))
+
+@app.route('/daily-report/save', methods=['POST'])
+@login_required
+def save_daily_report():
+    """日報を保存"""
+    try:
+        form = DailyReportForm()
+        
+        if form.validate_on_submit():
+            # 週次報告IDを取得（hidden fieldから）
+            weekly_report_id = request.form.get('weekly_report_id')
+            weekly_report = None
+            if weekly_report_id:
+                weekly_report = WeeklyReport.query.get(int(weekly_report_id))
+            
+            # メンティを取得
+            if weekly_report:
+                mentee = weekly_report.mentee
+            else:
+                # 週次報告がない場合は、現在のユーザーに関連するメンティを取得
+                mentee = Mentee.query.filter_by(user_id=current_user.id).first()
+                if not mentee:
+                    flash('メンティ情報が見つかりません。', 'danger')
+                    return redirect(url_for('my_dashboard'))
+            
+            # 日報を作成
+            daily_report = DailyReport(
+                mentee_id=mentee.id,
+                weekly_report_id=weekly_report.id if weekly_report else None,
+                report_date=datetime.now(),
+                title=form.title.data,
+                summary=form.summary.data,
+                generated_content=form.content.data,
+                status='draft'
+            )
+            
+            db.session.add(daily_report)
+            db.session.commit()
+            
+            flash('日報を保存しました。', 'success')
+            return redirect(url_for('view_daily_report', report_id=daily_report.id))
+        else:
+            flash('フォームの入力に問題があります。', 'danger')
+            return redirect(url_for('my_dashboard'))
+            
+    except Exception as e:
+        db.session.rollback()
+        flash(f'日報の保存中にエラーが発生しました: {str(e)}', 'danger')
+        return redirect(url_for('my_dashboard'))
+
+@app.route('/daily-report/<int:report_id>')
+@login_required
+def view_daily_report(report_id):
+    """日報を表示"""
+    try:
+        daily_report = DailyReport.query.get_or_404(report_id)
+        
+        # 権限チェック
+        if current_user.role not in ['admin', 'mentor'] and daily_report.mentee.user_id != current_user.id:
+            flash('この日報を表示する権限がありません。', 'danger')
+            return redirect(url_for('my_dashboard'))
+        
+        return render_template('view_daily_report.html', daily_report=daily_report)
+        
+    except Exception as e:
+        flash(f'日報の表示中にエラーが発生しました: {str(e)}', 'danger')
+        return redirect(url_for('my_dashboard'))
+
+@app.route('/daily-reports/<int:mentee_id>')
+@login_required
+def list_daily_reports(mentee_id):
+    """メンティの日報一覧を表示"""
+    try:
+        mentee = Mentee.query.get_or_404(mentee_id)
+        
+        # 権限チェック
+        if current_user.role not in ['admin', 'mentor'] and mentee.user_id != current_user.id:
+            flash('このメンティの日報を表示する権限がありません。', 'danger')
+            return redirect(url_for('my_dashboard'))
+        
+        # 日報一覧を取得（新しい順）
+        daily_reports = DailyReport.query.filter_by(mentee_id=mentee_id)\
+                                        .order_by(DailyReport.report_date.desc())\
+                                        .all()
+        
+        return render_template('list_daily_reports.html', 
+                             mentee=mentee, 
+                             daily_reports=daily_reports)
+        
+    except Exception as e:
+        flash(f'日報一覧の表示中にエラーが発生しました: {str(e)}', 'danger')
+        return redirect(url_for('my_dashboard'))
 
 if __name__ == '__main__':
     with app.app_context():

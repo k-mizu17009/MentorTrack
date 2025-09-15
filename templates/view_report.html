@@ -269,6 +269,9 @@
                     <a href="{{ url_for('mentee_dashboard', mentee_id=report.mentee.id) }}" class="btn btn-primary">
                         <i class="fas fa-arrow-left me-2"></i>ダッシュボードに戻る
                     </a>
+                    <a href="{{ url_for('generate_daily_report', weekly_report_id=report.id) }}" class="btn btn-info ms-2">
+                        <i class="fas fa-file-alt me-2"></i>日報を生成
+                    </a>
                     <a href="{{ url_for('new_report', mentee_id=report.mentee.id) }}" class="btn btn-outline-primary ms-2">
                         <i class="fas fa-plus me-2"></i>新しい報告を作成
                     </a>
