@@ -21,6 +21,19 @@
                 </a>
             </div>
 
+        <!-- フィルター状態表示 -->
+        <div class="alert alert-info alert-dismissible fade show" id="filter-status" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-filter me-2"></i>
+                    <span id="filter-status-text"></span>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="reset-filter-main">
+                    <i class="fas fa-undo-alt me-1"></i>フィルター解除
+                </button>
+            </div>
+        </div>
+
             <!-- 期間選択 -->
             <div class="card mb-4">
                 <div class="card-header">
@@ -104,7 +117,12 @@
             <!-- 商品群別詳細分析 -->
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">商品群別詳細分析</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">商品群別詳細分析</h5>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="reset-filter-header" style="display: none;">
+                            <i class="fas fa-undo-alt me-1"></i>フィルター解除
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -262,74 +280,89 @@
                     <!-- 進捗ステージ一覧 -->
                     <div class="card mb-4 sticky-top" style="top: 20px;">
                         <div class="card-header">
-                            <h6 class="mb-0">
-                                <i class="fas fa-list-ol me-2"></i>進捗ステージ一覧
-                            </h6>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-list-ol me-2"></i>進捗ステージ一覧
+                                </h6>
+                                <button class="btn btn-sm btn-outline-secondary" id="reset-filter" title="フィルターをリセット">
+                                    <i class="fas fa-undo-alt"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">クリックで絞り込み</small>
                         </div>
                         <div class="card-body p-2">
                             <div class="progress-stages-sidebar">
-                                <div class="progress-stage-item-sidebar" data-stage="proposal_pre">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="proposal_pre" data-filter="all">
                                     <div class="stage-number-sidebar">1</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">提案前</div>
                                         <div class="stage-percentage-sidebar">11%</div>
                                     </div>
+                                    <div class="stage-count-badge" data-stage="proposal_pre">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar" data-stage="estimate_completed">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="estimate_completed" data-filter="all">
                                     <div class="stage-number-sidebar">2</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">見積書対応済</div>
                                         <div class="stage-percentage-sidebar">22%</div>
                                     </div>
+                                    <div class="stage-count-badge" data-stage="estimate_completed">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar" data-stage="s_creation_approved">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s_creation_approved" data-filter="all">
                                     <div class="stage-number-sidebar">3</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">S作成承認済</div>
                                         <div class="stage-percentage-sidebar">33%</div>
                                     </div>
+                                    <div class="stage-count-badge" data-stage="s_creation_approved">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar" data-stage="proposal_decision_obtained">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="proposal_decision_obtained" data-filter="all">
                                     <div class="stage-number-sidebar">4</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">提案決裁取得済</div>
                                         <div class="stage-percentage-sidebar">44%</div>
                                     </div>
+                                    <div class="stage-count-badge" data-stage="proposal_decision_obtained">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar" data-stage="pre_production_s_confirmed">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="pre_production_s_confirmed" data-filter="all">
                                     <div class="stage-number-sidebar">5</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">量産前S確認済</div>
                                         <div class="stage-percentage-sidebar">56%</div>
                                     </div>
+                                    <div class="stage-count-badge" data-stage="pre_production_s_confirmed">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar" data-stage="first_order">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="first_order" data-filter="all">
                                     <div class="stage-number-sidebar">6</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">初回発注済</div>
                                         <div class="stage-percentage-sidebar">67%</div>
                                     </div>
+                                    <div class="stage-count-badge" data-stage="first_order">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar" data-stage="temporary_listing">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="temporary_listing" data-filter="all">
                                     <div class="stage-number-sidebar">7</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">仮出品済</div>
                                         <div class="stage-percentage-sidebar">78%</div>
                                     </div>
+                                    <div class="stage-count-badge" data-stage="temporary_listing">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar" data-stage="page_up">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="page_up" data-filter="all">
                                     <div class="stage-number-sidebar">8</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">ページアップ済</div>
                                         <div class="stage-percentage-sidebar">89%</div>
                                     </div>
+                                    <div class="stage-count-badge" data-stage="page_up">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar" data-stage="second_lot_ordered">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="second_lot_ordered" data-filter="all">
                                     <div class="stage-number-sidebar">9</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">2ロット目発注済</div>
                                         <div class="stage-percentage-sidebar">100%</div>
                                     </div>
+                                    <div class="stage-count-badge" data-stage="second_lot_ordered">0</div>
                                 </div>
                             </div>
                             <div class="text-center mt-2">
@@ -436,6 +469,79 @@
 
 .progress-stage-item-sidebar.completed-stage .stage-number-sidebar {
     background: #17a2b8;
+}
+
+/* フィルター可能なステージ項目 */
+.progress-stage-item-sidebar.filterable {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.progress-stage-item-sidebar.filterable:hover {
+    background: #e3f2fd;
+    border-color: #2196f3;
+    transform: translateX(4px);
+}
+
+.progress-stage-item-sidebar.filterable.active-filter {
+    background: #e8f5e8;
+    border-color: #28a745;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+}
+
+/* ステージカウントバッジ */
+.stage-count-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: #6c757d;
+    color: white;
+    font-size: 0.6rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 16px;
+    text-align: center;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.progress-stage-item-sidebar.filterable:hover .stage-count-badge {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.progress-stage-item-sidebar.filterable.active-filter .stage-count-badge {
+    background: #28a745;
+    opacity: 1;
+}
+
+/* フィルター解除ボタンのスタイル */
+#reset-filter-main, #reset-filter-header {
+    transition: all 0.3s ease;
+    color: white !important;
+}
+
+#reset-filter-main:hover, #reset-filter-header:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    color: white !important;
+}
+
+#reset-filter-header {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* レスポンシブ対応 */
@@ -660,6 +766,223 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ページ読み込み時に実行
     highlightCurrentStages();
+    
+    // フィルター機能（少し遅延して実行）
+    setTimeout(function() {
+        initStageFilter();
+    }, 100);
 });
+
+// ステージフィルター機能
+function initStageFilter() {
+    const filterableStages = document.querySelectorAll('.filterable');
+    const productGroups = document.querySelectorAll('.col-lg-3.col-md-6');
+    const filterStatus = document.getElementById('filter-status');
+    const filterStatusText = document.getElementById('filter-status-text');
+    const resetFilterBtn = document.getElementById('reset-filter');
+    
+    console.log('フィルター機能初期化:', {
+        filterableStages: filterableStages.length,
+        productGroups: productGroups.length,
+        filterStatus: filterStatus,
+        resetFilterBtn: resetFilterBtn
+    });
+    
+    // ステージごとの商品群数をカウント
+    function updateStageCounts() {
+        const stageCounts = {};
+        
+        // より確実に商品群カードを取得
+        let allProductGroups = document.querySelectorAll('.col-lg-3.col-md-6, .col-md-6.col-lg-3, .col-sm-6.col-md-6');
+        
+        // 上記で見つからない場合は、より広範囲で検索
+        if (allProductGroups.length === 0) {
+            allProductGroups = document.querySelectorAll('.col-md-6, .col-lg-3, .col-sm-6');
+        }
+        
+        // それでも見つからない場合は、カードクラスで検索
+        if (allProductGroups.length === 0) {
+            allProductGroups = document.querySelectorAll('.card, .modern-card');
+        }
+        
+        console.log('商品群カード数:', allProductGroups.length);
+        
+        allProductGroups.forEach(function(group, index) {
+            // ステージ番号バッジからdata-stage属性を取得
+            const stageNumberBadge = group.querySelector('.stage-number-badge');
+            if (stageNumberBadge) {
+                const stageKey = stageNumberBadge.getAttribute('data-stage');
+                console.log(`カウント対象商品群${index + 1}のステージ: "${stageKey}"`);
+                
+                if (stageKey) {
+                    stageCounts[stageKey] = (stageCounts[stageKey] || 0) + 1;
+                    console.log(`ステージ${stageKey}のカウント: ${stageCounts[stageKey]}`);
+                }
+            } else {
+                console.log(`カウント対象商品群${index + 1}: ステージ番号バッジが見つからない`);
+            }
+        });
+        
+        console.log('ステージカウント:', stageCounts);
+        
+        // カウントバッジを更新
+        filterableStages.forEach(function(stage) {
+            const stageKey = stage.getAttribute('data-stage');
+            const countBadge = stage.querySelector('.stage-count-badge');
+            const count = stageCounts[stageKey] || 0;
+            countBadge.textContent = count;
+            countBadge.style.display = count > 0 ? 'block' : 'none';
+        });
+    }
+    
+    // フィルター適用
+    function applyFilter(selectedStage) {
+        console.log('フィルター適用:', selectedStage);
+        
+        // 全てのステージ項目のアクティブ状態をリセット
+        filterableStages.forEach(function(stage) {
+            stage.classList.remove('active-filter');
+        });
+        
+        // 選択されたステージをアクティブにする
+        if (selectedStage !== 'all') {
+            const selectedStageElement = document.querySelector(`[data-stage="${selectedStage}"]`);
+            if (selectedStageElement) {
+                selectedStageElement.classList.add('active-filter');
+            }
+        }
+        
+        // より確実に商品群カードを取得
+        let allProductGroups = document.querySelectorAll('.col-lg-3.col-md-6, .col-md-6.col-lg-3, .col-sm-6.col-md-6');
+        
+        // 上記で見つからない場合は、より広範囲で検索
+        if (allProductGroups.length === 0) {
+            allProductGroups = document.querySelectorAll('.col-md-6, .col-lg-3, .col-sm-6');
+            console.log('代替セレクターで商品群カード数:', allProductGroups.length);
+        }
+        
+        // それでも見つからない場合は、カードクラスで検索
+        if (allProductGroups.length === 0) {
+            allProductGroups = document.querySelectorAll('.card, .modern-card');
+            console.log('カードクラスで商品群カード数:', allProductGroups.length);
+        }
+        
+        console.log('フィルター対象商品群数:', allProductGroups.length);
+        
+        // 商品群をフィルター
+        allProductGroups.forEach(function(group, index) {
+            if (selectedStage === 'all') {
+                group.style.display = 'block';
+                group.style.opacity = '1';
+                console.log(`商品群${index + 1}: 表示`);
+            } else {
+                // ステージ番号バッジからdata-stage属性を取得
+                const stageNumberBadge = group.querySelector('.stage-number-badge');
+                if (stageNumberBadge) {
+                    const stageKey = stageNumberBadge.getAttribute('data-stage');
+                    console.log(`商品群${index + 1}のステージ: "${stageKey}", 選択ステージ: "${selectedStage}"`);
+                    
+                    if (stageKey === selectedStage) {
+                        group.style.display = 'block';
+                        group.style.opacity = '1';
+                        console.log(`商品群${index + 1}: 表示 (ステージ: ${stageKey})`);
+                    } else {
+                        group.style.display = 'none';
+                        group.style.opacity = '0.3';
+                        console.log(`商品群${index + 1}: 非表示 (ステージ: ${stageKey})`);
+                    }
+                } else {
+                    // バッジがない場合は表示
+                    group.style.display = 'block';
+                    group.style.opacity = '1';
+                    console.log(`商品群${index + 1}: 表示 (バッジなし)`);
+                }
+            }
+        });
+        
+        // フィルター状態を表示
+        if (selectedStage !== 'all') {
+            const stageNames = {
+                'proposal_pre': '提案前',
+                'estimate_completed': '見積書対応済',
+                's_creation_approved': 'S作成承認済',
+                'proposal_decision_obtained': '提案決裁取得済',
+                'pre_production_s_confirmed': '量産前S確認済',
+                'first_order': '初回発注済',
+                'temporary_listing': '仮出品済',
+                'page_up': 'ページアップ済',
+                'second_lot_ordered': '2ロット目発注済'
+            };
+            
+            // 安全にカウントを取得
+            const selectedStageElements = document.querySelectorAll(`[data-stage="${selectedStage}"]`);
+            let filteredCount = 0;
+            
+            if (selectedStageElements.length > 0) {
+                const countBadge = selectedStageElements[0].querySelector('.stage-count-badge');
+                if (countBadge && countBadge.textContent) {
+                    filteredCount = parseInt(countBadge.textContent) || 0;
+                }
+            }
+            
+            // フィルター状態表示の要素が存在する場合のみ更新
+            if (filterStatusText) {
+                filterStatusText.textContent = `${stageNames[selectedStage]}の商品群を表示中 (${filteredCount}件)`;
+            }
+            
+            if (filterStatus) {
+                filterStatus.style.display = 'block';
+            }
+            
+            // ヘッダーの解除ボタンを表示
+            const resetFilterHeader = document.getElementById('reset-filter-header');
+            if (resetFilterHeader) {
+                resetFilterHeader.style.display = 'block';
+            }
+        } else {
+            if (filterStatus) {
+                filterStatus.style.display = 'none';
+            }
+            
+            // ヘッダーの解除ボタンを非表示
+            const resetFilterHeader = document.getElementById('reset-filter-header');
+            if (resetFilterHeader) {
+                resetFilterHeader.style.display = 'none';
+            }
+        }
+    }
+    
+    // ステージクリックイベント
+    filterableStages.forEach(function(stage) {
+        stage.addEventListener('click', function() {
+            const stageKey = this.getAttribute('data-stage');
+            applyFilter(stageKey);
+        });
+    });
+    
+    // リセットボタン（サイドバー）
+    resetFilterBtn.addEventListener('click', function() {
+        applyFilter('all');
+    });
+    
+    // メインフィルター解除ボタン
+    const resetFilterMain = document.getElementById('reset-filter-main');
+    if (resetFilterMain) {
+        resetFilterMain.addEventListener('click', function() {
+            applyFilter('all');
+        });
+    }
+    
+    // ヘッダーフィルター解除ボタン
+    const resetFilterHeader = document.getElementById('reset-filter-header');
+    if (resetFilterHeader) {
+        resetFilterHeader.addEventListener('click', function() {
+            applyFilter('all');
+        });
+    }
+    
+    // 初期化
+    updateStageCounts();
+}
 </script>
 {% endblock %}
