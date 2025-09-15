@@ -3,8 +3,10 @@
 {% block title %}週次報告詳細 - {{ report.mentee.name }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-8 mx-auto">
+<div class="container-fluid">
+    <div class="row">
+        <!-- メインコンテンツ -->
+        <div class="col-lg-8">
         <div class="card">
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
@@ -226,10 +228,244 @@
                 </div>
             </div>
         </div>
+        </div>
+        
+        <!-- サイドバー -->
+        <div class="col-lg-4">
+            <!-- 進捗ステージ一覧 -->
+            <div class="card mb-4 sticky-top" style="top: 20px;">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-list-ol me-2"></i>進捗ステージ一覧
+                    </h6>
+                    <small class="text-muted">進捗確認</small>
+                </div>
+                <div class="card-body p-2">
+                    <div class="progress-stages-sidebar">
+                        <div class="progress-stage-item-sidebar" data-stage="proposal_pre">
+                            <div class="stage-number-sidebar">1</div>
+                            <div class="stage-info-sidebar">
+                                <div class="stage-name-sidebar">提案前</div>
+                                <div class="stage-percentage-sidebar">11%</div>
+                            </div>
+                            <div class="stage-status-sidebar">
+                                {% if report.planning_stage == 'proposal_pre' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="progress-stage-item-sidebar" data-stage="estimate_completed">
+                            <div class="stage-number-sidebar">2</div>
+                            <div class="stage-info-sidebar">
+                                <div class="stage-name-sidebar">見積書対応済</div>
+                                <div class="stage-percentage-sidebar">22%</div>
+                            </div>
+                            <div class="stage-status-sidebar">
+                                {% if report.planning_stage == 'estimate_completed' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="progress-stage-item-sidebar" data-stage="s_creation_approved">
+                            <div class="stage-number-sidebar">3</div>
+                            <div class="stage-info-sidebar">
+                                <div class="stage-name-sidebar">S作成承認済</div>
+                                <div class="stage-percentage-sidebar">33%</div>
+                            </div>
+                            <div class="stage-status-sidebar">
+                                {% if report.planning_stage == 's_creation_approved' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="progress-stage-item-sidebar" data-stage="proposal_decision_obtained">
+                            <div class="stage-number-sidebar">4</div>
+                            <div class="stage-info-sidebar">
+                                <div class="stage-name-sidebar">提案決裁取得済</div>
+                                <div class="stage-percentage-sidebar">44%</div>
+                            </div>
+                            <div class="stage-status-sidebar">
+                                {% if report.planning_stage == 'proposal_decision_obtained' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="progress-stage-item-sidebar" data-stage="pre_production_s_confirmed">
+                            <div class="stage-number-sidebar">5</div>
+                            <div class="stage-info-sidebar">
+                                <div class="stage-name-sidebar">量産前S確認済</div>
+                                <div class="stage-percentage-sidebar">56%</div>
+                            </div>
+                            <div class="stage-status-sidebar">
+                                {% if report.planning_stage == 'pre_production_s_confirmed' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="progress-stage-item-sidebar" data-stage="first_order">
+                            <div class="stage-number-sidebar">6</div>
+                            <div class="stage-info-sidebar">
+                                <div class="stage-name-sidebar">初回発注済</div>
+                                <div class="stage-percentage-sidebar">67%</div>
+                            </div>
+                            <div class="stage-status-sidebar">
+                                {% if report.planning_stage == 'first_order' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="progress-stage-item-sidebar" data-stage="temporary_listing">
+                            <div class="stage-number-sidebar">7</div>
+                            <div class="stage-info-sidebar">
+                                <div class="stage-name-sidebar">仮出品済</div>
+                                <div class="stage-percentage-sidebar">78%</div>
+                            </div>
+                            <div class="stage-status-sidebar">
+                                {% if report.planning_stage == 'temporary_listing' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="progress-stage-item-sidebar" data-stage="page_up">
+                            <div class="stage-number-sidebar">8</div>
+                            <div class="stage-info-sidebar">
+                                <div class="stage-name-sidebar">ページアップ済</div>
+                                <div class="stage-percentage-sidebar">89%</div>
+                            </div>
+                            <div class="stage-status-sidebar">
+                                {% if report.planning_stage == 'page_up' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="progress-stage-item-sidebar" data-stage="second_lot_ordered">
+                            <div class="stage-number-sidebar">9</div>
+                            <div class="stage-info-sidebar">
+                                <div class="stage-name-sidebar">2ロット目発注済</div>
+                                <div class="stage-percentage-sidebar">100%</div>
+                            </div>
+                            <div class="stage-status-sidebar">
+                                {% if report.planning_stage == 'second_lot_ordered' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            現在のステージ: <strong>{{ get_stage_display_name(report.planning_stage) }}</strong>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <style>
+/* サイドバー用進捗ステージ一覧のスタイリング */
+.progress-stages-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.progress-stage-item-sidebar {
+    display: flex;
+    align-items: center;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 6px 8px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.progress-stage-item-sidebar:hover {
+    background: #e9ecef;
+    border-color: #007bff;
+    transform: translateX(2px);
+}
+
+/* 現在のステージをハイライト */
+.progress-stage-item-sidebar[data-stage="{{ report.planning_stage }}"] {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-color: #2196f3;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+}
+
+.stage-number-sidebar {
+    background: #007bff;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+/* 現在のステージの番号をハイライト */
+.progress-stage-item-sidebar[data-stage="{{ report.planning_stage }}"] .stage-number-sidebar {
+    background: #2196f3;
+    box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
+}
+
+.stage-info-sidebar {
+    flex: 1;
+    min-width: 0;
+}
+
+.stage-name-sidebar {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #495057;
+    line-height: 1.2;
+    margin-bottom: 1px;
+}
+
+.stage-percentage-sidebar {
+    font-size: 0.65rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.stage-status-sidebar {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+
+/* レスポンシブ対応 */
+@media (max-width: 992px) {
+    .col-lg-4 {
+        margin-top: 20px;
+    }
+    
+    .sticky-top {
+        position: relative !important;
+        top: auto !important;
+    }
+}
+
 /* 星評価表示のスタイル */
 .star-display-view {
     display: flex;
@@ -281,4 +517,56 @@
     }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 現在のステージをハイライト表示
+    function highlightCurrentStage() {
+        const currentStage = '{{ report.planning_stage }}';
+        const stageItems = document.querySelectorAll('.progress-stage-item-sidebar');
+        
+        stageItems.forEach(function(item) {
+            if (item.getAttribute('data-stage') === currentStage) {
+                item.style.background = 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)';
+                item.style.borderColor = '#2196f3';
+                item.style.boxShadow = '0 2px 8px rgba(33, 150, 243, 0.2)';
+                
+                // ステージ番号をハイライト
+                const stageNumber = item.querySelector('.stage-number-sidebar');
+                if (stageNumber) {
+                    stageNumber.style.background = '#2196f3';
+                    stageNumber.style.boxShadow = '0 0 8px rgba(33, 150, 243, 0.4)';
+                }
+            }
+        });
+    }
+    
+    // ステージアイテムのホバー効果
+    function addStageHoverEffects() {
+        const stageItems = document.querySelectorAll('.progress-stage-item-sidebar');
+        
+        stageItems.forEach(function(item) {
+            item.addEventListener('mouseenter', function() {
+                if (this.getAttribute('data-stage') !== '{{ report.planning_stage }}') {
+                    this.style.background = '#e9ecef';
+                    this.style.borderColor = '#007bff';
+                    this.style.transform = 'translateX(2px)';
+                }
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                if (this.getAttribute('data-stage') !== '{{ report.planning_stage }}') {
+                    this.style.background = '#f8f9fa';
+                    this.style.borderColor = '#dee2e6';
+                    this.style.transform = 'translateX(0)';
+                }
+            });
+        });
+    }
+    
+    // 初期化
+    highlightCurrentStage();
+    addStageHoverEffects();
+});
+</script>
 {% endblock %}

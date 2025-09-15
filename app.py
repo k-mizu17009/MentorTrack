@@ -470,6 +470,21 @@ def get_stage_display_name(stage):
     }
     return stage_names.get(stage, stage)
 
+def get_stage_progress_percentage(stage):
+    """企画ステージの進捗パーセンテージを取得"""
+    stage_percentages = {
+        'proposal_pre': 11,
+        'estimate_completed': 22,
+        's_creation_approved': 33,
+        'proposal_decision_obtained': 44,
+        'pre_production_s_confirmed': 56,
+        'first_order': 67,
+        'temporary_listing': 78,
+        'page_up': 89,
+        'second_lot_ordered': 100
+    }
+    return stage_percentages.get(stage, 0)
+
 def get_progress_status_info(status):
     """進捗状況の表示情報を取得"""
     status_info = {
@@ -497,6 +512,7 @@ def from_json_filter(json_string):
 def utility_processor():
     return dict(
         get_stage_display_name=get_stage_display_name,
+        get_stage_progress_percentage=get_stage_progress_percentage,
         get_progress_status_info=get_progress_status_info
     )
 
