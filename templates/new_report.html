@@ -71,6 +71,21 @@
                     }
                     </script>
                     
+                    <!-- 商品群ステージデータをJavaScriptで利用できるように埋め込み -->
+                    <script type="application/json" id="product-group-stages-data">
+                    {
+                        {% for pg_id, stage_info in product_group_stages.items() %}
+                        "{{ pg_id }}": {
+                            "name": "{{ stage_info.name }}",
+                            "latest_stage": "{{ stage_info.latest_stage }}",
+                            "latest_stage_name": "{{ stage_info.latest_stage_name }}",
+                            "last_report_date": "{{ stage_info.last_report_date }}",
+                            "has_reports": {{ stage_info.has_reports|lower }}
+                        }{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    }
+                    </script>
+                    
                     <!-- 商品群選択セクション -->
                     <div class="form-section">
                         <div class="section-header">
@@ -100,6 +115,63 @@
                                         <div class="image-placeholder-modern">
                                             <i class="fas fa-image fa-3x"></i>
                                             <p>商品群を選択してください</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 商品群進捗ステージ表示 -->
+                        <div class="row mt-3" id="product-group-stage-info" style="display: none;">
+                            <div class="col-12">
+                                <div class="stage-info-card">
+                                    <div class="stage-info-header">
+                                        <h6 class="stage-info-title">
+                                            <i class="fas fa-chart-line me-2"></i>選択した商品群の進捗状況
+                                        </h6>
+                                    </div>
+                                    <div class="stage-info-content">
+                                        <!-- 進捗バー表示 -->
+                                        <div class="progress-visualization">
+                                            <div class="progress-bar-container">
+                                                <div class="progress-bar" id="progress-bar">
+                                                    <div class="progress-fill" id="progress-fill"></div>
+                                                </div>
+                                                <div class="progress-percentage" id="progress-percentage">0%</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- ステージ情報 -->
+                                        <div class="row mt-3">
+                                            <div class="col-md-6">
+                                                <div class="stage-info-item">
+                                                    <span class="stage-info-label">
+                                                        <i class="fas fa-flag me-1"></i>最新ステージ:
+                                                    </span>
+                                                    <span class="stage-info-value" id="latest-stage-name">-</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="stage-info-item">
+                                                    <span class="stage-info-label">
+                                                        <i class="fas fa-calendar me-1"></i>最終報告日:
+                                                    </span>
+                                                    <span class="stage-info-value" id="last-report-date">-</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- ステージ詳細表示 -->
+                                        <div class="stage-details" id="stage-details">
+                                            <div class="current-stage-badge" id="current-stage-badge">
+                                                <i class="fas fa-star me-1"></i>
+                                                <span id="current-stage-text">-</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="stage-info-note" id="stage-info-note">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            <span>この商品群の最新の進捗状況です。新しい報告でステージを更新できます。</span>
                                         </div>
                                     </div>
                                 </div>
@@ -168,28 +240,20 @@
                         </div>
                         
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group-modern mb-4">
                                     <label class="form-label-modern">
-                                        <i class="fas fa-check-circle me-2"></i>今週の進捗
+                                        <i class="fas fa-tasks me-2"></i>今週の進捗・実施した行動
                                     </label>
-                                    {{ form.progress_items(class="form-control-modern", rows="4", placeholder="今週完了した項目を具体的に記述してください。例：「市場調査完了」「競合分析実施」「価格設定検討」など") }}
+                                    {{ form.progress_items(class="form-control-modern", rows="6", placeholder="今週の進捗状況と実施した具体的な行動を記述してください。例：「市場調査完了」「競合分析実施」「価格設定検討」「サンプル作成の承認取得」など") }}
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-group-modern mb-4">
-                                    <label class="form-label-modern">
-                                        <i class="fas fa-running me-2"></i>実施した行動
-                                    </label>
-                                    {{ form.actions_taken(class="form-control-modern", rows="4", placeholder="今週実施した具体的な行動を記述してください") }}
-                                </div>
-                            </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group-modern mb-4">
                                     <label class="form-label-modern">
                                         <i class="fas fa-lightbulb me-2"></i>気づき・悩み
                                     </label>
-                                    {{ form.insights_concerns(class="form-control-modern", rows="4", placeholder="今週感じた気づきや悩みを自由に記述してください。これがメンターとの対話のきっかけになります。") }}
+                                    {{ form.insights_concerns(class="form-control-modern", rows="6", placeholder="今週感じた気づきや悩みを自由に記述してください。これがメンターとの対話のきっかけになります。") }}
                                 </div>
                             </div>
                         </div>
@@ -869,6 +933,182 @@
     }
 }
 
+/* 進捗ステージ表示カードのスタイル */
+.stage-info-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.stage-info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stage-info-header {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.stage-info-title {
+    color: #495057;
+    font-weight: 600;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.stage-info-content {
+    padding: 0.5rem 0;
+}
+
+/* 進捗バー表示のスタイル */
+.progress-visualization {
+    margin-bottom: 1rem;
+}
+
+.progress-bar-container {
+    position: relative;
+    background: #e9ecef;
+    border-radius: 20px;
+    height: 12px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745 0%, #20c997 50%, #17a2b8 100%);
+    border-radius: 20px;
+    transition: width 0.8s ease-in-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #495057;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.stage-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    padding: 0.25rem 0;
+}
+
+.stage-info-label {
+    color: #6c757d;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+}
+
+.stage-info-value {
+    color: #495057;
+    font-weight: 600;
+    font-size: 0.9rem;
+    background: #ffffff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+/* ステージ詳細表示 */
+.stage-details {
+    margin: 1rem 0;
+    text-align: center;
+}
+
+.current-stage-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.current-stage-badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ステージ別の色分け */
+.stage-badge-proposal-pre { background: linear-gradient(135deg, #6c757d, #495057); color: white; }
+.stage-badge-estimate-completed { background: linear-gradient(135deg, #ffc107, #ff8f00); color: white; }
+.stage-badge-s-creation-approved { background: linear-gradient(135deg, #fd7e14, #e65100); color: white; }
+.stage-badge-proposal-decision-obtained { background: linear-gradient(135deg, #17a2b8, #0d6efd); color: white; }
+.stage-badge-pre-production-s-confirmed { background: linear-gradient(135deg, #6f42c1, #4c63d2); color: white; }
+.stage-badge-first-order { background: linear-gradient(135deg, #20c997, #198754); color: white; }
+.stage-badge-temporary-listing { background: linear-gradient(135deg, #0dcaf0, #0aa2c0); color: white; }
+.stage-badge-page-up { background: linear-gradient(135deg, #198754, #146c43); color: white; }
+.stage-badge-second-lot-ordered { background: linear-gradient(135deg, #28a745, #1e7e34); color: white; }
+
+.stage-info-note {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.85rem;
+    color: #1976d2;
+}
+
+.stage-info-note i {
+    color: #2196f3;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .stage-info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .stage-info-value {
+        width: 100%;
+        text-align: center;
+    }
+}
+
 @media (max-width: 992px) {
     /* タブレット表示での調整 */
     .form-section .row .col-md-4 {
@@ -878,10 +1118,14 @@
 </style>
 
 <script>
-// 商品群画像表示機能
+// 商品群画像表示機能と進捗ステージ表示機能
 document.addEventListener('DOMContentLoaded', function() {
     const productGroupSelect = document.getElementById('product-group-select');
     const productGroupImage = document.getElementById('product-group-image');
+    const stageInfoCard = document.getElementById('product-group-stage-info');
+    const latestStageName = document.getElementById('latest-stage-name');
+    const lastReportDate = document.getElementById('last-report-date');
+    const stageInfoNote = document.getElementById('stage-info-note');
     
     // 商品群データを取得
     let productGroupsData = {};
@@ -895,7 +1139,66 @@ document.addEventListener('DOMContentLoaded', function() {
         productGroupsData = {};
     }
     
+    // 商品群ステージデータを取得
+    let productGroupStagesData = {};
+    try {
+        const stagesElement = document.getElementById('product-group-stages-data');
+        if (stagesElement && stagesElement.textContent) {
+            productGroupStagesData = JSON.parse(stagesElement.textContent);
+        }
+    } catch (e) {
+        console.error('商品群ステージデータの解析エラー:', e);
+        productGroupStagesData = {};
+    }
+    
     console.log('商品群データ:', productGroupsData);
+    console.log('商品群ステージデータ:', productGroupStagesData);
+    
+    // 進捗バー更新関数
+    function updateProgressBar(stage) {
+        const progressFill = document.getElementById('progress-fill');
+        const progressPercentage = document.getElementById('progress-percentage');
+        
+        // ステージ別の進捗率
+        const stageProgress = {
+            'proposal_pre': 11,
+            'estimate_completed': 22,
+            's_creation_approved': 33,
+            'proposal_decision_obtained': 44,
+            'pre_production_s_confirmed': 56,
+            'first_order': 67,
+            'temporary_listing': 78,
+            'page_up': 89,
+            'second_lot_ordered': 100
+        };
+        
+        const percentage = stageProgress[stage] || 0;
+        
+        // アニメーション付きで進捗バーを更新
+        setTimeout(() => {
+            progressFill.style.width = percentage + '%';
+            progressPercentage.textContent = percentage + '%';
+        }, 100);
+    }
+    
+    // ステージバッジ更新関数
+    function updateStageBadge(stage, stageName) {
+        const currentStageBadge = document.getElementById('current-stage-badge');
+        const currentStageText = document.getElementById('current-stage-text');
+        
+        // 既存のクラスを削除
+        currentStageBadge.className = 'current-stage-badge';
+        
+        // ステージ別のクラスを追加
+        if (stage) {
+            const stageClass = 'stage-badge-' + stage.replace(/_/g, '-');
+            currentStageBadge.classList.add(stageClass);
+            currentStageText.textContent = stageName;
+        } else {
+            currentStageBadge.classList.add('stage-badge-proposal-pre');
+            currentStageText.textContent = '未報告';
+        }
+    }
     
     // 商品群選択時のイベントリスナー
     productGroupSelect.addEventListener('change', function() {
@@ -906,6 +1209,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const productGroup = productGroupsData[selectedId];
             const images = productGroup.images;
             
+            // 画像表示
             if (images && images.length > 0) {
                 // 1枚目の画像を表示
                 const firstImage = images[0];
@@ -934,6 +1238,36 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
             }
+            
+            // 進捗ステージ表示
+            if (productGroupStagesData[selectedId]) {
+                const stageInfo = productGroupStagesData[selectedId];
+                
+                latestStageName.textContent = stageInfo.latest_stage_name;
+                lastReportDate.textContent = stageInfo.last_report_date || '未報告';
+                
+                // 進捗バーの更新
+                updateProgressBar(stageInfo.latest_stage);
+                
+                // ステージバッジの更新
+                updateStageBadge(stageInfo.latest_stage, stageInfo.latest_stage_name);
+                
+                // ステージ情報の表示を調整
+                if (stageInfo.has_reports) {
+                    stageInfoNote.innerHTML = `
+                        <i class="fas fa-info-circle me-1"></i>
+                        <span>この商品群の最新の進捗状況です。新しい報告でステージを更新できます。</span>
+                    `;
+                } else {
+                    stageInfoNote.innerHTML = `
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        <span>この商品群の報告はまだありません。初回の報告を作成します。</span>
+                    `;
+                }
+                
+                // ステージ情報カードを表示
+                stageInfoCard.style.display = 'block';
+            }
         } else {
             // デフォルト表示
             productGroupImage.innerHTML = `
@@ -942,6 +1276,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p>商品群を選択してください</p>
                 </div>
             `;
+            
+            // ステージ情報カードを非表示
+            stageInfoCard.style.display = 'none';
         }
     });
     

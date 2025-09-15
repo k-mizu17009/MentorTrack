@@ -262,12 +262,9 @@ class WeeklyReportForm(FlaskForm):
             if not product_group:
                 raise ValidationError('選択された商品群が見つかりません。')
     
-    # 進捗チェックリスト（動的に生成）
-    progress_items = TextAreaField('今週の進捗', 
-                                  render_kw={'rows': 5, 'placeholder': '完了した項目を記述してください'})
-    
-    actions_taken = TextAreaField('実施した行動', 
-                                 render_kw={'rows': 4, 'placeholder': '今週実施した具体的な行動を記述してください'})
+    # 進捗・行動統合フィールド
+    progress_items = TextAreaField('今週の進捗・実施した行動', 
+                                  render_kw={'rows': 6, 'placeholder': '今週の進捗状況と実施した具体的な行動を記述してください'})
     
     insights_concerns = TextAreaField('気づき・悩み', 
                                      render_kw={'rows': 4, 'placeholder': '今週感じた気づきや悩みを自由に記述してください'})
@@ -437,7 +434,6 @@ def generate_daily_report_from_weekly(weekly_report, report_date=None):
     planning_stage = weekly_report.planning_stage
     product_group = weekly_report.product_group
     progress_items = weekly_report.progress_items or ""
-    actions_taken = weekly_report.actions_taken or ""
     insights_concerns = weekly_report.insights_concerns or ""
     self_evaluation = weekly_report.self_evaluation
     
@@ -475,7 +471,7 @@ def generate_daily_report_from_weekly(weekly_report, report_date=None):
     title = f"{report_date.strftime('%m月%d日')}の業務報告 - {product_group}"
     
     # 要約生成（元の文章を尊重）
-    summary = generate_quality_summary(progress_items, actions_taken, insights_concerns, evaluation_name)
+    summary = generate_quality_summary(progress_items, insights_concerns, evaluation_name)
     
     # 詳細な日報内容を生成（元の文章を保持）
     content_parts = []
@@ -488,16 +484,10 @@ def generate_daily_report_from_weekly(weekly_report, report_date=None):
     content_parts.append(f"**現在のステージ**: {stage_name}")
     content_parts.append("")
     
-    # 今週の進捗（元の文章を保持）
+    # 今週の進捗・実施した行動（統合版）
     if progress_items:
-        content_parts.append("## 今週の進捗")
+        content_parts.append("## 今週の進捗・実施した行動")
         content_parts.append(progress_items)
-        content_parts.append("")
-    
-    # 実施した行動（元の文章を保持）
-    if actions_taken:
-        content_parts.append("## 実施した行動")
-        content_parts.append(actions_taken)
         content_parts.append("")
     
     # 気づき・悩み（元の文章を保持）
@@ -536,23 +526,17 @@ def generate_daily_report_from_weekly(weekly_report, report_date=None):
         'generated_content': generated_content
     }
 
-def generate_quality_summary(progress, actions, insights, evaluation):
+def generate_quality_summary(progress, insights, evaluation):
     """
-    品質重視の要約を生成する関数（元の文章を尊重）
+    品質重視の要約を生成する関数（統合版）
     """
     summary_parts = []
     
-    # 進捗の要約（元の文章をそのまま使用）
+    # 進捗・行動の要約（統合版）
     if progress:
         progress_lines = [line.strip() for line in progress.split('\n') if line.strip()]
         if progress_lines:
-            summary_parts.append(f"【進捗】{progress_lines[0]}")
-    
-    # 実施した行動の要約（元の文章をそのまま使用）
-    if actions:
-        action_lines = [line.strip() for line in actions.split('\n') if line.strip()]
-        if action_lines:
-            summary_parts.append(f"【実施】{action_lines[0]}")
+            summary_parts.append(f"【進捗・行動】{progress_lines[0]}")
     
     # 気づきや評価の要約（元の文章をそのまま使用）
     if insights:
@@ -603,11 +587,58 @@ def generate_outlook_text(planning_stage, product_group, insights):
     
     return base_outlook
 
-def generate_ai_enhanced_summary(progress, actions, insights, evaluation):
+def get_product_group_latest_stages(mentee_id):
+    """
+    商品群ごとの最新の進捗ステージを取得
+    """
+    # メンティの商品群を取得
+    product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
+    product_group_stages = {}
+    
+    for pg in product_groups:
+        # 各商品群の最新の週次報告を取得
+        latest_report = WeeklyReport.query.filter_by(
+            mentee_id=mentee_id,
+            product_group=pg.name
+        ).order_by(WeeklyReport.report_date.desc()).first()
+        
+        if latest_report:
+            # ステージの日本語名を取得
+            stage_names = {
+                'proposal_pre': '提案前',
+                'estimate_completed': '見積書対応済',
+                's_creation_approved': 'S作成承認済',
+                'proposal_decision_obtained': '提案決裁取得済',
+                'pre_production_s_confirmed': '量産前S確認済',
+                'first_order': '初回発注済',
+                'temporary_listing': '仮出品済',
+                'page_up': 'ページアップ済',
+                'second_lot_ordered': '2ロット目発注済'
+            }
+            
+            product_group_stages[pg.id] = {
+                'name': pg.name,
+                'latest_stage': latest_report.planning_stage,
+                'latest_stage_name': stage_names.get(latest_report.planning_stage, latest_report.planning_stage),
+                'last_report_date': latest_report.report_date.strftime('%Y年%m月%d日'),
+                'has_reports': True
+            }
+        else:
+            product_group_stages[pg.id] = {
+                'name': pg.name,
+                'latest_stage': None,
+                'latest_stage_name': '未報告',
+                'last_report_date': None,
+                'has_reports': False
+            }
+    
+    return product_group_stages
+
+def generate_ai_enhanced_summary(progress, insights, evaluation):
     """
     AI風の要約を生成する関数（レガシー）
     """
-    return generate_quality_summary(progress, actions, insights, evaluation)
+    return generate_quality_summary(progress, insights, evaluation)
 
 def enhance_progress_description(progress_text):
     """
@@ -1277,7 +1308,8 @@ def new_report(mentee_id):
             selected_product_group = ProductGroup.query.get(form.product_group.data)
             if not selected_product_group:
                 flash('選択された商品群が見つかりません。商品群を再選択してください。', 'danger')
-                return render_template('new_report.html', form=form, mentee=mentee, todo_list=todo_list, product_groups=product_groups)
+                product_group_stages = get_product_group_latest_stages(mentee_id)
+                return render_template('new_report.html', form=form, mentee=mentee, todo_list=todo_list, product_groups=product_groups, product_group_stages=product_group_stages)
             
             product_group_name = selected_product_group.name
             
@@ -1286,7 +1318,7 @@ def new_report(mentee_id):
                 planning_stage=form.planning_stage.data,
                 product_group=product_group_name,
                 progress_items=form.progress_items.data,
-                actions_taken=form.actions_taken.data,
+                actions_taken="",  # 統合により空文字列に設定
                 insights_concerns=form.insights_concerns.data,
                 self_evaluation=form.self_evaluation.data,
                 additional_responses=str(additional_responses),
@@ -1326,7 +1358,10 @@ def new_report(mentee_id):
     # 商品群データを取得（画像表示用）
     product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
     
-    return render_template('new_report.html', form=form, mentee=mentee, todo_list=todo_list, product_groups=product_groups)
+    # 商品群ごとの最新の進捗ステージを取得
+    product_group_stages = get_product_group_latest_stages(mentee_id)
+    
+    return render_template('new_report.html', form=form, mentee=mentee, todo_list=todo_list, product_groups=product_groups, product_group_stages=product_group_stages)
 
 @app.route('/report/<int:report_id>')
 @login_required
