@@ -937,6 +937,12 @@ def view_report(report_id):
         week_start=previous_week_start
     ).first()
     
+    # 商品群情報を取得（画像表示用）
+    product_group = ProductGroup.query.filter_by(
+        name=report.product_group,
+        mentee_id=report.mentee_id
+    ).first()
+    
     # 追加の問いかけ回答をパース
     import ast
     try:
@@ -944,7 +950,7 @@ def view_report(report_id):
     except (ValueError, SyntaxError, TypeError):
         additional_responses = {}
     
-    return render_template('view_report.html', report=report, previous_report=previous_report, additional_responses=additional_responses)
+    return render_template('view_report.html', report=report, previous_report=previous_report, additional_responses=additional_responses, product_group=product_group)
 
 @app.route('/report/<int:report_id>/comment', methods=['GET', 'POST'])
 @login_required

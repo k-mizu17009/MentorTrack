@@ -5,8 +5,76 @@
 {% block content %}
 <div class="container-fluid">
     <div class="row">
+        <!-- 左サイドバー：代表商品群・登録画像・自己評価 -->
+        <div class="col-lg-3">
+            <!-- 代表商品群 -->
+            <div class="card mb-3 sticky-top" style="top: 20px;">
+                <div class="card-body p-2">
+                    <h6 class="info-card-title">
+                        <i class="fas fa-box me-2"></i>代表商品群
+                    </h6>
+                    <p class="mb-0 fw-medium text-center">{{ report.product_group }}</p>
+                </div>
+            </div>
+            
+            <!-- 登録画像 -->
+            <div class="card mb-3">
+                <div class="card-body p-2">
+                    {% if product_group and product_group.images %}
+                        {% set images = product_group.images|from_json %}
+                        {% if images %}
+                            <div class="registered-image-container">
+                                <img src="{{ url_for('static', filename='uploads/product_groups/' + images[0]) }}" 
+                                     alt="{{ report.product_group }}" 
+                                     class="registered-image-thumbnail">
+                                <div class="image-overlay-title">
+                                    <i class="fas fa-camera me-1"></i>登録画像
+                                </div>
+                                {% if images|length > 1 %}
+                                    <div class="image-count-badge">
+                                        <i class="fas fa-images me-1"></i>{{ images|length }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="no-images-placeholder">
+                                <i class="fas fa-image fa-2x text-muted"></i>
+                                <p class="text-muted mb-0 mt-2">画像なし</p>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="no-images-placeholder">
+                            <i class="fas fa-image fa-2x text-muted"></i>
+                            <p class="text-muted mb-0 mt-2">画像なし</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 自己評価 -->
+            <div class="card mb-3">
+                <div class="card-body p-2">
+                    <h6 class="info-card-title">
+                        <i class="fas fa-star me-2"></i>自己評価
+                    </h6>
+                    <div class="star-display-view">
+                        {% if report.self_evaluation == 1 %}
+                            <span class="stars-view">⭐</span>
+                            <span class="star-text-view">思うように進まなかった</span>
+                        {% elif report.self_evaluation == 2 %}
+                            <span class="stars-view">⭐⭐</span>
+                            <span class="star-text-view">まあまあ進んだ</span>
+                        {% elif report.self_evaluation == 3 %}
+                            <span class="stars-view">⭐⭐⭐</span>
+                            <span class="star-text-view">とても順調に進んだ</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- メインコンテンツ -->
-        <div class="col-lg-8">
+        <div class="col-lg-6">
         <div class="card">
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
@@ -20,27 +88,6 @@
                 <p class="mb-0 mt-2 text-light">{{ report.report_date.strftime('%Y年%m月%d日') }}の報告</p>
             </div>
             <div class="card-body">
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h5><i class="fas fa-box me-2"></i>代表商品群</h5>
-                        <p class="text-muted">{{ report.product_group }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h5><i class="fas fa-star me-2"></i>自己評価</h5>
-                        <div class="star-display-view">
-                            {% if report.self_evaluation == 1 %}
-                                <span class="stars-view">⭐</span>
-                                <span class="star-text-view">思うように進まなかった</span>
-                            {% elif report.self_evaluation == 2 %}
-                                <span class="stars-view">⭐⭐</span>
-                                <span class="star-text-view">まあまあ進んだ</span>
-                            {% elif report.self_evaluation == 3 %}
-                                <span class="stars-view">⭐⭐⭐</span>
-                                <span class="star-text-view">とても順調に進んだ</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
 
                 <div class="mb-4">
                     <h5><i class="fas fa-tasks me-2"></i>今週の進捗</h5>
@@ -230,15 +277,14 @@
         </div>
         </div>
         
-        <!-- サイドバー -->
-        <div class="col-lg-4">
-            <!-- 進捗ステージ一覧 -->
+        <!-- 右サイドバー：進捗ステージ一覧 -->
+        <div class="col-lg-3">
             <div class="card mb-4 sticky-top" style="top: 20px;">
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="fas fa-list-ol me-2"></i>進捗ステージ一覧
                     </h6>
-                    <small class="text-muted">進捗確認</small>
+                    <small class="text-white">現在のステージ: <strong>{{ get_stage_display_name(report.planning_stage) }}</strong></small>
                 </div>
                 <div class="card-body p-2">
                     <div class="progress-stages-sidebar">
@@ -360,12 +406,6 @@
                         </div>
                     </div>
                     
-                    <div class="text-center mt-3">
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle me-1"></i>
-                            現在のステージ: <strong>{{ get_stage_display_name(report.planning_stage) }}</strong>
-                        </small>
-                    </div>
                 </div>
             </div>
         </div>
@@ -377,24 +417,26 @@
 .progress-stages-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 }
 
 .progress-stage-item-sidebar {
     display: flex;
+    flex-direction: column;
     align-items: center;
     background: #f8f9fa;
     border: 1px solid #dee2e6;
     border-radius: 6px;
-    padding: 6px 8px;
+    padding: 4px 6px;
     transition: all 0.3s ease;
     position: relative;
+    text-align: center;
 }
 
 .progress-stage-item-sidebar:hover {
     background: #e9ecef;
     border-color: #007bff;
-    transform: translateX(2px);
+    transform: translateY(-1px);
 }
 
 /* 現在のステージをハイライト */
@@ -407,56 +449,163 @@
 .stage-number-sidebar {
     background: #007bff;
     color: white;
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     font-weight: bold;
-    margin-right: 6px;
+    margin-bottom: 2px;
     flex-shrink: 0;
 }
 
 /* 現在のステージの番号をハイライト */
 .progress-stage-item-sidebar[data-stage="{{ report.planning_stage }}"] .stage-number-sidebar {
     background: #2196f3;
-    box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
+    box-shadow: 0 0 6px rgba(33, 150, 243, 0.4);
 }
 
 .stage-info-sidebar {
     flex: 1;
     min-width: 0;
+    width: 100%;
 }
 
 .stage-name-sidebar {
-    font-size: 0.75rem;
+    font-size: 0.6rem;
     font-weight: 600;
     color: #495057;
-    line-height: 1.2;
+    line-height: 1.1;
     margin-bottom: 1px;
+    word-break: break-all;
 }
 
 .stage-percentage-sidebar {
-    font-size: 0.65rem;
+    font-size: 0.5rem;
     color: #6c757d;
     font-weight: 500;
 }
 
 .stage-status-sidebar {
-    width: 16px;
-    height: 16px;
+    width: 12px;
+    height: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* スマートレイアウト用のカードスタイル */
+.info-card {
+    background: #f8f9fa;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: #e9ecef;
+}
+
+.info-card-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.info-card-title i {
+    color: #007bff;
+}
+
+.info-card-content {
+    min-height: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+
+/* 登録画像表示 */
+.registered-image-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+.registered-image-thumbnail {
+    width: 100%;
+    height: 200px;
+    object-fit: contain;
+    border: none;
+    border-radius: 6px;
+    background: white;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.registered-image-thumbnail:hover {
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.image-overlay-title {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    backdrop-filter: blur(2px);
+}
+
+.image-count-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0, 123, 255, 0.9);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    backdrop-filter: blur(2px);
+}
+
+.no-images-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    text-align: center;
+}
+
+.no-images-placeholder i {
+    opacity: 0.5;
+    font-size: 1.5rem;
+}
+
+.no-images-placeholder p {
+    font-size: 0.75rem;
 }
 
 
 /* レスポンシブ対応 */
 @media (max-width: 992px) {
-    .col-lg-4 {
+    .col-lg-3 {
         margin-top: 20px;
     }
     
@@ -464,18 +613,53 @@
         position: relative !important;
         top: auto !important;
     }
+    
+    .info-card {
+        margin-bottom: 16px;
+    }
+    
+    .progress-stage-item-sidebar {
+        flex-direction: row;
+        text-align: left;
+    }
+    
+    .stage-number-sidebar {
+        margin-right: 6px;
+        margin-bottom: 0;
+    }
+    
+    .stage-info-sidebar {
+        width: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .registered-image-thumbnail {
+        height: 120px;
+    }
+    
+    .info-card-title {
+        font-size: 0.75rem;
+    }
+    
+    .info-card {
+        padding: 8px;
+    }
 }
 
 /* 星評価表示のスタイル */
 .star-display-view {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
+    gap: 6px;
+    padding: 4px 8px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(102, 126, 234, 0.2);
     transition: all 0.3s ease;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
 }
 
 .star-display-view:hover {
@@ -484,15 +668,15 @@
 }
 
 .stars-view {
-    font-size: 18px;
-    text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+    font-size: 14px;
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.6);
     animation: twinkle-view 3s ease-in-out infinite alternate;
 }
 
 .star-text-view {
     color: white;
     font-weight: 500;
-    font-size: 14px;
+    font-size: 10px;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
