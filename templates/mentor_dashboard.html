@@ -811,19 +811,22 @@ function generateMenteeComparison() {
         const totalGroups = menteeGroups.length;
         const completedGroups = menteeGroups.filter(pg => pg.is_completed).length;
         const activeGroups = totalGroups - completedGroups;
-        const completionRate = totalGroups > 0 ? Math.round((completedGroups / totalGroups) * 100) : 0;
         
-        // 平均進捗率を計算
-        const avgProgress = menteeGroups.length > 0 ? 
-            Math.round(menteeGroups.reduce((sum, pg) => sum + pg.progress_percentage, 0) / menteeGroups.length) : 0;
+        // 今月の新規企画数を計算
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        const newProjectsThisMonth = menteeGroups.filter(pg => {
+            const createdDate = new Date(pg.created_at);
+            return createdDate.getMonth() === currentMonth && createdDate.getFullYear() === currentYear;
+        }).length;
+        
         
         return {
             name: mentee.name,
             totalGroups,
             completedGroups,
             activeGroups,
-            completionRate,
-            avgProgress
+            newProjectsThisMonth
         };
     });
     
@@ -860,14 +863,10 @@ function generateMenteeComparison() {
                     </div>
                     <hr>
                     <div class="text-center">
-                        <h6>完了率: ${stat.completionRate}%</h6>
-                        <div class="progress mb-2">
-                            <div class="progress-bar bg-success" style="width: ${stat.completionRate}%"></div>
-                        </div>
-                        <h6>平均進捗: ${stat.avgProgress}%</h6>
-                        <div class="progress">
-                            <div class="progress-bar bg-info" style="width: ${stat.avgProgress}%"></div>
-                        </div>
+                        <h6>
+                            <i class="fas fa-plus-circle text-primary me-2"></i>
+                            今月の新規企画: ${stat.newProjectsThisMonth}件
+                        </h6>
                     </div>
                 </div>
             </div>

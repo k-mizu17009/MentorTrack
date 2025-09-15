@@ -367,7 +367,9 @@ def get_product_group_progress(mentee_id, weeks=16):
                 'current_stage': None,
                 'stage_duration': 0,
                 'progress_status': 'unknown',
-                'is_completed': False
+                'is_completed': False,
+                'created_at': product_group.created_at if product_group else None,
+                'stage': None
             }
         
         product_groups[product_group_name]['reports'].append({
@@ -376,6 +378,10 @@ def get_product_group_progress(mentee_id, weeks=16):
             'stage': report.planning_stage,
             'self_evaluation': report.self_evaluation
         })
+        
+        # 最新のステージを設定
+        if not product_groups[product_group_name]['stage']:
+            product_groups[product_group_name]['stage'] = report.planning_stage
     
     # 各商品群の進捗状況を分析
     for pg_name, pg_data in product_groups.items():
