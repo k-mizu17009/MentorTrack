@@ -460,6 +460,17 @@
     padding-bottom: 0.5rem;
 }
 
+/* クリック可能なアラート */
+.clickable-alert {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.clickable-alert:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
     .btn-group {
@@ -521,6 +532,36 @@ document.addEventListener('DOMContentLoaded', function() {
     // メンティ比較機能
     generateMenteeComparison();
 });
+
+// アラートクリック時の処理
+function handleAlertClick(alertType, groups) {
+    console.log('アラートクリック:', alertType, groups);
+    
+    if (alertType === 'success' && groups && groups.length > 0) {
+        console.log('完了した商品群数:', groups.length);
+        
+        if (groups.length === 1) {
+            // 1つの商品群の場合は詳細ページに遷移
+            const productGroup = groups[0];
+            console.log('商品群詳細:', productGroup);
+            
+            if (productGroup.id) {
+                console.log('商品群ID:', productGroup.id);
+                window.location.href = `/product-group/${productGroup.id}/details`;
+            } else {
+                console.log('商品群IDが見つかりません');
+                // IDがない場合は商品群別進捗サマリーに遷移
+                window.location.href = '/mentor/dashboard#product-group-progress';
+            }
+        } else {
+            // 複数の商品群の場合は商品群別進捗サマリーに遷移
+            console.log('複数の商品群があるため、サマリーに遷移');
+            window.location.href = '/mentor/dashboard#product-group-progress';
+        }
+    } else {
+        console.log('アラートタイプまたはグループデータが無効です');
+    }
+}
 
 // 指導アラート生成
 function generateMentorAlerts() {
@@ -588,21 +629,50 @@ function generateMentorAlerts() {
             </div>
         `;
     } else {
-        alertsContainer.innerHTML = alerts.map(alert => `
-            <div class="col-md-4 mb-3">
-                <div class="alert alert-${alert.type} alert-dismissible fade show" role="alert">
-                    <div class="d-flex align-items-center">
-                        <i class="${alert.icon} fa-2x me-3"></i>
-                        <div class="flex-grow-1">
-                            <h6 class="alert-heading mb-1">${alert.title}</h6>
-                            <p class="mb-1">${alert.message}</p>
-                            <small class="text-muted">${alert.count}件</small>
+        alertsContainer.innerHTML = alerts.map(alert => {
+            // 完了おめでとうアラートの場合はクリック可能にする
+            const clickableClass = alert.type === 'success' ? 'clickable-alert' : '';
+            const dataGroups = alert.type === 'success' ? `data-groups='${JSON.stringify(alert.groups)}'` : '';
+            
+            return `
+                <div class="col-md-4 mb-3">
+                    <div class="alert alert-${alert.type} alert-dismissible fade show ${clickableClass}" role="alert" data-alert-type="${alert.type}" ${dataGroups}>
+                        <div class="d-flex align-items-center">
+                            <i class="${alert.icon} fa-2x me-3"></i>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading mb-1">${alert.title}</h6>
+                                <p class="mb-1">${alert.message}</p>
+                                <small class="text-muted">${alert.count}件</small>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
+        
+        // クリック可能なアラートにイベントリスナーを追加
+        const clickableAlerts = alertsContainer.querySelectorAll('.clickable-alert');
+        clickableAlerts.forEach(alert => {
+            alert.addEventListener('click', function(e) {
+                // 閉じるボタンがクリックされた場合は何もしない
+                if (e.target.classList.contains('btn-close')) {
+                    return;
+                }
+                
+                const alertType = this.getAttribute('data-alert-type');
+                const groupsData = this.getAttribute('data-groups');
+                
+                if (alertType === 'success' && groupsData) {
+                    try {
+                        const groups = JSON.parse(groupsData);
+                        handleAlertClick(alertType, groups);
+                    } catch (error) {
+                        console.error('グループデータの解析に失敗しました:', error);
+                    }
+                }
+            });
+        });
     }
 }
 
