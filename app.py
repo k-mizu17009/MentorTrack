@@ -273,8 +273,8 @@ class MenteeProfileForm(FlaskForm):
 
 class ProductGroupForm(FlaskForm):
     name = StringField('代表商品群名', 
-                      validators=[DataRequired(), Length(min=1, max=200)],
-                      render_kw={'placeholder': '代表商品群名を入力してください'})
+                      validators=[DataRequired(), Length(min=1, max=10)],
+                      render_kw={'placeholder': '代表商品群名を入力してください（最大10文字）'})
     description = TextAreaField('説明', 
                                render_kw={'rows': 3, 'placeholder': '商品群の説明（任意）'})
     images = FileField('画像ファイル', 
@@ -283,8 +283,8 @@ class ProductGroupForm(FlaskForm):
 
 class ProductGroupEditForm(FlaskForm):
     name = StringField('代表商品群名', 
-                      validators=[DataRequired(), Length(min=1, max=200)],
-                      render_kw={'placeholder': '代表商品群名を入力してください'})
+                      validators=[DataRequired(), Length(min=1, max=10)],
+                      render_kw={'placeholder': '代表商品群名を入力してください（最大10文字）'})
     description = TextAreaField('説明', 
                                render_kw={'rows': 3, 'placeholder': '商品群の説明（任意）'})
     images = FileField('新しい画像ファイル', 
@@ -337,6 +337,11 @@ def get_product_group_progress(mentee_id, weeks=16):
     """商品群別の進捗状況を取得（4か月=16週間の開発期間を想定）"""
     from datetime import datetime, timedelta
     
+    # 現在存在する商品群のリストを取得
+    existing_product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
+    existing_product_group_names = {pg.name for pg in existing_product_groups}
+    
+    
     # 4か月分の過去の報告を取得
     end_date = datetime.now()
     start_date = end_date - timedelta(weeks=weeks)
@@ -351,6 +356,10 @@ def get_product_group_progress(mentee_id, weeks=16):
     
     for report in reports:
         product_group_name = report.product_group
+        
+        # 商品群が削除されている場合は進捗サマリーに表示しない
+        if product_group_name not in existing_product_group_names:
+            continue
         
         if product_group_name not in product_groups:
             # ProductGroupモデルから画像情報を取得
@@ -1284,6 +1293,19 @@ def delete_product_group(product_group_id):
         return jsonify({'success': False, 'message': 'アクセス権限がありません'}), 403
     
     try:
+        # 関連する週次報告を確認
+        related_reports = WeeklyReport.query.filter_by(
+            mentee_id=product_group.mentee_id,
+            product_group=product_group.name
+        ).all()
+        
+        if related_reports:
+            # 関連する報告がある場合は警告メッセージを返す
+            return jsonify({
+                'success': False, 
+                'message': f'この商品群に関連する週次報告が{len(related_reports)}件あります。先に報告を削除するか、商品群名を変更してください。'
+            }), 400
+        
         # 関連する画像ファイルを削除
         if product_group.images:
             try:
@@ -1293,9 +1315,33 @@ def delete_product_group(product_group_id):
                 pass
         
         mentee_id = product_group.mentee_id
+        product_group_name = product_group.name
+        
+        # 削除前の確認
+        before_count = ProductGroup.query.filter_by(mentee_id=mentee_id).count()
+        
+        # 代表商品群を削除
         db.session.delete(product_group)
+        db.session.flush()  # 変更をフラッシュして即座に反映
+        
+        # 削除の確認
+        deleted_check = ProductGroup.query.get(product_group_id)
+        if deleted_check is not None:
+            raise Exception("削除が正常に完了しませんでした")
+        
         db.session.commit()
-        return jsonify({'success': True, 'message': '代表商品群が削除されました'})
+        
+        # 削除後の確認
+        remaining_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
+        after_count = len(remaining_groups)
+        
+        if after_count >= before_count:
+            raise Exception("削除処理が正常に完了しませんでした")
+        
+        return jsonify({
+            'success': True, 
+            'message': f'代表商品群「{product_group_name}」が削除されました（削除前: {before_count}件 → 削除後: {after_count}件）'
+        })
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'エラーが発生しました: {str(e)}'}), 500

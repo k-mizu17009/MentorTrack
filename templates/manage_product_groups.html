@@ -30,7 +30,16 @@
                                 <!-- 代表商品群名 -->
                                 <div class="form-group mb-3">
                                     {{ form.name.label(class="form-label fw-bold") }}
-                                    {{ form.name(class="form-control form-control-lg", placeholder="代表商品群名を入力してください") }}
+                                    {{ form.name(class="form-control form-control-lg", id="product-name", placeholder="代表商品群名を入力してください（最大10文字）", maxlength="10") }}
+                                    <div class="d-flex justify-content-between mt-1">
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            最大10文字まで入力できます
+                                        </small>
+                                        <small class="text-muted" id="name-counter">
+                                            <span id="name-count">0</span>/10文字
+                                        </small>
+                                    </div>
                                     {% if form.name.errors %}
                                         <div class="text-danger mt-1">
                                             {% for error in form.name.errors %}
@@ -221,26 +230,90 @@ function deleteProductGroup(id, name) {
 
 document.getElementById('confirmDelete').addEventListener('click', function() {
     if (productGroupToDelete) {
+        console.log('削除開始:', productGroupToDelete);
+        
+        // 削除ボタンを無効化して重複送信を防ぐ
+        const deleteBtn = document.getElementById('confirmDelete');
+        deleteBtn.disabled = true;
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 削除中...';
+        
         fetch(`/product-group/${productGroupToDelete}/delete`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('レスポンス受信:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('削除結果:', data);
             if (data.success) {
-                location.reload();
+                // 成功メッセージを表示
+                showAlert('success', data.message);
+                // モーダルを閉じる
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+                modal.hide();
+                // 削除された行を即座に非表示にする
+                const rowToRemove = document.querySelector(`button[onclick*="${productGroupToDelete}"]`).closest('tr');
+                if (rowToRemove) {
+                    rowToRemove.style.opacity = '0.5';
+                    rowToRemove.style.transition = 'opacity 0.3s';
+                    setTimeout(() => {
+                        rowToRemove.remove();
+                    }, 300);
+                }
+                // 複数の方法でリロードを試行
+                setTimeout(() => {
+                    console.log('ページリロード実行');
+                    // 方法1: 通常のリロード
+                    window.location.reload();
+                }, 500);
+                
+                // 方法2: 強制的なリロード（バックアップ）
+                setTimeout(() => {
+                    console.log('強制リロード実行');
+                    window.location.href = window.location.href;
+                }, 1500);
             } else {
-                alert('エラー: ' + data.message);
+                console.error('削除失敗:', data.message);
+                showAlert('danger', 'エラー: ' + data.message);
+                // ボタンを元に戻す
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = '削除する';
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('エラーが発生しました。');
+            console.error('削除処理でエラー:', error);
+            showAlert('danger', 'エラーが発生しました。');
+            // ボタンを元に戻す
+            deleteBtn.disabled = false;
+            deleteBtn.innerHTML = '削除する';
         });
     }
 });
+
+// アラート表示関数
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // ページの上部にアラートを挿入
+    const container = document.querySelector('.container');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // 5秒後に自動でアラートを非表示
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
 
 // ドラッグ&ドロップ機能
 document.addEventListener('DOMContentLoaded', function() {
@@ -561,5 +634,102 @@ document.addEventListener('DOMContentLoaded', function() {
 .drag-drop-area.dragover::before {
     transform: translateX(100%);
 }
+
+/* 文字数カウンターのスタイリング */
+#name-counter {
+    font-weight: 500;
+}
+
+#name-counter.warning {
+    color: #ffc107;
+}
+
+#name-counter.danger {
+    color: #dc3545;
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 商品群名の文字数カウンター
+    const nameInput = document.getElementById('product-name');
+    const nameCount = document.getElementById('name-count');
+    const nameCounter = document.getElementById('name-counter');
+    
+    if (nameInput && nameCount && nameCounter) {
+        function updateNameCounter() {
+            const currentLength = nameInput.value.length;
+            nameCount.textContent = currentLength;
+            
+            // 色を変更
+            nameCounter.classList.remove('warning', 'danger');
+            if (currentLength >= 9) {
+                nameCounter.classList.add('danger');
+            } else if (currentLength >= 7) {
+                nameCounter.classList.add('warning');
+            }
+        }
+        
+        // 初期値の設定
+        updateNameCounter();
+        
+        // 入力時の更新
+        nameInput.addEventListener('input', updateNameCounter);
+        nameInput.addEventListener('keyup', updateNameCounter);
+    }
+    
+    // ドラッグ&ドロップ機能
+    const dragDropArea = document.getElementById('dragDropArea');
+    const fileInput = document.getElementById('images');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    
+    if (dragDropArea && fileInput) {
+        // ドラッグ&ドロップイベント
+        dragDropArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dragDropArea.classList.add('dragover');
+        });
+        
+        dragDropArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            dragDropArea.classList.remove('dragover');
+        });
+        
+        dragDropArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dragDropArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                updateFileInfo(files);
+            }
+        });
+        
+        // クリックでファイル選択
+        dragDropArea.addEventListener('click', function() {
+            fileInput.click();
+        });
+        
+        // ファイル選択時の処理
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                updateFileInfo(this.files);
+            }
+        });
+        
+        // ファイル情報の更新
+        function updateFileInfo(files) {
+            if (files.length === 1) {
+                fileName.textContent = files[0].name;
+            } else {
+                fileName.textContent = `${files.length}個のファイルが選択されました`;
+            }
+            fileInfo.style.display = 'block';
+            dragDropArea.querySelector('.drag-drop-content').style.display = 'none';
+        }
+    }
+});
+</script>
 {% endblock %}
