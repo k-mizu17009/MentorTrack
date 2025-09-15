@@ -46,21 +46,53 @@
                 <hr class="my-2">
 
                 <div class="text-center">
-                    <h4 class="mb-1">システムの特徴</h4>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <ul class="list-unstyled text-start">
-                                <li class="mb-1"><i class="fas fa-check text-success me-2"></i>商品企画ステージ別の報告テンプレート</li>
-                                <li class="mb-1"><i class="fas fa-check text-success me-2"></i>前週との比較表示機能</li>
-                                <li class="mb-1"><i class="fas fa-check text-success me-2"></i>思考を促す問いかけ設計</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <ul class="list-unstyled text-start">
-                                <li class="mb-1"><i class="fas fa-check text-success me-2"></i>自己評価とメンターコメント</li>
-                                <li class="mb-1"><i class="fas fa-check text-success me-2"></i>学習ログとしての自然な表示</li>
-                                <li class="mb-1"><i class="fas fa-check text-success me-2"></i>負担軽減のための自動化機能</li>
-                            </ul>
+                    <h4 class="mb-4">システムの特徴</h4>
+                    <div class="row justify-content-center">
+                        <div class="col-lg-10">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="feature-list-container">
+                                        <ul class="list-unstyled">
+                                            <li class="mb-2 feature-item">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                商品企画ステージ別の報告テンプレート
+                                            </li>
+                                            <li class="mb-2 feature-item">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                自己評価とメンターコメント
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="feature-list-container">
+                                        <ul class="list-unstyled">
+                                            <li class="mb-2 feature-item">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                前週との比較表示機能
+                                            </li>
+                                            <li class="mb-2 feature-item">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                学習ログとしての自然な表示
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="feature-list-container">
+                                        <ul class="list-unstyled">
+                                            <li class="mb-2 feature-item">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                思考を促す問いかけ設計
+                                            </li>
+                                            <li class="mb-2 feature-item">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                負担軽減のための自動化機能
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -150,6 +182,52 @@
 </div>
 
 <style>
+/* システムの特徴セクションのスタイリング */
+.feature-list-container {
+    background: rgba(248, 249, 250, 0.8);
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.feature-list-container:hover {
+    background: rgba(248, 249, 250, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    transition: color 0.3s ease;
+}
+
+.feature-item:hover {
+    color: #495057;
+}
+
+.feature-item i {
+    font-size: 1rem;
+    min-width: 1.2rem;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .feature-list-container {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .feature-item {
+        font-size: 0.9rem;
+        padding: 0.4rem 0;
+    }
+}
+
 .report-button-container {
     position: relative;
     display: inline-block;
