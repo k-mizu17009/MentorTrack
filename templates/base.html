@@ -54,6 +54,48 @@
             padding: 1rem;
             margin: 1rem 0;
         }
+        
+        /* 統一された商品画像サイズ */
+        .product-image-container {
+            width: 100%;
+            height: 120px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .product-image:hover {
+            transform: scale(1.05);
+        }
+        
+        /* ヒーロー画像の統一サイズ */
+        .hero-image-container {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .hero-product-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
     </style>
 </head>
 <body>

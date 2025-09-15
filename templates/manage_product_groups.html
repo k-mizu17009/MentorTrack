@@ -117,10 +117,11 @@
                                                 {% if images %}
                                                     <div class="d-flex">
                                                         {% for image in images[:3] %}
-                                                        <img src="{{ url_for('uploaded_file', filename=image) }}" 
-                                                             class="img-thumbnail me-1" 
-                                                             style="width: 40px; height: 40px; object-fit: cover;"
-                                                             alt="{{ pg.name }}">
+                                                        <div class="product-image-container me-1" style="width: 40px; height: 40px;">
+                                                            <img src="{{ url_for('uploaded_file', filename=image) }}" 
+                                                                 class="product-image"
+                                                                 alt="{{ pg.name }}">
+                                                        </div>
                                                         {% endfor %}
                                                         {% if images|length > 3 %}
                                                         <span class="badge bg-secondary ms-1">+{{ images|length - 3 }}</span>
