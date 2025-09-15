@@ -467,6 +467,7 @@ def get_progress_status_info(status):
         'good': {'class': 'success', 'icon': 'fas fa-arrow-up', 'text': '順調'},
         'warning': {'class': 'warning', 'icon': 'fas fa-pause', 'text': '注意'},
         'danger': {'class': 'danger', 'icon': 'fas fa-exclamation-triangle', 'text': '停滞'},
+        'completed': {'class': 'success', 'icon': 'fas fa-check-circle', 'text': '完了'},
         'unknown': {'class': 'secondary', 'icon': 'fas fa-question', 'text': '不明'}
     }
     return status_info.get(status, status_info['unknown'])

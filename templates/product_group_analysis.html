@@ -114,7 +114,23 @@
                             <div class="card h-100">
                                 <div class="card-header py-2">
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <h6 class="mb-0">{{ pg.name }}</h6>
+                                        <h6 class="mb-0">
+                                            <span class="stage-number-badge me-2" data-stage="{{ pg.current_stage }}">
+                                                {% set stage_number_mapping = {
+                                                    'proposal_pre': 1,
+                                                    'estimate_completed': 2,
+                                                    's_creation_approved': 3,
+                                                    'proposal_decision_obtained': 4,
+                                                    'pre_production_s_confirmed': 5,
+                                                    'first_order': 6,
+                                                    'temporary_listing': 7,
+                                                    'page_up': 8,
+                                                    'second_lot_ordered': 9
+                                                } %}
+                                                {{ stage_number_mapping.get(pg.current_stage, '?') }}
+                                            </span>
+                                            {{ pg.name }}
+                                        </h6>
                                         <span class="badge bg-{{ get_progress_status_info(pg.progress_status).class }}">
                                             <i class="{{ get_progress_status_info(pg.progress_status).icon }} me-1"></i>
                                             {{ get_progress_status_info(pg.progress_status).text }}
@@ -442,6 +458,66 @@
         height: 22px;
         font-size: 0.75rem;
     }
+}
+
+/* カードのステージ番号バッジ */
+.stage-number-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: bold;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.stage-number-badge:hover {
+    transform: scale(1.1);
+    box-shadow: 0 3px 6px rgba(0, 123, 255, 0.4);
+}
+
+/* ステージ番号バッジの色分け */
+.stage-number-badge[data-stage="proposal_pre"] {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+}
+
+.stage-number-badge[data-stage="estimate_completed"] {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+}
+
+.stage-number-badge[data-stage="s_creation_approved"] {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+}
+
+.stage-number-badge[data-stage="proposal_decision_obtained"] {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+    color: #212529;
+}
+
+.stage-number-badge[data-stage="pre_production_s_confirmed"] {
+    background: linear-gradient(135deg, #fd7e14 0%, #e55100 100%);
+}
+
+.stage-number-badge[data-stage="first_order"] {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.stage-number-badge[data-stage="temporary_listing"] {
+    background: linear-gradient(135deg, #6f42c1 0%, #59359a 100%);
+}
+
+.stage-number-badge[data-stage="page_up"] {
+    background: linear-gradient(135deg, #e83e8c 0%, #d63384 100%);
+}
+
+.stage-number-badge[data-stage="second_lot_ordered"] {
+    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
 }
 
 .timeline {
