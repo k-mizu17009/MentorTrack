@@ -16,10 +16,24 @@
                         順調: 7日以内に報告 / 注意: 8-14日 / 停滞: 15日以上
                     </small>
                 </div>
-                <a href="{{ url_for('mentee_dashboard', mentee_id=mentee.id) }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> ダッシュボードに戻る
-                </a>
+                {% if current_user.role in ['mentor', 'admin'] %}
+                    <a href="{{ url_for('mentor_dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> メンターダッシュボードに戻る
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('mentee_dashboard', mentee_id=mentee.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> ダッシュボードに戻る
+                    </a>
+                {% endif %}
             </div>
+            {% if current_user.role in ['mentor', 'admin'] %}
+            <div class="col-md-6 text-end">
+                <div class="alert alert-info alert-sm py-2 mb-0">
+                    <i class="fas fa-chalkboard-teacher me-2"></i>
+                    <small>メンター視点でメンティの進捗を確認中</small>
+                </div>
+            </div>
+            {% endif %}
 
         <!-- フィルター状態表示 -->
         <div class="alert alert-info alert-dismissible fade show" id="filter-status" style="display: none;">
