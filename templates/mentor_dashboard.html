@@ -860,8 +860,9 @@
     position: relative;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 15px;
-    padding: 25px 30px;
-    margin-bottom: 20px;
+    padding: 20px 25px;
+    margin: 0 auto 20px auto;
+    max-width: 1200px;
     overflow: hidden;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
@@ -880,12 +881,18 @@
     position: relative;
     z-index: 2;
     color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    max-width: 1100px;
+    margin: 0 auto;
 }
 
 .hero-main-title {
-    font-size: 2.2rem;
+    font-size: 2rem;
     font-weight: 800;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     line-height: 1.1;
 }
 
@@ -896,35 +903,35 @@
 
 .title-line:nth-child(2) {
     animation-delay: 0.2s;
-    background: linear-gradient(45deg, #ffd700, #ffed4e);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: white;
 }
 
 .hero-subtitle {
     font-size: 1rem;
     opacity: 0.9;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     animation: fadeInUp 0.8s ease-out 0.4s both;
 }
 
 .hero-stats {
     display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
+    flex-direction: row;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: auto;
+    margin-right: 50px;
 }
 
 .stat-card {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    padding: 15px 18px;
+    border-radius: 10px;
+    padding: 8px 10px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    min-width: 130px;
+    gap: 6px;
+    min-width: 90px;
     animation: slideInUp 0.8s ease-out;
     animation-fill-mode: both;
 }
@@ -934,14 +941,14 @@
 .stat-card:nth-child(3) { animation-delay: 0.8s; }
 
 .stat-icon {
-    width: 40px;
-    height: 40px;
+    width: 24px;
+    height: 24px;
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 0.8rem;
 }
 
 .stat-content {
@@ -950,13 +957,13 @@
 }
 
 .stat-number {
-    font-size: 1.4rem;
+    font-size: 1rem;
     font-weight: 700;
     line-height: 1;
 }
 
 .stat-label {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     opacity: 0.8;
 }
 
@@ -1410,17 +1417,29 @@
 
 /* レスポンシブ対応の改善 */
 @media (max-width: 768px) {
+    .hero-content {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        max-width: none;
+    }
+    
     .hero-main-title {
         font-size: 1.8rem;
+        text-align: center;
     }
     
     .hero-stats {
+        flex-direction: row;
         justify-content: center;
+        width: 100%;
+        gap: 6px;
+        margin: 0;
     }
     
     .stat-card {
-        min-width: 110px;
-        padding: 12px 15px;
+        min-width: 70px;
+        padding: 4px 6px;
     }
     
     .action-btn {
@@ -1439,9 +1458,102 @@
         max-width: none !important;
     }
 }
+
+/* リップル効果のCSS */
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(0);
+    animation: ripple-animation 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple-animation {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
 </style>
 
 <script>
+// モダンUI初期化関数
+function initializeModernUI() {
+    console.log('Initializing modern UI');
+    
+    // アニメーション効果の初期化
+    initializeAnimations();
+    
+    // カードホバー効果の初期化
+    initializeCardEffects();
+    
+    // ボタン効果の初期化
+    initializeButtonEffects();
+    
+    console.log('Modern UI initialized');
+}
+
+// アニメーション効果の初期化
+function initializeAnimations() {
+    // フェードイン効果
+    const cards = document.querySelectorAll('.modern-product-card, .modern-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+}
+
+// カード効果の初期化
+function initializeCardEffects() {
+    const cards = document.querySelectorAll('.modern-product-card, .modern-card');
+    
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
+        });
+    });
+}
+
+// ボタン効果の初期化
+function initializeButtonEffects() {
+    const buttons = document.querySelectorAll('.btn, .action-btn');
+    
+    buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            // リップル効果
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+}
+
 // フィルター機能
 document.addEventListener('DOMContentLoaded', function() {
     initializeModernUI();
@@ -1971,9 +2083,13 @@ function scrollToSection(sectionId) {
 
 // 進捗状況によるフィルタリング機能
 function filterByProgressStatus(status) {
+    console.log('Filtering by status:', status);
+    
     const productCards = document.querySelectorAll('.product-card');
     const filterStatus = document.getElementById('progress-filter-status');
     const filterStatusText = document.getElementById('progress-filter-status-text');
+    
+    console.log('Found product cards:', productCards.length);
     
     // 全てのボタンのアクティブ状態をリセット
     document.querySelectorAll('.progress-filter-buttons .btn').forEach(btn => {
@@ -1981,7 +2097,9 @@ function filterByProgressStatus(status) {
     });
     
     // クリックされたボタンをアクティブにする
-    event.target.classList.add('active');
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
     
     let visibleCount = 0;
     let statusText = '';
@@ -1989,6 +2107,8 @@ function filterByProgressStatus(status) {
     productCards.forEach(card => {
         const warningLevel = card.getAttribute('data-warning-level');
         const cardStatus = card.getAttribute('data-status');
+        
+        console.log('Card warning level:', warningLevel, 'status:', cardStatus);
         
         let shouldShow = false;
         
@@ -2017,25 +2137,35 @@ function filterByProgressStatus(status) {
             card.style.display = 'block';
             card.style.opacity = '1';
             visibleCount++;
+            console.log('Showing card:', card);
         } else {
             card.style.display = 'none';
             card.style.opacity = '0.3';
+            console.log('Hiding card:', card);
         }
     });
+    
+    console.log('Visible count:', visibleCount);
     
     // フィルター状態を表示
     if (status !== 'all') {
         filterStatusText.textContent = `${statusText}を表示中 (${visibleCount}件)`;
         filterStatus.style.display = 'block';
+        console.log('Filter status displayed:', statusText, visibleCount);
     } else {
         filterStatus.style.display = 'none';
+        console.log('Filter status hidden');
     }
 }
 
 // フィルター解除機能
 function clearProgressFilter() {
+    console.log('Clearing progress filter');
+    
     const productCards = document.querySelectorAll('.product-card');
     const filterStatus = document.getElementById('progress-filter-status');
+    
+    console.log('Found product cards for clear:', productCards.length);
     
     // 全てのボタンのアクティブ状態をリセット
     document.querySelectorAll('.progress-filter-buttons .btn').forEach(btn => {
@@ -2053,6 +2183,8 @@ function clearProgressFilter() {
     
     // デフォルトのフィルターをリセット
     document.getElementById('progress-active').checked = true;
+    
+    console.log('Filter cleared');
 }
 
 // メンティの詳細分析ページに遷移
