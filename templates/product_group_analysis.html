@@ -334,12 +334,12 @@
                 
                 <!-- サイドバー -->
                 <div class="col-lg-3">
-                    <!-- 進捗ステージ一覧 -->
+                    <!-- 企画ステージ一覧 -->
                     <div class="card mb-4 sticky-top" style="top: 20px;">
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h6 class="mb-0">
-                                    <i class="fas fa-list-ol me-2"></i>進捗ステージ一覧
+                                    <i class="fas fa-list-ol me-2"></i>企画ステージ一覧
                                 </h6>
                                 <button class="btn btn-sm btn-outline-secondary" id="reset-filter" title="フィルターをリセット">
                                     <i class="fas fa-undo-alt"></i>
@@ -360,7 +360,7 @@
                                 <div class="progress-stage-item-sidebar filterable" data-stage="estimate_completed" data-filter="all">
                                     <div class="stage-number-sidebar">1</div>
                                     <div class="stage-info-sidebar">
-                                        <div class="stage-name-sidebar">見積書対応済</div>
+                                        <div class="stage-name-sidebar">見積書対応</div>
                                         <div class="stage-percentage-sidebar">22%</div>
                                     </div>
                                     <div class="stage-count-badge" data-stage="estimate_completed">0</div>
@@ -368,7 +368,7 @@
                                 <div class="progress-stage-item-sidebar filterable" data-stage="s_creation_approved" data-filter="all">
                                     <div class="stage-number-sidebar">2</div>
                                     <div class="stage-info-sidebar">
-                                        <div class="stage-name-sidebar">S作成承認済</div>
+                                        <div class="stage-name-sidebar">サンプル承認</div>
                                         <div class="stage-percentage-sidebar">33%</div>
                                     </div>
                                     <div class="stage-count-badge" data-stage="s_creation_approved">0</div>
@@ -376,7 +376,7 @@
                                 <div class="progress-stage-item-sidebar filterable" data-stage="proposal_decision_obtained" data-filter="all">
                                     <div class="stage-number-sidebar">3</div>
                                     <div class="stage-info-sidebar">
-                                        <div class="stage-name-sidebar">提案決裁取得済</div>
+                                        <div class="stage-name-sidebar">提案決裁</div>
                                         <div class="stage-percentage-sidebar">44%</div>
                                     </div>
                                     <div class="stage-count-badge" data-stage="proposal_decision_obtained">0</div>
@@ -384,7 +384,7 @@
                                 <div class="progress-stage-item-sidebar filterable" data-stage="pre_production_s_confirmed" data-filter="all">
                                     <div class="stage-number-sidebar">4</div>
                                     <div class="stage-info-sidebar">
-                                        <div class="stage-name-sidebar">量産前S確認済</div>
+                                        <div class="stage-name-sidebar">量産前サンプル</div>
                                         <div class="stage-percentage-sidebar">56%</div>
                                     </div>
                                     <div class="stage-count-badge" data-stage="pre_production_s_confirmed">0</div>
@@ -392,7 +392,7 @@
                                 <div class="progress-stage-item-sidebar filterable" data-stage="first_order" data-filter="all">
                                     <div class="stage-number-sidebar">5</div>
                                     <div class="stage-info-sidebar">
-                                        <div class="stage-name-sidebar">初回発注済</div>
+                                        <div class="stage-name-sidebar">初回発注</div>
                                         <div class="stage-percentage-sidebar">67%</div>
                                     </div>
                                     <div class="stage-count-badge" data-stage="first_order">0</div>
@@ -400,7 +400,7 @@
                                 <div class="progress-stage-item-sidebar filterable" data-stage="temporary_listing" data-filter="all">
                                     <div class="stage-number-sidebar">6</div>
                                     <div class="stage-info-sidebar">
-                                        <div class="stage-name-sidebar">仮出品済</div>
+                                        <div class="stage-name-sidebar">仮出品</div>
                                         <div class="stage-percentage-sidebar">78%</div>
                                     </div>
                                     <div class="stage-count-badge" data-stage="temporary_listing">0</div>
@@ -408,7 +408,7 @@
                                 <div class="progress-stage-item-sidebar filterable" data-stage="page_up" data-filter="all">
                                     <div class="stage-number-sidebar">7</div>
                                     <div class="stage-info-sidebar">
-                                        <div class="stage-name-sidebar">ページアップ済</div>
+                                        <div class="stage-name-sidebar">ページアップ</div>
                                         <div class="stage-percentage-sidebar">89%</div>
                                     </div>
                                     <div class="stage-count-badge" data-stage="page_up">0</div>
@@ -416,7 +416,7 @@
                                 <div class="progress-stage-item-sidebar filterable" data-stage="second_lot_ordered" data-filter="all">
                                     <div class="stage-number-sidebar">8</div>
                                     <div class="stage-info-sidebar">
-                                        <div class="stage-name-sidebar">2ロット目発注済</div>
+                                        <div class="stage-name-sidebar">2ロット目発注</div>
                                         <div class="stage-percentage-sidebar">100%</div>
                                     </div>
                                     <div class="stage-count-badge" data-stage="second_lot_ordered">0</div>
@@ -462,11 +462,16 @@
 .progress-stages-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
+    padding: 4px 0;
 }
 
 /* ヘッダーのテキスト色を白に */
 .card-header h6 {
+    color: white !important;
+}
+
+.card-header h5 {
     color: white !important;
 }
 
@@ -481,33 +486,39 @@
 .progress-stage-item-sidebar {
     display: flex;
     align-items: center;
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    padding: 6px 8px;
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 8px 10px;
     transition: all 0.3s ease;
     cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
 }
 
 .progress-stage-item-sidebar:hover {
-    background: #e9ecef;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-color: #007bff;
-    transform: translateX(2px);
+    transform: translateX(3px);
+    box-shadow: 0 3px 8px rgba(0, 123, 255, 0.15);
 }
 
 .stage-number-sidebar {
-    background: #007bff;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
     color: white;
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.7rem;
-    font-weight: bold;
-    margin-right: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-right: 8px;
     flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+    transition: all 0.3s ease;
 }
 
 .stage-info-sidebar {
@@ -516,37 +527,55 @@
 }
 
 .stage-name-sidebar {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 600;
-    color: #495057;
-    line-height: 1.2;
-    margin-bottom: 1px;
+    color: #343a40;
+    line-height: 1.3;
+    margin-bottom: 2px;
 }
 
 .stage-percentage-sidebar {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     color: #6c757d;
     font-weight: 500;
+    background: rgba(108, 117, 125, 0.1);
+    padding: 1px 6px;
+    border-radius: 10px;
+    display: inline-block;
 }
 
 /* 現在のステージのハイライト（サイドバー用） */
 .progress-stage-item-sidebar.current-stage {
     border-color: #28a745;
-    background: #d4edda;
-    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    box-shadow: 0 3px 8px rgba(40, 167, 69, 0.25);
+    transform: translateX(2px);
+}
+
+.progress-stage-item-sidebar.current-stage::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
 }
 
 .progress-stage-item-sidebar.current-stage .stage-number-sidebar {
-    background: #28a745;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.4);
 }
 
 .progress-stage-item-sidebar.completed-stage {
     border-color: #17a2b8;
-    background: #d1ecf1;
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    box-shadow: 0 2px 6px rgba(23, 162, 184, 0.2);
 }
 
 .progress-stage-item-sidebar.completed-stage .stage-number-sidebar {
-    background: #17a2b8;
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    box-shadow: 0 2px 4px rgba(23, 162, 184, 0.3);
 }
 
 /* フィルター可能なステージ項目 */
@@ -563,26 +592,38 @@
 }
 
 .progress-stage-item-sidebar.filterable.active-filter {
-    background: #e8f5e8;
+    background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
     border-color: #28a745;
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    transform: translateX(4px);
+}
+
+.progress-stage-item-sidebar.filterable.active-filter::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
 }
 
 /* ステージカウントバッジ */
 .stage-count-badge {
     position: absolute;
-    top: 4px;
-    right: 4px;
-    background: #6c757d;
+    top: 3px;
+    right: 3px;
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
     color: white;
-    font-size: 0.6rem;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 10px;
-    min-width: 16px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 12px;
+    min-width: 18px;
     text-align: center;
-    opacity: 0.7;
+    opacity: 0.8;
     transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .progress-stage-item-sidebar.filterable:hover .stage-count-badge {
@@ -591,8 +632,10 @@
 }
 
 .progress-stage-item-sidebar.filterable.active-filter .stage-count-badge {
-    background: #28a745;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     opacity: 1;
+    transform: scale(1.1);
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.4);
 }
 
 /* フィルター解除ボタンのスタイル */
@@ -1057,14 +1100,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 // ステージ名を抽出（表示名から内部名に変換）
                 const stageMapping = {
                     '提案前': 'proposal_pre',
-                    '見積書対応済': 'estimate_completed',
-                    'S作成承認済': 's_creation_approved',
-                    '提案決裁取得済': 'proposal_decision_obtained',
-                    '量産前S確認済': 'pre_production_s_confirmed',
-                    '初回発注済': 'first_order',
-                    '仮出品済': 'temporary_listing',
-                    'ページアップ済': 'page_up',
-                    '2ロット目発注済': 'second_lot_ordered',
+                    '見積書対応': 'estimate_completed',
+                    'サンプル承認': 's_creation_approved',
+                    '提案決裁': 'proposal_decision_obtained',
+                    '量産前サンプル': 'pre_production_s_confirmed',
+                    '初回発注': 'first_order',
+                    '仮出品': 'temporary_listing',
+                    'ページアップ': 'page_up',
+                    '2ロット目発注': 'second_lot_ordered',
                     '企画中止': 'project_cancelled'
                 };
                 
@@ -1241,14 +1284,15 @@ function initStageFilter() {
         if (selectedStage !== 'all') {
             const stageNames = {
                 'proposal_pre': '提案前',
-                'estimate_completed': '見積書対応済',
-                's_creation_approved': 'S作成承認済',
-                'proposal_decision_obtained': '提案決裁取得済',
-                'pre_production_s_confirmed': '量産前S確認済',
-                'first_order': '初回発注済',
-                'temporary_listing': '仮出品済',
-                'page_up': 'ページアップ済',
-                'second_lot_ordered': '2ロット目発注済'
+                'estimate_completed': '見積書対応',
+                's_creation_approved': 'サンプル承認',
+                'proposal_decision_obtained': '提案決裁',
+                'pre_production_s_confirmed': '量産前サンプル',
+                'first_order': '初回発注',
+                'temporary_listing': '仮出品',
+                'page_up': 'ページアップ',
+                'second_lot_ordered': '2ロット目発注',
+                'project_cancelled': '企画中止'
             };
             
             // 安全にカウントを取得
