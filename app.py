@@ -446,20 +446,8 @@ def generate_daily_report_from_weekly(weekly_report, report_date=None):
         except:
             additional_responses = {}
     
-    # 企画ステージの日本語名を取得
-    stage_names = {
-        'proposal_pre': '提案前',
-        'estimate_completed': '見積書対応済',
-        's_creation_approved': 'サンプル承認済',
-        'proposal_decision_obtained': '提案決裁済',
-        'pre_production_s_confirmed': '量産前サンプル済',
-        'first_order': '初回発注済',
-        'temporary_listing': '仮出品済',
-        'page_up': 'ページアップ済',
-        'second_lot_ordered': '2ロット目発注済',
-        'project_cancelled': '企画中止'
-    }
-    stage_name = stage_names.get(planning_stage, planning_stage)
+    # 企画ステージの日本語名を取得（企画ステージフォームの表示形式に合わせる）
+    stage_name = get_stage_display_name(planning_stage)
     
     # 自己評価の日本語名を取得
     evaluation_names = {
@@ -606,24 +594,11 @@ def get_product_group_latest_stages(mentee_id):
         ).order_by(WeeklyReport.report_date.desc()).first()
         
         if latest_report:
-            # ステージの日本語名を取得
-            stage_names = {
-                'proposal_pre': '提案前',
-                'estimate_completed': '見積書対応済',
-                's_creation_approved': 'サンプル承認済',
-                'proposal_decision_obtained': '提案決裁済',
-                'pre_production_s_confirmed': '量産前サンプル済',
-                'first_order': '初回発注済',
-                'temporary_listing': '仮出品済',
-                'page_up': 'ページアップ済',
-                'second_lot_ordered': '2ロット目発注済',
-                'project_cancelled': '企画中止'
-            }
-            
+            # ステージの日本語名を取得（企画ステージフォームの表示形式に合わせる）
             product_group_stages[pg.id] = {
                 'name': pg.name,
                 'latest_stage': latest_report.planning_stage,
-                'latest_stage_name': stage_names.get(latest_report.planning_stage, latest_report.planning_stage),
+                'latest_stage_name': get_stage_display_name(latest_report.planning_stage),
                 'last_report_date': latest_report.report_date.strftime('%Y年%m月%d日'),
                 'has_reports': True
             }
@@ -908,18 +883,18 @@ def get_product_group_progress(mentee_id, weeks=16):
     return list(product_groups.values())
 
 def get_stage_display_name(stage):
-    """企画ステージの表示名を取得"""
+    """企画ステージの表示名を取得（企画ステージフォームの表示形式に合わせる）"""
     stage_names = {
-        'proposal_pre': '提案前',
-        'estimate_completed': '見積書対応　済',
-        's_creation_approved': 'サンプル承認　済',
-        'proposal_decision_obtained': '提案決裁　済',
-        'pre_production_s_confirmed': '量産前サンプル　済',
-        'first_order': '初回発注　済',
-        'temporary_listing': '仮出品　済',
-        'page_up': 'ページアップ　済',
-        'second_lot_ordered': '2ロット目発注済',
-        'project_cancelled': '企画中止'
+        'proposal_pre': '0.提案前',
+        'estimate_completed': '1.見積書対応',
+        's_creation_approved': '2.サンプル承認',
+        'proposal_decision_obtained': '3.提案決裁',
+        'pre_production_s_confirmed': '4.量産前サンプル',
+        'first_order': '5.初回発注',
+        'temporary_listing': '6.仮出品',
+        'page_up': '7.ページアップ',
+        'second_lot_ordered': '8.2ロット目発注',
+        'project_cancelled': '9.企画中止'
     }
     return stage_names.get(stage, stage)
 
