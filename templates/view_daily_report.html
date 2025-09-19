@@ -27,7 +27,8 @@
                         <h5><i class="fas fa-clipboard-list me-2"></i>要約</h5>
                         <div class="card bg-light">
                             <div class="card-body">
-                                <p class="mb-0">{{ daily_report.summary }}</p>
+                                <!-- Debug: {{ daily_report.summary[:50] }} -->
+                                <div class="summary-content">{{ render_markdown(daily_report.summary) | safe }}</div>
                             </div>
                         </div>
                     </div>
@@ -38,7 +39,9 @@
                         <div class="card">
                             <div class="card-body">
                                 <div class="report-content">
-                                    {{ daily_report.generated_content | replace('\n', '<br>') | safe }}
+                                    <!-- Debug: {{ daily_report.generated_content[:50] }} -->
+                                    <!-- Test: {{ render_markdown('# Test Markdown') | safe }} -->
+                                    {{ render_markdown(daily_report.generated_content) | safe }}
                                 </div>
                             </div>
                         </div>
@@ -93,13 +96,12 @@
 </div>
 
 <style>
-.report-content {
-    white-space: pre-wrap;
+.report-content, .summary-content {
     font-family: 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
     line-height: 1.6;
 }
 
-.report-content h1 {
+.report-content h1, .summary-content h1 {
     color: #007bff;
     border-bottom: 2px solid #007bff;
     padding-bottom: 8px;
@@ -107,7 +109,7 @@
     font-size: 1.5rem;
 }
 
-.report-content h2 {
+.report-content h2, .summary-content h2 {
     color: #495057;
     border-left: 4px solid #007bff;
     padding-left: 12px;
@@ -116,24 +118,97 @@
     font-size: 1.2rem;
 }
 
-.report-content strong {
+.report-content h3, .summary-content h3 {
+    color: #495057;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.report-content strong, .summary-content strong {
     color: #495057;
     font-weight: 600;
 }
 
-.report-content hr {
+.report-content em, .summary-content em {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.report-content hr, .summary-content hr {
     border-color: #dee2e6;
     margin: 20px 0;
 }
 
+.report-content ul, .summary-content ul,
+.report-content ol, .summary-content ol {
+    padding-left: 20px;
+    margin-bottom: 15px;
+}
+
+.report-content li, .summary-content li {
+    margin-bottom: 5px;
+}
+
+.report-content blockquote, .summary-content blockquote {
+    border-left: 4px solid #007bff;
+    padding-left: 15px;
+    margin: 15px 0;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.report-content code, .summary-content code {
+    background-color: #f8f9fa;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.report-content pre, .summary-content pre {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin: 15px 0;
+}
+
+.report-content pre code, .summary-content pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+.report-content table, .summary-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+}
+
+.report-content th, .summary-content th,
+.report-content td, .summary-content td {
+    border: 1px solid #dee2e6;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.report-content th, .summary-content th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
-    .report-content h1 {
+    .report-content h1, .summary-content h1 {
         font-size: 1.3rem;
     }
     
-    .report-content h2 {
+    .report-content h2, .summary-content h2 {
         font-size: 1.1rem;
+    }
+    
+    .report-content h3, .summary-content h3 {
+        font-size: 1rem;
     }
 }
 </style>

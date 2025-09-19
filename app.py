@@ -11,6 +11,7 @@ import json
 import uuid
 from werkzeug.utils import secure_filename
 import re
+import markdown
 
 # AI機能のためのインポート（オプション）
 try:
@@ -898,6 +899,26 @@ def get_stage_display_name(stage):
     }
     return stage_names.get(stage, stage)
 
+def render_markdown(text):
+    """マークダウンテキストをHTMLに変換する"""
+    if not text:
+        return ""
+    try:
+        # デバッグ用ログ
+        print(f"Rendering markdown text: {text[:100]}...")
+        
+        # マークダウンをHTMLに変換
+        html = markdown.markdown(text, extensions=['extra', 'codehilite', 'tables'])
+        
+        # デバッグ用ログ
+        print(f"Rendered HTML: {html[:100]}...")
+        
+        return html
+    except Exception as e:
+        # エラーが発生した場合は元のテキストを返す
+        print(f"Markdown rendering error: {e}")
+        return text.replace('\n', '<br>')
+
 def get_stage_progress_percentage(stage):
     """企画ステージの進捗パーセンテージを取得"""
     stage_percentages = {
@@ -943,7 +964,8 @@ def utility_processor():
     return dict(
         get_stage_display_name=get_stage_display_name,
         get_stage_progress_percentage=get_stage_progress_percentage,
-        get_progress_status_info=get_progress_status_info
+        get_progress_status_info=get_progress_status_info,
+        render_markdown=render_markdown
     )
 
 # ルート
