@@ -96,9 +96,156 @@
             object-fit: cover;
             object-position: center;
         }
+        
+        /* 最上面通知バナーのスタイル */
+        .top-notification-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1050;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transform: translateY(-100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+        }
+        
+        .top-notification-banner.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .top-notification-banner.slide-out {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-content i {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .notification-actions .btn {
+            border-color: rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .notification-actions .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        .notification-actions .btn-light {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .notification-actions .btn-light:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* 通知アイコンのアニメーション */
+        .notification-icon-pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        /* 通知表示時のボディの調整 */
+        body.notification-showing {
+            padding-top: 60px;
+            transition: padding-top 0.4s ease;
+        }
+        
+        /* 通知ドロップダウンのz-index修正 */
+        .navbar .dropdown-menu {
+            z-index: 1060 !important;
+        }
+        
+        /* 進捗ステージ一覧のz-index調整 */
+        .sticky-top {
+            z-index: 1020 !important;
+        }
+        
+        /* Bootstrap dropdown menu のz-index強制設定 */
+        .dropdown-menu.show {
+            z-index: 1060 !important;
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .top-notification-banner {
+                padding: 8px 0;
+            }
+            
+            .notification-content {
+                margin-right: 10px;
+            }
+            
+            .notification-actions .btn {
+                padding: 4px 8px;
+                font-size: 0.8rem;
+            }
+            
+            .notification-actions .btn .fas {
+                margin-right: 0;
+            }
+            
+            .notification-actions .btn span {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- 最上面通知バナー -->
+    <div id="top-notification-banner" class="top-notification-banner" style="display: none;">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="notification-content">
+                    <div class="d-flex align-items-center">
+                        <i id="notification-icon" class="fas fa-bell me-2"></i>
+                        <div>
+                            <strong id="notification-title"></strong>
+                            <div id="notification-message" class="small"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="notification-actions">
+                    <button class="btn btn-sm btn-outline-light me-2" onclick="viewNotificationDetails()">
+                        <i class="fas fa-eye me-1"></i><span>詳細</span>
+                    </button>
+                    <button class="btn btn-sm btn-light" onclick="dismissTopNotification()">
+                        <i class="fas fa-times"></i><span class="d-none d-sm-inline ms-1">閉じる</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">
@@ -124,7 +271,7 @@
                             <i class="fas fa-bell me-1"></i>
                             <span id="notification-badge" class="badge bg-danger" style="display: none;">0</span>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" style="min-width: 300px;">
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" style="min-width: 300px; z-index: 1060;">
                             <li><h6 class="dropdown-header">通知</h6></li>
                             <li><div id="notification-list">
                                 <div class="text-center p-3">
@@ -143,7 +290,7 @@
                         <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-tools me-1"></i>管理
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                        <ul class="dropdown-menu" aria-labelledby="adminDropdown" style="z-index: 1060;">
                             <li><a class="dropdown-item" href="{{ url_for('admin_users') }}">
                                 <i class="fas fa-users me-1"></i>ユーザー管理
                             </a></li>
@@ -157,7 +304,7 @@
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user me-1"></i>{{ current_user.username }}
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown" style="z-index: 1060;">
                             <li><span class="dropdown-item-text"><small class="text-muted">役割: {{ current_user.role }}</small></span></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('logout') }}">
@@ -229,6 +376,12 @@
         if (notifications.length === 0) {
             list.innerHTML = '<div class="text-center p-3 text-muted">通知はありません</div>';
             return;
+        }
+        
+        // 最新の未読通知を最上面バナーに表示
+        const latestUnreadNotification = notifications.find(n => !n.is_read);
+        if (latestUnreadNotification) {
+            showTopNotification(latestUnreadNotification);
         }
         
         let html = '';
@@ -311,6 +464,98 @@
         });
     }
     
+    // 最上面通知バナーの表示
+    let currentTopNotification = null;
+    let topNotificationTimeout = null;
+    
+    function showTopNotification(notification) {
+        // 同じ通知が既に表示されている場合はスキップ
+        if (currentTopNotification && currentTopNotification.id === notification.id) {
+            return;
+        }
+        
+        currentTopNotification = notification;
+        
+        const banner = document.getElementById('top-notification-banner');
+        const icon = document.getElementById('notification-icon');
+        const title = document.getElementById('notification-title');
+        const message = document.getElementById('notification-message');
+        
+        // アイコンの設定
+        const iconClass = notification.type === 'report_created' ? 'fa-file-alt' : 
+                         notification.type === 'comment_added' ? 'fa-comment' : 'fa-bell';
+        icon.className = `fas ${iconClass} me-2 notification-icon-pulse`;
+        
+        // コンテンツの設定
+        title.textContent = notification.title;
+        message.textContent = notification.message;
+        
+        // バナーを表示
+        banner.style.display = 'block';
+        document.body.classList.add('notification-showing');
+        
+        // アニメーション効果
+        setTimeout(() => {
+            banner.classList.add('show');
+        }, 100);
+        
+        // 自動非表示タイマーをクリア
+        if (topNotificationTimeout) {
+            clearTimeout(topNotificationTimeout);
+        }
+        
+        // 8秒後に自動非表示
+        topNotificationTimeout = setTimeout(() => {
+            hideTopNotification();
+        }, 8000);
+    }
+    
+    function hideTopNotification() {
+        const banner = document.getElementById('top-notification-banner');
+        
+        banner.classList.remove('show');
+        banner.classList.add('slide-out');
+        
+        setTimeout(() => {
+            banner.style.display = 'none';
+            banner.classList.remove('slide-out');
+            document.body.classList.remove('notification-showing');
+            currentTopNotification = null;
+        }, 400);
+        
+        if (topNotificationTimeout) {
+            clearTimeout(topNotificationTimeout);
+            topNotificationTimeout = null;
+        }
+    }
+    
+    function dismissTopNotification() {
+        if (currentTopNotification) {
+            // 通知を既読にする
+            markAsRead(currentTopNotification.id);
+        }
+        hideTopNotification();
+    }
+    
+    function viewNotificationDetails() {
+        if (currentTopNotification) {
+            handleNotificationClick(
+                currentTopNotification.id, 
+                currentTopNotification.type, 
+                currentTopNotification.related_id
+            );
+            hideTopNotification();
+        }
+    }
+    
+    // 通知バナーのキーボードショートカット
+    document.addEventListener('keydown', function(e) {
+        // Escキーで通知を閉じる
+        if (e.key === 'Escape' && currentTopNotification) {
+            dismissTopNotification();
+        }
+    });
+
     // ページ読み込み時に通知を読み込み、定期的に更新
     document.addEventListener('DOMContentLoaded', function() {
         loadNotifications();
