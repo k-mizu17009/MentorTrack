@@ -23,34 +23,6 @@
                         </div>
                     </div>
 
-                    <!-- 統計カード -->
-                    <div class="stats-card">
-                        <div class="stats-header">
-                            <i class="fas fa-chart-bar"></i>
-                            <span>統計情報</span>
-                        </div>
-                        <div class="stats-content">
-                            <div class="stat-item">
-                                <div class="stat-icon">
-                                    <i class="fas fa-file-alt"></i>
-                                </div>
-                                <div class="stat-info">
-                                    <span class="stat-number">{{ reports|length }}</span>
-                                    <span class="stat-label">総報告数</span>
-                                </div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-icon">
-                                    <i class="fas fa-boxes"></i>
-                                </div>
-                                <div class="stat-info">
-                                    <span class="stat-number">{{ product_group_progress|length }}</span>
-                                    <span class="stat-label">商品群数</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- ナビゲーションメニュー -->
                     <div class="navigation-menu">
                         <div class="menu-header">
@@ -71,19 +43,6 @@
                                 </div>
                             </a>
                             
-                            <a href="{{ url_for('list_daily_reports', mentee_id=mentee.id) }}" class="menu-item info">
-                                <div class="menu-icon">
-                                    <i class="fas fa-file-alt"></i>
-                                </div>
-                                <div class="menu-content">
-                                    <span class="menu-title">日報一覧</span>
-                                    <span class="menu-subtitle">閲覧・編集</span>
-                                </div>
-                                <div class="menu-arrow">
-                                    <i class="fas fa-chevron-right"></i>
-                                </div>
-                            </a>
-                            
                             <a href="{{ url_for('manage_product_groups', mentee_id=mentee.id) }}" class="menu-item success">
                                 <div class="menu-icon">
                                     <i class="fas fa-boxes"></i>
@@ -96,8 +55,22 @@
                                     <i class="fas fa-chevron-right"></i>
                                 </div>
                             </a>
+                            
+                            <a href="{{ url_for('list_daily_reports', mentee_id=mentee.id) }}" class="menu-item info">
+                                <div class="menu-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="menu-content">
+                                    <span class="menu-title">日報一覧</span>
+                                    <span class="menu-subtitle">閲覧・編集</span>
+                                </div>
+                                <div class="menu-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </a>
                         </div>
                     </div>
+
                 </div>
 
                 <!-- プロファイル編集ボタン（控えめに配置） -->
@@ -113,11 +86,37 @@
         <!-- メインコンテンツ -->
         <div class="col-lg-9 main-content">
             <div class="main-header">
-                <h2>
-                    <i class="fas fa-tachometer-alt me-2"></i>
-                    {{ mentee.name }}のダッシュボード
-                </h2>
-                <p class="text-muted">あなたの進捗と成果を確認しましょう</p>
+                <div class="header-content">
+                    <div class="header-title-section">
+                        <h2>
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            {{ mentee.name }}のダッシュボード
+                        </h2>
+                        <p class="text-muted">あなたの進捗と成果を確認しましょう</p>
+                    </div>
+                    <div class="header-stats">
+                        <div class="stats-container">
+                            <div class="stat-card-header">
+                                <div class="stat-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number">{{ reports|length }}</span>
+                                    <span class="stat-label">総報告数</span>
+                                </div>
+                            </div>
+                            <div class="stat-card-header">
+                                <div class="stat-icon">
+                                    <i class="fas fa-boxes"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number">{{ product_group_progress|length }}</span>
+                                    <span class="stat-label">商品群数</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
                 <!-- 商品群別進捗サマリー -->
@@ -1339,6 +1338,128 @@ document.addEventListener('DOMContentLoaded', function() {
     line-height: 1;
 }
 
+
+/* プロファイル編集セクション（控えめ） */
+.profile-edit-section {
+    margin-top: auto;
+    padding-top: 15px;
+}
+
+.profile-edit-btn-small {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+}
+
+.profile-edit-btn-small:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.9);
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.profile-edit-btn-small i {
+    font-size: 0.7rem;
+}
+
+/* メインコンテンツ */
+.main-content {
+    padding: 25px 30px;
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+.main-header {
+    margin-bottom: 30px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.header-title-section h2 {
+    color: #495057;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.header-title-section .text-muted {
+    font-size: 1rem;
+    margin-bottom: 0;
+}
+
+.header-stats {
+    flex-shrink: 0;
+}
+
+.stats-container {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.stat-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    transition: all 0.3s ease;
+}
+
+.stat-card-header:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+.stat-card-header .stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1.2rem;
+}
+
+.stat-card-header .stat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.stat-card-header .stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stat-card-header .stat-label {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
 /* ナビゲーションメニュー */
 .navigation-menu {
     background: rgba(255, 255, 255, 0.1);
@@ -1460,63 +1581,27 @@ document.addEventListener('DOMContentLoaded', function() {
     transform: translateX(3px);
 }
 
-/* プロファイル編集セクション（控えめ） */
-.profile-edit-section {
-    margin-top: auto;
-    padding-top: 15px;
-}
-
-.profile-edit-btn-small {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.7);
-    text-decoration: none;
-    border-radius: 8px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    width: 100%;
-}
-
-.profile-edit-btn-small:hover {
-    background: rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.9);
-    transform: translateY(-1px);
-    text-decoration: none;
-}
-
-.profile-edit-btn-small i {
-    font-size: 0.7rem;
-}
-
-/* メインコンテンツ */
-.main-content {
-    padding: 25px 30px;
-    background: #f8f9fa;
-    min-height: 100vh;
-}
-
-.main-header {
-    margin-bottom: 30px;
-}
-
-.main-header h2 {
-    color: #495057;
-    font-weight: 700;
-    margin-bottom: 8px;
-}
-
-.main-header .text-muted {
-    font-size: 1rem;
-}
-
 /* レスポンシブ対応 */
 @media (max-width: 991px) {
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .stats-container {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .stat-card-header {
+        padding: 12px 16px;
+    }
+    
+    .stat-card-header .stat-number {
+        font-size: 1.3rem;
+    }
+    
     .sidebar-nav {
         min-height: auto;
         margin-bottom: 20px;
@@ -1539,11 +1624,6 @@ document.addEventListener('DOMContentLoaded', function() {
         flex-shrink: 0;
     }
     
-    .stats-card {
-        min-width: 180px;
-        flex-shrink: 0;
-    }
-    
     .navigation-menu {
         min-width: 250px;
         flex-shrink: 0;
@@ -1558,6 +1638,7 @@ document.addEventListener('DOMContentLoaded', function() {
         min-width: 200px;
         flex-shrink: 0;
     }
+    
     
     .profile-edit-section {
         display: none; /* モバイルでは非表示 */
@@ -1587,6 +1668,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .menu-item {
         min-width: auto;
     }
+    
     
     .profile-edit-section {
         display: block; /* 小さな画面では再表示 */
