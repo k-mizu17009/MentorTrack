@@ -3,45 +3,122 @@
 {% block title %}{{ mentee.name }} - MentorTrack{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-8 mx-auto">
-        <div class="card">
-            <div class="card-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0">
-                        <i class="fas fa-user me-2"></i>{{ mentee.name }}のダッシュボード
-                    </h3>
-                    <a href="{{ url_for('mentee_profile') }}" class="btn btn-outline-light btn-sm">
-                        <i class="fas fa-user-edit me-1"></i>プロファイル編集
-                    </a>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="row mb-4">
-                    <div class="col-md-3">
-                        <a href="{{ url_for('new_report', mentee_id=mentee.id) }}" class="btn btn-primary btn-lg w-100">
-                            <i class="fas fa-plus me-2"></i>新しい週次報告を作成
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="{{ url_for('list_daily_reports', mentee_id=mentee.id) }}" class="btn btn-info btn-lg w-100">
-                            <i class="fas fa-file-alt me-2"></i>日報一覧
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="{{ url_for('manage_product_groups', mentee_id=mentee.id) }}" class="btn btn-success btn-lg w-100">
-                            <i class="fas fa-boxes me-2"></i>代表商品群 登録
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card bg-light">
-                            <div class="card-body text-center">
-                                <h5 class="card-title">総報告数</h5>
-                                <h2 class="text-primary">{{ reports|length }}</h2>
+<div class="container-fluid">
+    <div class="row">
+        <!-- サイドバー -->
+        <div class="col-lg-3 sidebar-nav">
+            <div class="sidebar-content">
+                <!-- メインコンテンツグループ -->
+                <div class="sidebar-main-content">
+                    <!-- プロファイルセクション -->
+                    <div class="profile-section">
+                        <div class="profile-header">
+                            <div class="profile-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="profile-info">
+                                <h4>{{ mentee.name }}</h4>
+                                <p class="text-muted">メンティ</p>
                             </div>
                         </div>
                     </div>
+
+                    <!-- 統計カード -->
+                    <div class="stats-card">
+                        <div class="stats-header">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>統計情報</span>
+                        </div>
+                        <div class="stats-content">
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number">{{ reports|length }}</span>
+                                    <span class="stat-label">総報告数</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-boxes"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number">{{ product_group_progress|length }}</span>
+                                    <span class="stat-label">商品群数</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ナビゲーションメニュー -->
+                    <div class="navigation-menu">
+                        <div class="menu-header">
+                            <i class="fas fa-bars"></i>
+                            <span>メニュー</span>
+                        </div>
+                        <div class="menu-items">
+                            <a href="{{ url_for('new_report', mentee_id=mentee.id) }}" class="menu-item primary">
+                                <div class="menu-icon">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                                <div class="menu-content">
+                                    <span class="menu-title">新しい週次報告</span>
+                                    <span class="menu-subtitle">作成</span>
+                                </div>
+                                <div class="menu-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </a>
+                            
+                            <a href="{{ url_for('list_daily_reports', mentee_id=mentee.id) }}" class="menu-item info">
+                                <div class="menu-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="menu-content">
+                                    <span class="menu-title">日報一覧</span>
+                                    <span class="menu-subtitle">閲覧・編集</span>
+                                </div>
+                                <div class="menu-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </a>
+                            
+                            <a href="{{ url_for('manage_product_groups', mentee_id=mentee.id) }}" class="menu-item success">
+                                <div class="menu-icon">
+                                    <i class="fas fa-boxes"></i>
+                                </div>
+                                <div class="menu-content">
+                                    <span class="menu-title">代表商品群</span>
+                                    <span class="menu-subtitle">登録・管理</span>
+                                </div>
+                                <div class="menu-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- プロファイル編集ボタン（控えめに配置） -->
+                <div class="profile-edit-section">
+                    <a href="{{ url_for('mentee_profile') }}" class="profile-edit-btn-small">
+                        <i class="fas fa-user-edit"></i>
+                        <span>プロファイル編集</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <div class="col-lg-9 main-content">
+            <div class="main-header">
+                <h2>
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    {{ mentee.name }}のダッシュボード
+                </h2>
+                <p class="text-muted">あなたの進捗と成果を確認しましょう</p>
+            </div>
 
                 <!-- 商品群別進捗サマリー -->
                 {% if product_group_progress %}
@@ -70,6 +147,12 @@
                                     <label class="filter-btn" for="filter-completed">
                                         <i class="fas fa-check"></i>
                                         <span>完了済み</span>
+                                    </label>
+                                    
+                                    <input type="radio" class="filter-check" name="filter" id="filter-cancelled" value="cancelled">
+                                    <label class="filter-btn" for="filter-cancelled">
+                                        <i class="fas fa-ban"></i>
+                                        <span>企画中止</span>
                                     </label>
                                     
                                     <input type="radio" class="filter-check" name="filter" id="filter-all" value="all">
@@ -111,11 +194,11 @@
                         <div id="active-products" class="product-group-section">
                             <h6 class="text-primary mb-3">
                                 <i class="fas fa-play me-2"></i>進行中の商品群
-                                <span class="badge bg-primary ms-2" id="active-count">{{ product_group_progress|selectattr('is_completed', 'equalto', false)|list|length }}</span>
+                                <span class="badge bg-primary ms-2" id="active-count">{{ product_group_progress|selectattr('is_completed', 'equalto', false)|selectattr('is_cancelled', 'equalto', false)|list|length }}</span>
                             </h6>
                             <div class="row">
                                 {% for pg in product_group_progress %}
-                                {% if not pg.is_completed %}
+                                {% if not pg.is_completed and not pg.is_cancelled %}
                                 <div class="col-md-6 col-lg-4 mb-3 product-card" data-status="active" data-warning-level="{{ pg.time_warning_level or 0 }}">
                                     <div class="card h-100 time-warning-card warning-level-{{ pg.time_warning_level or 0 }}">
                                         <!-- 商品群画像 -->
@@ -253,6 +336,76 @@
                                     </div>
                                     {% endfor %}
                                 </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- 企画中止商品群 -->
+                        {% set cancelled_products = product_group_progress|selectattr('is_cancelled', 'equalto', true)|list %}
+                        {% if cancelled_products %}
+                        <div id="cancelled-products" class="product-group-section mt-4">
+                            <h6 class="text-secondary mb-3">
+                                <i class="fas fa-ban me-2"></i>企画中止商品群
+                                <span class="badge bg-secondary ms-2" id="cancelled-count">{{ cancelled_products|length }}</span>
+                            </h6>
+                            <div class="row">
+                                {% for pg in cancelled_products %}
+                                <div class="col-md-6 col-lg-4 mb-3 product-card" data-status="cancelled" data-warning-level="0">
+                                    <div class="card h-100 cancelled-card">
+                                        <!-- 商品群画像 -->
+                                        {% if pg.images %}
+                                        <div class="product-group-image-container">
+                                            {% set image_list = pg.images|from_json if pg.images is string else pg.images %}
+                                            {% if image_list and image_list|length > 0 %}
+                                                <img src="/uploads/product_groups/{{ image_list[0] }}" 
+                                                     alt="{{ pg.name }}" 
+                                                     class="product-group-image"
+                                                     onerror="this.style.display='none';">
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="card-title mb-0 text-muted">{{ pg.name }}</h6>
+                                                <span class="badge bg-secondary">
+                                                    <i class="fas fa-ban me-1"></i>企画中止
+                                                </span>
+                                            </div>
+                                            
+                                            <p class="card-text small text-muted mb-2">
+                                                <strong>中止ステージ:</strong> {{ get_stage_display_name(pg.current_stage) }}
+                                            </p>
+                                            
+                                            <p class="card-text small text-muted mb-2">
+                                                <strong>中止日:</strong> {{ pg.stage_duration }}日前
+                                            </p>
+                                            
+                                            <!-- 中止バー -->
+                                            <div class="progress mb-2" style="height: 8px;">
+                                                {% set stage_progress = {'proposal_pre': 11, 'estimate_completed': 22, 's_creation_approved': 33, 'proposal_decision_obtained': 44, 'pre_production_s_confirmed': 56, 'first_order': 67, 'temporary_listing': 78, 'page_up': 89, 'second_lot_ordered': 100, 'project_cancelled': 100} %}
+                                                <div class="progress-bar bg-secondary" 
+                                                     role="progressbar" 
+                                                     style="width: {{ stage_progress.get(pg.current_stage, 0) }}%"
+                                                     aria-valuenow="{{ stage_progress.get(pg.current_stage, 0) }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted">
+                                                    {% if pg.reports|length > 0 %}
+                                                        {{ pg.reports|length }}回の報告
+                                                    {% else %}
+                                                        報告なし
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
                             </div>
                         </div>
                         {% endif %}
@@ -471,6 +624,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterButtons = document.querySelectorAll('input[name="filter"]');
     const activeSection = document.getElementById('active-products');
     const completedSection = document.getElementById('completed-products');
+    const cancelledSection = document.getElementById('cancelled-products');
     
     filterButtons.forEach(button => {
         button.addEventListener('change', function() {
@@ -481,6 +635,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     activeSection.style.display = 'block';
                     if (completedSection) {
                         completedSection.style.display = 'none';
+                    }
+                    if (cancelledSection) {
+                        cancelledSection.style.display = 'none';
                     }
                     break;
                 case 'completed':
@@ -493,11 +650,26 @@ document.addEventListener('DOMContentLoaded', function() {
                             const bsCollapse = new bootstrap.Collapse(collapse, {show: true});
                         }
                     }
+                    if (cancelledSection) {
+                        cancelledSection.style.display = 'none';
+                    }
+                    break;
+                case 'cancelled':
+                    activeSection.style.display = 'none';
+                    if (completedSection) {
+                        completedSection.style.display = 'none';
+                    }
+                    if (cancelledSection) {
+                        cancelledSection.style.display = 'block';
+                    }
                     break;
                 case 'all':
                     activeSection.style.display = 'block';
                     if (completedSection) {
                         completedSection.style.display = 'block';
+                    }
+                    if (cancelledSection) {
+                        cancelledSection.style.display = 'block';
                     }
                     break;
             }
@@ -1004,6 +1176,422 @@ document.addEventListener('DOMContentLoaded', function() {
         box-shadow: 
             0 16px 48px rgba(79, 70, 229, 0.5),
             0 8px 24px rgba(79, 70, 229, 0.4);
+    }
+}
+
+/* サイドバーのスタイル */
+.sidebar-nav {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 0;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-content {
+    padding: 25px 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.sidebar-main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* プロファイルセクション */
+.profile-section {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+}
+
+.profile-header {
+    margin-bottom: 15px;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 2rem;
+    color: white;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.profile-info h4 {
+    color: white;
+    font-weight: 700;
+    margin-bottom: 5px;
+    font-size: 1.3rem;
+}
+
+.profile-info .text-muted {
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 0.9rem;
+}
+
+.profile-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    text-decoration: none;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.profile-edit-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* 統計カード */
+.stats-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stats-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.stats-header i {
+    color: #ffd700;
+    font-size: 1.1rem;
+}
+
+.stats-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 215, 0, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffd700;
+    font-size: 1.1rem;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.stat-number {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1;
+}
+
+/* ナビゲーションメニュー */
+.navigation-menu {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.menu-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.menu-header i {
+    color: #ffd700;
+    font-size: 1.1rem;
+}
+
+.menu-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.menu-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+}
+
+.menu-item.primary:hover {
+    background: rgba(13, 110, 253, 0.2);
+    border-color: rgba(13, 110, 253, 0.3);
+}
+
+.menu-item.info:hover {
+    background: rgba(13, 202, 240, 0.2);
+    border-color: rgba(13, 202, 240, 0.3);
+}
+
+.menu-item.success:hover {
+    background: rgba(25, 135, 84, 0.2);
+    border-color: rgba(25, 135, 84, 0.3);
+}
+
+.menu-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.menu-item.primary .menu-icon {
+    background: rgba(13, 110, 253, 0.3);
+}
+
+.menu-item.info .menu-icon {
+    background: rgba(13, 202, 240, 0.3);
+}
+
+.menu-item.success .menu-icon {
+    background: rgba(25, 135, 84, 0.3);
+}
+
+.menu-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.menu-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: white;
+    line-height: 1.2;
+}
+
+.menu-subtitle {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1;
+}
+
+.menu-arrow {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.menu-item:hover .menu-arrow {
+    color: white;
+    transform: translateX(3px);
+}
+
+/* プロファイル編集セクション（控えめ） */
+.profile-edit-section {
+    margin-top: auto;
+    padding-top: 15px;
+}
+
+.profile-edit-btn-small {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+}
+
+.profile-edit-btn-small:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.9);
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.profile-edit-btn-small i {
+    font-size: 0.7rem;
+}
+
+/* メインコンテンツ */
+.main-content {
+    padding: 25px 30px;
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+.main-header {
+    margin-bottom: 30px;
+}
+
+.main-header h2 {
+    color: #495057;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.main-header .text-muted {
+    font-size: 1rem;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 991px) {
+    .sidebar-nav {
+        min-height: auto;
+        margin-bottom: 20px;
+    }
+    
+    .sidebar-content {
+        padding: 20px;
+        flex-direction: row;
+        overflow-x: auto;
+        justify-content: flex-start;
+    }
+    
+    .sidebar-main-content {
+        flex-direction: row;
+        gap: 15px;
+    }
+    
+    .profile-section {
+        min-width: 200px;
+        flex-shrink: 0;
+    }
+    
+    .stats-card {
+        min-width: 180px;
+        flex-shrink: 0;
+    }
+    
+    .navigation-menu {
+        min-width: 250px;
+        flex-shrink: 0;
+    }
+    
+    .menu-items {
+        flex-direction: row;
+        gap: 10px;
+    }
+    
+    .menu-item {
+        min-width: 200px;
+        flex-shrink: 0;
+    }
+    
+    .profile-edit-section {
+        display: none; /* モバイルでは非表示 */
+    }
+    
+    .main-content {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar-content {
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+    
+    .sidebar-main-content {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .menu-items {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .menu-item {
+        min-width: auto;
+    }
+    
+    .profile-edit-section {
+        display: block; /* 小さな画面では再表示 */
+        margin-top: 15px;
+        padding-top: 10px;
     }
 }
 </style>
