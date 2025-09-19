@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}日報一覧 - {{ mentee.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">
+                            <i class="fas fa-file-alt me-2"></i>{{ mentee.name }}の日報一覧
+                        </h3>
+                        <div>
+                            <a href="{{ url_for('mentee_dashboard', mentee_id=mentee.id) }}" class="btn btn-outline-primary">
+                                <i class="fas fa-arrow-left me-2"></i>ダッシュボードに戻る
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if daily_reports %}
+                        <div class="row">
+                            {% for report in daily_reports %}
+                            <div class="col-lg-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">{{ report.title }}</h6>
+                                            <span class="badge bg-{{ 'success' if report.status == 'published' else 'warning' if report.status == 'draft' else 'secondary' }}">
+                                                {{ '公開済み' if report.status == 'published' else '下書き' if report.status == 'draft' else 'アーカイブ' }}
+                                            </span>
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>{{ report.report_date.strftime('%Y年%m月%d日') }}
+                                        </small>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="report-summary">
+                                            <p class="text-muted mb-3">{{ report.summary }}</p>
+                                        </div>
+                                        
+                                        {% if report.weekly_report %}
+                                        <div class="mb-3">
+                                            <small class="text-info">
+                                                <i class="fas fa-link me-1"></i>
+                                                関連: {{ report.weekly_report.product_group }}
+                                            </small>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ report.created_at.strftime('%m/%d %H:%M') }}
+                                            </small>
+                                            <a href="{{ url_for('view_daily_report', report_id=report.id) }}" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye me-1"></i>詳細
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- ページネーション（将来の拡張用） -->
+                        <div class="d-flex justify-content-center mt-4">
+                            <nav aria-label="日報ページネーション">
+                                <ul class="pagination">
+                                    <li class="page-item disabled">
+                                        <span class="page-link">前へ</span>
+                                    </li>
+                                    <li class="page-item active">
+                                        <span class="page-link">1</span>
+                                    </li>
+                                    <li class="page-item disabled">
+                                        <span class="page-link">次へ</span>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">日報がありません</h5>
+                            <p class="text-muted">まだ日報が作成されていません。</p>
+                            <a href="{{ url_for('mentee_dashboard', mentee_id=mentee.id) }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>週次報告から日報を生成
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.report-summary {
+    max-height: 100px;
+    overflow: hidden;
+    position: relative;
+}
+
+.report-summary::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: linear-gradient(transparent, white);
+}
+
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .col-lg-6 {
+        margin-bottom: 1rem;
+    }
+    
+    .card-header h6 {
+        font-size: 0.9rem;
+    }
+    
+    .report-summary {
+        max-height: 80px;
+    }
+}
+</style>
+{% endblock %}

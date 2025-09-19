@@ -122,7 +122,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="progress mb-3" style="height: 20px;">
-                                    {% set stage_progress = {'proposal_pre': 11, 'estimate_completed': 22, 's_creation_approved': 33, 'proposal_decision_obtained': 44, 'pre_production_s_confirmed': 56, 'first_order': 67, 'temporary_listing': 78, 'page_up': 89, 'second_lot_ordered': 100} %}
+                                    {% set stage_progress = {'proposal_pre': 11, 'estimate_completed': 22, 's_creation_approved': 33, 'proposal_decision_obtained': 44, 'pre_production_s_confirmed': 56, 'first_order': 67, 'temporary_listing': 78, 'page_up': 89, 'second_lot_ordered': 100, 'project_cancelled': 100} %}
                                     <div class="progress-bar bg-{{ get_progress_status_info(current_progress.progress_status).class }}" 
                                          role="progressbar" 
                                          style="width: {{ stage_progress.get(current_progress.current_stage, 0) }}%"

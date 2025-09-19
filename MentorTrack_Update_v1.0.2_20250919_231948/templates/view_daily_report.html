@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}日報詳細 - {{ daily_report.mentee.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">
+                            <i class="fas fa-file-alt me-2"></i>{{ daily_report.title }}
+                        </h3>
+                        <span class="badge bg-{{ 'success' if daily_report.status == 'published' else 'warning' if daily_report.status == 'draft' else 'secondary' }}">
+                            {{ '公開済み' if daily_report.status == 'published' else '下書き' if daily_report.status == 'draft' else 'アーカイブ' }}
+                        </span>
+                    </div>
+                    <p class="mb-0 mt-2 text-light">
+                        <i class="fas fa-user me-1"></i>{{ daily_report.mentee.name }} | 
+                        <i class="fas fa-calendar me-1"></i>{{ daily_report.report_date.strftime('%Y年%m月%d日') }}
+                    </p>
+                </div>
+                <div class="card-body">
+                    <!-- 要約 -->
+                    <div class="mb-4">
+                        <h5><i class="fas fa-clipboard-list me-2"></i>要約</h5>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <p class="mb-0">{{ daily_report.summary }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 詳細内容 -->
+                    <div class="mb-4">
+                        <h5><i class="fas fa-file-text me-2"></i>詳細内容</h5>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="report-content">
+                                    {{ daily_report.generated_content | replace('\n', '<br>') | safe }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 関連情報 -->
+                    {% if daily_report.weekly_report %}
+                    <div class="mb-4">
+                        <h5><i class="fas fa-link me-2"></i>関連する週次報告</h5>
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <p class="mb-2">
+                                    <strong>商品群:</strong> {{ daily_report.weekly_report.product_group }}
+                                </p>
+                                <p class="mb-2">
+                                    <strong>ステージ:</strong> 
+                                    <span class="badge bg-info">
+                                        {{ get_stage_display_name(daily_report.weekly_report.planning_stage) }}
+                                    </span>
+                                </p>
+                                <p class="mb-0">
+                                    <strong>報告日:</strong> {{ daily_report.weekly_report.report_date.strftime('%Y年%m月%d日') }}
+                                </p>
+                                <div class="mt-2">
+                                    <a href="{{ url_for('view_report', report_id=daily_report.weekly_report.id) }}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-external-link-alt me-1"></i>週次報告を表示
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- アクションボタン -->
+                    <div class="text-center">
+                        <a href="{{ url_for('list_daily_reports', mentee_id=daily_report.mentee.id) }}" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>日報一覧に戻る
+                        </a>
+                        {% if current_user.role in ['admin'] or daily_report.mentee.user_id == current_user.id %}
+                        <a href="{{ url_for('generate_daily_report', weekly_report_id=daily_report.weekly_report.id) if daily_report.weekly_report else '#' }}" 
+                           class="btn btn-outline-success ms-2">
+                            <i class="fas fa-edit me-2"></i>編集
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.report-content {
+    white-space: pre-wrap;
+    font-family: 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+    line-height: 1.6;
+}
+
+.report-content h1 {
+    color: #007bff;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+.report-content h2 {
+    color: #495057;
+    border-left: 4px solid #007bff;
+    padding-left: 12px;
+    margin-top: 24px;
+    margin-bottom: 12px;
+    font-size: 1.2rem;
+}
+
+.report-content strong {
+    color: #495057;
+    font-weight: 600;
+}
+
+.report-content hr {
+    border-color: #dee2e6;
+    margin: 20px 0;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .report-content h1 {
+        font-size: 1.3rem;
+    }
+    
+    .report-content h2 {
+        font-size: 1.1rem;
+    }
+}
+</style>
+{% endblock %}

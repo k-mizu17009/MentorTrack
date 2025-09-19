@@ -236,15 +236,16 @@ class LoginForm(FlaskForm):
 
 class WeeklyReportForm(FlaskForm):
     planning_stage = SelectField('企画ステージ', 
-                                choices=[('proposal_pre', '提案前'), 
-                                        ('estimate_completed', '見積書対応　済'), 
-                                        ('s_creation_approved', 'S作成承認　済'), 
-                                        ('proposal_decision_obtained', '提案決裁取得　済'),
-                                        ('pre_production_s_confirmed', '量産前S確認　済'),
-                                        ('first_order', '初回発注　済'),
-                                        ('temporary_listing', '仮出品　済'),
-                                        ('page_up', 'ページアップ　済'),
-                                        ('second_lot_ordered', '2ロット目発注済')],
+                                choices=[('proposal_pre', '0.提案前'), 
+                                        ('estimate_completed', '1.見積書対応'), 
+                                        ('s_creation_approved', '2.サンプル承認'), 
+                                        ('proposal_decision_obtained', '3.提案決裁'),
+                                        ('pre_production_s_confirmed', '4.量産前サンプル'),
+                                        ('first_order', '5.初回発注'),
+                                        ('temporary_listing', '6.仮出品'),
+                                        ('page_up', '7.ページアップ'),
+                                        ('second_lot_ordered', '8.2ロット目発注'),
+                                        ('project_cancelled', '9.企画中止')],
                                 validators=[DataRequired()])
     
     product_group = SelectField('代表商品群', 
@@ -449,13 +450,14 @@ def generate_daily_report_from_weekly(weekly_report, report_date=None):
     stage_names = {
         'proposal_pre': '提案前',
         'estimate_completed': '見積書対応済',
-        's_creation_approved': 'S作成承認済',
-        'proposal_decision_obtained': '提案決裁取得済',
-        'pre_production_s_confirmed': '量産前S確認済',
+        's_creation_approved': 'サンプル承認済',
+        'proposal_decision_obtained': '提案決裁済',
+        'pre_production_s_confirmed': '量産前サンプル済',
         'first_order': '初回発注済',
         'temporary_listing': '仮出品済',
         'page_up': 'ページアップ済',
-        'second_lot_ordered': '2ロット目発注済'
+        'second_lot_ordered': '2ロット目発注済',
+        'project_cancelled': '企画中止'
     }
     stage_name = stage_names.get(planning_stage, planning_stage)
     
@@ -572,9 +574,10 @@ def generate_outlook_text(planning_stage, product_group, insights):
         'temporary_listing': f"{product_group}の仮出品に向けて、商品の品質確認と発注準備を着実に進めます。",
         'pre_production_s_confirmed': f"{product_group}の量産前確認を完了し、次のステップに向けた準備を進めます。",
         'proposal_decision_obtained': f"{product_group}の提案決裁を取得し、量産準備に取り組みます。",
-        's_creation_approved': f"{product_group}のS作成承認を取得し、提案決裁に向けて進めます。",
-        'estimate_completed': f"{product_group}の見積書対応を完了し、S作成承認に向けて進めます。",
-        'proposal_pre': f"{product_group}の企画を進め、見積書対応に向けて準備を進めます。"
+        's_creation_approved': f"{product_group}のサンプル承認を取得し、提案決裁に向けて進めます。",
+        'estimate_completed': f"{product_group}の見積書対応を完了し、サンプル承認に向けて進めます。",
+        'proposal_pre': f"{product_group}の企画を進め、見積書対応に向けて準備を進めます。",
+        'project_cancelled': f"{product_group}の企画は中止となりました。他の商品群の企画に集中し、新たな機会を探ります。"
     }
     
     base_outlook = outlook_templates.get(planning_stage, f"{product_group}の企画を進め、次のステップに向けて準備を進めます。")
@@ -607,13 +610,14 @@ def get_product_group_latest_stages(mentee_id):
             stage_names = {
                 'proposal_pre': '提案前',
                 'estimate_completed': '見積書対応済',
-                's_creation_approved': 'S作成承認済',
-                'proposal_decision_obtained': '提案決裁取得済',
-                'pre_production_s_confirmed': '量産前S確認済',
+                's_creation_approved': 'サンプル承認済',
+                'proposal_decision_obtained': '提案決裁済',
+                'pre_production_s_confirmed': '量産前サンプル済',
                 'first_order': '初回発注済',
                 'temporary_listing': '仮出品済',
                 'page_up': 'ページアップ済',
-                'second_lot_ordered': '2ロット目発注済'
+                'second_lot_ordered': '2ロット目発注済',
+                'project_cancelled': '企画中止'
             }
             
             product_group_stages[pg.id] = {
@@ -721,9 +725,10 @@ def generate_enhanced_outlook(planning_stage, product_group, insights):
         'temporary_listing': f"{product_group}の仮出品に向けて、商品の品質確認と発注準備を着実に進めます。",
         'pre_production_s_confirmed': f"{product_group}の量産前確認を完了し、次のステップに向けた準備を進めます。",
         'proposal_decision_obtained': f"{product_group}の提案決裁を取得し、量産準備に取り組みます。",
-        's_creation_approved': f"{product_group}のS作成承認を取得し、提案決裁に向けて進めます。",
-        'estimate_completed': f"{product_group}の見積書対応を完了し、S作成承認に向けて進めます。",
-        'proposal_pre': f"{product_group}の企画を進め、見積書対応に向けて準備を進めます。"
+        's_creation_approved': f"{product_group}のサンプル承認を取得し、提案決裁に向けて進めます。",
+        'estimate_completed': f"{product_group}の見積書対応を完了し、サンプル承認に向けて進めます。",
+        'proposal_pre': f"{product_group}の企画を進め、見積書対応に向けて準備を進めます。",
+        'project_cancelled': f"{product_group}の企画は中止となりました。他の商品群の企画に集中し、新たな機会を探ります。"
     }
     
     base_outlook = outlook_templates.get(planning_stage, f"{product_group}の企画を進め、次のステップに向けて準備を進めます。")
@@ -842,6 +847,9 @@ def get_product_group_progress(mentee_id, weeks=16):
             # 完了ステージかどうかを判定
             pg_data['is_completed'] = latest_report['stage'] == 'second_lot_ordered'
             
+            # 企画中止かどうかを判定
+            pg_data['is_cancelled'] = latest_report['stage'] == 'project_cancelled'
+            
             # 現在のステージにいる期間を計算
             current_stage_start = latest_report['date']
             for report in pg_data['reports']:
@@ -869,6 +877,10 @@ def get_product_group_progress(mentee_id, weeks=16):
             # 完了済みの場合は警告なし
             if pg_data['is_completed']:
                 pg_data['progress_status'] = 'completed'
+                pg_data['time_warning_level'] = 0
+            elif pg_data['is_cancelled']:
+                # 企画中止の場合は専用の状況
+                pg_data['progress_status'] = 'cancelled'
                 pg_data['time_warning_level'] = 0
             else:
                 # 4週間ごとに段階的に警告レベルを上げる
@@ -900,13 +912,14 @@ def get_stage_display_name(stage):
     stage_names = {
         'proposal_pre': '提案前',
         'estimate_completed': '見積書対応　済',
-        's_creation_approved': 'S作成承認　済',
-        'proposal_decision_obtained': '提案決裁取得　済',
-        'pre_production_s_confirmed': '量産前S確認　済',
+        's_creation_approved': 'サンプル承認　済',
+        'proposal_decision_obtained': '提案決裁　済',
+        'pre_production_s_confirmed': '量産前サンプル　済',
         'first_order': '初回発注　済',
         'temporary_listing': '仮出品　済',
         'page_up': 'ページアップ　済',
-        'second_lot_ordered': '2ロット目発注済'
+        'second_lot_ordered': '2ロット目発注済',
+        'project_cancelled': '企画中止'
     }
     return stage_names.get(stage, stage)
 
@@ -921,7 +934,8 @@ def get_stage_progress_percentage(stage):
         'first_order': 67,
         'temporary_listing': 78,
         'page_up': 89,
-        'second_lot_ordered': 100
+        'second_lot_ordered': 100,
+        'project_cancelled': 100
     }
     return stage_percentages.get(stage, 0)
 
@@ -932,6 +946,7 @@ def get_progress_status_info(status):
         'warning': {'class': 'warning', 'icon': 'fas fa-pause', 'text': '注意'},
         'danger': {'class': 'danger', 'icon': 'fas fa-exclamation-triangle', 'text': '停滞'},
         'completed': {'class': 'success', 'icon': 'fas fa-check-circle', 'text': '完了'},
+        'cancelled': {'class': 'secondary', 'icon': 'fas fa-ban', 'text': '企画中止'},
         'unknown': {'class': 'secondary', 'icon': 'fas fa-question', 'text': '不明'}
     }
     return status_info.get(status, status_info['unknown'])
@@ -2056,4 +2071,10 @@ def list_daily_reports(mentee_id):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    
+    # 本番環境かどうかを環境変数で判定
+    import os
+    debug_mode = os.environ.get('FLASK_ENV') != 'production'
+    port = int(os.environ.get('PORT', 5000))
+    
+    app.run(debug=debug_mode, host='0.0.0.0', port=port)

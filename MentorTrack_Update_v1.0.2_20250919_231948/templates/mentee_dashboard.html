@@ -1,0 +1,1010 @@
+{% extends "base.html" %}
+
+{% block title %}{{ mentee.name }} - MentorTrack{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user me-2"></i>{{ mentee.name }}のダッシュボード
+                    </h3>
+                    <a href="{{ url_for('mentee_profile') }}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-user-edit me-1"></i>プロファイル編集
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('new_report', mentee_id=mentee.id) }}" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-plus me-2"></i>新しい週次報告を作成
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('list_daily_reports', mentee_id=mentee.id) }}" class="btn btn-info btn-lg w-100">
+                            <i class="fas fa-file-alt me-2"></i>日報一覧
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('manage_product_groups', mentee_id=mentee.id) }}" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-boxes me-2"></i>代表商品群 登録
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">総報告数</h5>
+                                <h2 class="text-primary">{{ reports|length }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 商品群別進捗サマリー -->
+                {% if product_group_progress %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-line me-2"></i>商品群別進捗サマリー
+                                </h5>
+                                <small class="text-white-50">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    順調: 7日以内に報告 / 注意: 8-14日 / 停滞: 15日以上
+                                </small>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <!-- フィルターボタン -->
+                                <div class="filter-group" role="group" aria-label="フィルター">
+                                    <input type="radio" class="filter-check" name="filter" id="filter-active" value="active" checked>
+                                    <label class="filter-btn" for="filter-active">
+                                        <i class="fas fa-play"></i>
+                                        <span>進行中</span>
+                                    </label>
+                                    
+                                    <input type="radio" class="filter-check" name="filter" id="filter-completed" value="completed">
+                                    <label class="filter-btn" for="filter-completed">
+                                        <i class="fas fa-check"></i>
+                                        <span>完了済み</span>
+                                    </label>
+                                    
+                                    <input type="radio" class="filter-check" name="filter" id="filter-all" value="all">
+                                    <label class="filter-btn" for="filter-all">
+                                        <i class="fas fa-list"></i>
+                                        <span>すべて</span>
+                                    </label>
+                                </div>
+                                <a href="{{ url_for('product_group_analysis', mentee_id=mentee.id) }}" 
+                                   class="btn detailed-analysis-btn-modern" 
+                                   data-bs-toggle="tooltip" 
+                                   data-bs-placement="bottom" 
+                                   title="詳細な進捗分析と次のステップを確認">
+                                    <div class="btn-content">
+                                        <div class="btn-icon">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M3 3V21H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M9 9L12 6L16 10L20 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </div>
+                                        <div class="btn-text">
+                                            <span class="btn-main-text">詳細分析</span>
+                                            <span class="btn-sub-text">進捗を深く理解</span>
+                                        </div>
+                                        <div class="btn-arrow">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="btn-glow"></div>
+                                    <div class="btn-shimmer"></div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- 進行中の商品群 -->
+                        <div id="active-products" class="product-group-section">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-play me-2"></i>進行中の商品群
+                                <span class="badge bg-primary ms-2" id="active-count">{{ product_group_progress|selectattr('is_completed', 'equalto', false)|list|length }}</span>
+                            </h6>
+                            <div class="row">
+                                {% for pg in product_group_progress %}
+                                {% if not pg.is_completed %}
+                                <div class="col-md-6 col-lg-4 mb-3 product-card" data-status="active" data-warning-level="{{ pg.time_warning_level or 0 }}">
+                                    <div class="card h-100 time-warning-card warning-level-{{ pg.time_warning_level or 0 }}">
+                                        <!-- 商品群画像 -->
+                                        {% if pg.images %}
+                                        <div class="product-group-image-container">
+                                            {% set image_list = pg.images|from_json if pg.images is string else pg.images %}
+                                            {% if image_list and image_list|length > 0 %}
+                                                <img src="/uploads/product_groups/{{ image_list[0] }}" 
+                                                     alt="{{ pg.name }}" 
+                                                     class="product-group-image"
+                                                     onerror="this.style.display='none';">
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="card-title mb-0">{{ pg.name }}</h6>
+                                                <span class="badge bg-{{ get_progress_status_info(pg.progress_status).class }}">
+                                                    <i class="{{ get_progress_status_info(pg.progress_status).icon }} me-1"></i>
+                                                    {{ get_progress_status_info(pg.progress_status).text }}
+                                                </span>
+                                            </div>
+                                            
+                                            <p class="card-text small text-muted mb-2">
+                                                <strong>現在のステージ:</strong> {{ get_stage_display_name(pg.current_stage) }}
+                                            </p>
+                                            
+                                            <p class="card-text small text-muted mb-2">
+                                                <strong>最後の報告:</strong> {{ pg.stage_duration }}日前
+                                            </p>
+                                            
+                                            <p class="card-text small text-muted mb-2">
+                                                <strong>経過週数:</strong> {{ pg.weeks_since_start or 0 }}週間
+                                            </p>
+                                            
+                                            <!-- 進捗バー -->
+                                            <div class="progress mb-2" style="height: 8px;">
+                                                {% set stage_progress = {'proposal_pre': 11, 'estimate_completed': 22, 's_creation_approved': 33, 'proposal_decision_obtained': 44, 'pre_production_s_confirmed': 56, 'first_order': 67, 'temporary_listing': 78, 'page_up': 89, 'second_lot_ordered': 100} %}
+                                                <div class="progress-bar bg-{{ get_progress_status_info(pg.progress_status).class }}" 
+                                                     role="progressbar" 
+                                                     style="width: {{ stage_progress.get(pg.current_stage, 0) }}%"
+                                                     aria-valuenow="{{ stage_progress.get(pg.current_stage, 0) }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted">
+                                                    {% if pg.reports|length > 0 %}
+                                                        {{ pg.reports|length }}回の報告
+                                                    {% else %}
+                                                        報告なし
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- 完了済み商品群（折りたたみ可能） -->
+                        {% set completed_products = product_group_progress|selectattr('is_completed', 'equalto', true)|list %}
+                        {% if completed_products %}
+                        <div id="completed-products" class="product-group-section mt-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="text-muted mb-0">
+                                    <i class="fas fa-check-circle me-2"></i>完了済み商品群
+                                    <span class="badge bg-secondary ms-2" id="completed-count">{{ completed_products|length }}</span>
+                                </h6>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#completedCollapse" aria-expanded="false" aria-controls="completedCollapse">
+                                    <i class="fas fa-chevron-down me-1"></i>表示/非表示
+                                </button>
+                            </div>
+                            <div class="collapse" id="completedCollapse">
+                                <div class="row">
+                                    {% for pg in completed_products %}
+                                    <div class="col-md-6 col-lg-4 mb-3 product-card" data-status="completed">
+                                        <div class="card h-100 completed-card">
+                                            <!-- 商品群画像 -->
+                                            {% if pg.images %}
+                                            <div class="product-group-image-container">
+                                                {% set image_list = pg.images|from_json if pg.images is string else pg.images %}
+                                                {% if image_list and image_list|length > 0 %}
+                                                    <img src="/uploads/product_groups/{{ image_list[0] }}" 
+                                                         alt="{{ pg.name }}" 
+                                                         class="product-group-image"
+                                                         onerror="this.style.display='none';">
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
+                                            
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <h6 class="card-title mb-0 text-muted">{{ pg.name }}</h6>
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check me-1"></i>完了
+                                                    </span>
+                                                </div>
+                                                
+                                                <p class="card-text small text-muted mb-2">
+                                                    <strong>完了ステージ:</strong> {{ get_stage_display_name(pg.current_stage) }}
+                                                </p>
+                                                
+                                                <p class="card-text small text-muted mb-2">
+                                                    <strong>完了日:</strong> {{ pg.stage_duration }}日前
+                                                </p>
+                                                
+                                                <!-- 完了バー -->
+                                                <div class="progress mb-2" style="height: 8px;">
+                                                    <div class="progress-bar bg-success" 
+                                                         role="progressbar" 
+                                                         style="width: 100%"
+                                                         aria-valuenow="100" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <small class="text-muted">
+                                                        {% if pg.reports|length > 0 %}
+                                                            {{ pg.reports|length }}回の報告
+                                                        {% else %}
+                                                            報告なし
+                                                        {% endif %}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if reports %}
+                <h4 class="mb-3">過去の報告</h4>
+                <div class="row">
+                    {% for report in reports %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="card-title mb-0">
+                                        {{ report.report_date.strftime('%Y年%m月%d日') }}の報告
+                                    </h6>
+                                    <span class="badge bg-{{ 'success' if report.planning_stage == 'second_lot_ordered' else 'primary' if report.planning_stage in ['page_up', 'first_order'] else 'info' if report.planning_stage in ['temporary_listing', 'pre_production_s_confirmed'] else 'warning' if report.planning_stage in ['proposal_decision_obtained', 's_creation_approved', 'estimate_completed'] else 'secondary' }} stage-badge">
+                                        {{ get_stage_display_name(report.planning_stage) }}
+                                    </span>
+                                </div>
+                                
+                                <p class="card-text">
+                                    <strong>商品群:</strong> {{ report.product_group[:50] }}{% if report.product_group|length > 50 %}...{% endif %}
+                                </p>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="badge bg-{{ 'success' if report.self_evaluation == 3 else 'warning' if report.self_evaluation == 2 else 'danger' }} evaluation-badge">
+                                            自己評価: {{ report.self_evaluation }}/3
+                                        </span>
+                                    </div>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('view_report', report_id=report.id) }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye me-1"></i>詳細を見る
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="confirmDelete({{ report.id }}, '{{ report.report_date.strftime('%Y年%m月%d日') }}の報告')">
+                                            <i class="fas fa-trash me-1"></i>削除
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">まだ報告がありません</h5>
+                    <p class="text-muted">最初の週次報告を作成してみましょう！</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 削除確認モーダル -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">報告の削除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>以下の報告を削除してもよろしいですか？</p>
+                <p class="fw-bold" id="reportToDelete"></p>
+                <p class="text-danger"><small>この操作は取り消すことができません。</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">削除する</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let reportIdToDelete = null;
+
+function confirmDelete(reportId, reportTitle) {
+    reportIdToDelete = reportId;
+    document.getElementById('reportToDelete').textContent = reportTitle;
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    if (reportIdToDelete) {
+        deleteReport(reportIdToDelete);
+    }
+});
+
+function deleteReport(reportId) {
+    fetch(`/report/${reportId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 成功メッセージを表示
+            showAlert('success', data.message);
+            // ページをリロードして更新されたリストを表示
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showAlert('danger', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'エラーが発生しました。');
+    });
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // ページの上部にアラートを挿入
+    const container = document.querySelector('.container');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // 5秒後に自動でアラートを非表示
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// 詳細分析ボタンの追加エフェクト
+document.addEventListener('DOMContentLoaded', function() {
+    // ツールチップを初期化
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // 詳細分析ボタンの特別なエフェクト
+    const detailedAnalysisBtn = document.querySelector('.detailed-analysis-btn-modern');
+    if (detailedAnalysisBtn) {
+        // マウスオーバー時の追加エフェクト
+        detailedAnalysisBtn.addEventListener('mouseenter', function() {
+            // 周囲に光る効果を追加
+            this.style.boxShadow = '0 0 20px rgba(0, 123, 255, 0.8), 0 0 40px rgba(0, 123, 255, 0.4)';
+        });
+        
+        detailedAnalysisBtn.addEventListener('mouseleave', function() {
+            // 元の影に戻す
+            this.style.boxShadow = '';
+        });
+        
+        // クリック時のエフェクト
+        detailedAnalysisBtn.addEventListener('click', function(e) {
+            // クリックエフェクト
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
+            
+            // 成功メッセージを表示（オプション）
+            const successMsg = document.createElement('div');
+            successMsg.className = 'btn-success-message';
+            successMsg.innerHTML = '<i class="fas fa-check-circle me-1"></i>詳細分析ページに移動中...';
+            successMsg.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(40, 167, 69, 0.9);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 25px;
+                font-size: 14px;
+                z-index: 9999;
+                animation: fadeInOut 2s ease-in-out;
+                pointer-events: none;
+            `;
+            document.body.appendChild(successMsg);
+            
+            setTimeout(() => {
+                if (successMsg.parentNode) {
+                    successMsg.parentNode.removeChild(successMsg);
+                }
+            }, 2000);
+        });
+    }
+});
+
+// フェードイン・フェードアウトアニメーション
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInOut {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    }
+`;
+document.head.appendChild(style);
+
+// フィルター機能
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('input[name="filter"]');
+    const activeSection = document.getElementById('active-products');
+    const completedSection = document.getElementById('completed-products');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('change', function() {
+            const filterValue = this.value;
+            
+            switch(filterValue) {
+                case 'active':
+                    activeSection.style.display = 'block';
+                    if (completedSection) {
+                        completedSection.style.display = 'none';
+                    }
+                    break;
+                case 'completed':
+                    activeSection.style.display = 'none';
+                    if (completedSection) {
+                        completedSection.style.display = 'block';
+                        // 完了済みセクションを展開
+                        const collapse = document.getElementById('completedCollapse');
+                        if (collapse && !collapse.classList.contains('show')) {
+                            const bsCollapse = new bootstrap.Collapse(collapse, {show: true});
+                        }
+                    }
+                    break;
+                case 'all':
+                    activeSection.style.display = 'block';
+                    if (completedSection) {
+                        completedSection.style.display = 'block';
+                    }
+                    break;
+            }
+        });
+    });
+});
+</script>
+
+<style>
+/* 完了済み商品群のスタイル */
+.completed-card {
+    opacity: 0.7;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+.completed-card .card-title {
+    color: #6c757d;
+}
+
+.completed-card .card-text {
+    color: #6c757d !important;
+}
+
+/* フィルターボタンのスタイル */
+.btn-check:checked + .btn-outline-light {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: #fff;
+    color: #fff;
+}
+
+/* 時間ベースの警告レベルスタイル */
+.time-warning-card {
+    transition: all 0.3s ease;
+    border-width: 2px;
+}
+
+/* 警告レベル0（正常） */
+.warning-level-0 {
+    border-color: #28a745;
+    background-color: #f8fff9;
+}
+
+.warning-level-0 .card-title {
+    color: #155724;
+}
+
+/* 警告レベル1（軽度の警告 - 黄色） */
+.warning-level-1 {
+    border-color: #ffc107;
+    background-color: #fffdf0;
+    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.2);
+}
+
+.warning-level-1 .card-title {
+    color: #856404;
+}
+
+/* 警告レベル2（中程度の警告 - オレンジ） */
+.warning-level-2 {
+    border-color: #fd7e14;
+    background-color: #fff5f0;
+    box-shadow: 0 3px 6px rgba(253, 126, 20, 0.3);
+}
+
+.warning-level-2 .card-title {
+    color: #a0522d;
+}
+
+/* 警告レベル3（高度の警告 - 赤） */
+.warning-level-3 {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+    animation: pulse-warning 2s infinite;
+}
+
+.warning-level-3 .card-title {
+    color: #721c24;
+}
+
+/* 警告レベル4（最高度の警告 - 濃い赤） */
+.warning-level-4 {
+    border-color: #8b0000;
+    background-color: #ffebee;
+    box-shadow: 0 5px 10px rgba(139, 0, 0, 0.5);
+    animation: pulse-danger 1.5s infinite;
+}
+
+.warning-level-4 .card-title {
+    color: #4a0000;
+    font-weight: bold;
+}
+
+/* アニメーション */
+@keyframes pulse-warning {
+    0% {
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+    }
+    50% {
+        box-shadow: 0 6px 12px rgba(220, 53, 69, 0.6);
+    }
+    100% {
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+    }
+}
+
+@keyframes pulse-danger {
+    0% {
+        box-shadow: 0 5px 10px rgba(139, 0, 0, 0.5);
+    }
+    50% {
+        box-shadow: 0 8px 16px rgba(139, 0, 0, 0.7);
+    }
+    100% {
+        box-shadow: 0 5px 10px rgba(139, 0, 0, 0.5);
+    }
+}
+
+/* ホバー効果 */
+.time-warning-card:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease;
+}
+
+.warning-level-3:hover,
+.warning-level-4:hover {
+    transform: translateY(-3px);
+}
+
+/* セクション間のスペーシング */
+.product-group-section {
+    transition: all 0.3s ease;
+}
+
+/* 完了済みセクションのヘッダー */
+#completed-products h6 {
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.5rem;
+}
+
+/* 商品群画像表示 */
+.product-group-image-container {
+    width: 100%;
+    height: 60px;
+    overflow: hidden;
+    border-radius: 6px 6px 0 0;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.product-group-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 0;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 0.25rem;
+    }
+    
+    .product-group-image-container {
+        height: 50px;
+    }
+}
+
+/* コンパクトなフィルターボタン */
+.filter-group {
+    display: flex;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 4px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.filter-check {
+    display: none;
+}
+
+.filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.filter-btn:hover {
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.filter-check:checked + .filter-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filter-btn i {
+    font-size: 10px;
+    width: 12px;
+    text-align: center;
+}
+
+.filter-btn span {
+    font-size: 11px;
+    line-height: 1;
+}
+
+/* モダンな詳細分析ボタン */
+.detailed-analysis-btn-modern {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 16px;
+    color: white;
+    text-decoration: none;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 
+        0 8px 32px rgba(102, 126, 234, 0.3),
+        0 4px 16px rgba(102, 126, 234, 0.2);
+    animation: modernFloat 3s ease-in-out infinite;
+}
+
+.detailed-analysis-btn-modern:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 
+        0 16px 48px rgba(102, 126, 234, 0.4),
+        0 8px 24px rgba(102, 126, 234, 0.3);
+    animation: none;
+}
+
+.detailed-analysis-btn-modern:active {
+    transform: translateY(-2px) scale(0.98);
+}
+
+/* ボタンコンテンツ */
+.btn-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    position: relative;
+    z-index: 2;
+}
+
+/* アイコン */
+.btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.detailed-analysis-btn-modern:hover .btn-icon {
+    background: rgba(255, 255, 255, 0.25);
+    transform: rotate(5deg) scale(1.1);
+}
+
+/* テキスト */
+.btn-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+.btn-main-text {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.btn-sub-text {
+    font-size: 12px;
+    opacity: 0.8;
+    font-weight: 400;
+}
+
+/* 矢印 */
+.btn-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.detailed-analysis-btn-modern:hover .btn-arrow {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(4px);
+}
+
+/* グローエフェクト */
+.btn-glow {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #667eea, #764ba2, #667eea, #764ba2);
+    background-size: 400% 400%;
+    border-radius: 18px;
+    z-index: -1;
+    animation: gradientFlow 4s ease infinite;
+    opacity: 0.8;
+}
+
+/* シマーエフェクト */
+.btn-shimmer {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    border-radius: 16px;
+    animation: shimmer 3s ease-in-out infinite;
+    z-index: 1;
+}
+
+/* アニメーション */
+@keyframes modernFloat {
+    0%, 100% {
+        transform: translateY(0px);
+        box-shadow: 
+            0 8px 32px rgba(102, 126, 234, 0.3),
+            0 4px 16px rgba(102, 126, 234, 0.2);
+    }
+    50% {
+        transform: translateY(-2px);
+        box-shadow: 
+            0 12px 40px rgba(102, 126, 234, 0.35),
+            0 6px 20px rgba(102, 126, 234, 0.25);
+    }
+}
+
+@keyframes gradientFlow {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+    50% {
+        left: 100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .detailed-analysis-btn-modern {
+        animation-duration: 4s;
+    }
+    
+    .btn-content {
+        padding: 12px 16px;
+        gap: 10px;
+    }
+    
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .btn-main-text {
+        font-size: 14px;
+    }
+    
+    .btn-sub-text {
+        font-size: 11px;
+    }
+    
+    .btn-arrow {
+        width: 28px;
+        height: 28px;
+    }
+    
+    /* フィルターボタンのレスポンシブ */
+    .filter-btn {
+        padding: 6px 8px;
+        gap: 4px;
+    }
+    
+    .filter-btn span {
+        font-size: 10px;
+    }
+    
+    .filter-btn i {
+        font-size: 9px;
+        width: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn-content {
+        padding: 10px 14px;
+        gap: 8px;
+    }
+    
+    .btn-text {
+        gap: 1px;
+    }
+    
+    .btn-main-text {
+        font-size: 13px;
+    }
+    
+    .btn-sub-text {
+        font-size: 10px;
+    }
+    
+    /* フィルターボタンの超小画面対応 */
+    .filter-group {
+        padding: 3px;
+    }
+    
+    .filter-btn {
+        padding: 5px 6px;
+        gap: 3px;
+    }
+    
+    .filter-btn span {
+        font-size: 9px;
+    }
+    
+    .filter-btn i {
+        font-size: 8px;
+        width: 8px;
+    }
+}
+
+/* アクセシビリティ配慮 */
+@media (prefers-reduced-motion: reduce) {
+    .detailed-analysis-btn-modern,
+    .btn-glow,
+    .btn-shimmer,
+    .btn-icon,
+    .btn-arrow {
+        animation: none;
+        transition: none;
+    }
+    
+    .detailed-analysis-btn-modern {
+        transform: none;
+    }
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+    .detailed-analysis-btn-modern {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        box-shadow: 
+            0 8px 32px rgba(79, 70, 229, 0.4),
+            0 4px 16px rgba(79, 70, 229, 0.3);
+    }
+    
+    .detailed-analysis-btn-modern:hover {
+        box-shadow: 
+            0 16px 48px rgba(79, 70, 229, 0.5),
+            0 8px 24px rgba(79, 70, 229, 0.4);
+    }
+}
+</style>
+{% endblock %}

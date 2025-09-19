@@ -189,15 +189,16 @@
                                         <h6 class="mb-0">
                                             <span class="stage-number-badge me-2" data-stage="{{ pg.current_stage }}">
                                                 {% set stage_number_mapping = {
-                                                    'proposal_pre': 1,
-                                                    'estimate_completed': 2,
-                                                    's_creation_approved': 3,
-                                                    'proposal_decision_obtained': 4,
-                                                    'pre_production_s_confirmed': 5,
-                                                    'first_order': 6,
-                                                    'temporary_listing': 7,
-                                                    'page_up': 8,
-                                                    'second_lot_ordered': 9
+                                                    'proposal_pre': 0,
+                                                    'estimate_completed': 1,
+                                                    's_creation_approved': 2,
+                                                    'proposal_decision_obtained': 3,
+                                                    'pre_production_s_confirmed': 4,
+                                                    'first_order': 5,
+                                                    'temporary_listing': 6,
+                                                    'page_up': 7,
+                                                    'second_lot_ordered': 8,
+                                                    'project_cancelled': 9
                                                 } %}
                                                 {{ stage_number_mapping.get(pg.current_stage, '?') }}
                                             </span>
@@ -251,7 +252,8 @@
                                                     'first_order': 67, 
                                                     'temporary_listing': 78, 
                                                     'page_up': 89, 
-                                                    'second_lot_ordered': 100
+                                                    'second_lot_ordered': 100,
+                                                    'project_cancelled': 100
                                                 } %}
                                                 {{ stage_progress.get(pg.current_stage, 0) }}%
                                             </small>
@@ -348,7 +350,7 @@
                         <div class="card-body p-2">
                             <div class="progress-stages-sidebar">
                                 <div class="progress-stage-item-sidebar filterable" data-stage="proposal_pre" data-filter="all">
-                                    <div class="stage-number-sidebar">1</div>
+                                    <div class="stage-number-sidebar">0</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">提案前</div>
                                         <div class="stage-percentage-sidebar">11%</div>
@@ -356,7 +358,7 @@
                                     <div class="stage-count-badge" data-stage="proposal_pre">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="estimate_completed" data-filter="all">
-                                    <div class="stage-number-sidebar">2</div>
+                                    <div class="stage-number-sidebar">1</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">見積書対応済</div>
                                         <div class="stage-percentage-sidebar">22%</div>
@@ -364,7 +366,7 @@
                                     <div class="stage-count-badge" data-stage="estimate_completed">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="s_creation_approved" data-filter="all">
-                                    <div class="stage-number-sidebar">3</div>
+                                    <div class="stage-number-sidebar">2</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">S作成承認済</div>
                                         <div class="stage-percentage-sidebar">33%</div>
@@ -372,7 +374,7 @@
                                     <div class="stage-count-badge" data-stage="s_creation_approved">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="proposal_decision_obtained" data-filter="all">
-                                    <div class="stage-number-sidebar">4</div>
+                                    <div class="stage-number-sidebar">3</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">提案決裁取得済</div>
                                         <div class="stage-percentage-sidebar">44%</div>
@@ -380,7 +382,7 @@
                                     <div class="stage-count-badge" data-stage="proposal_decision_obtained">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="pre_production_s_confirmed" data-filter="all">
-                                    <div class="stage-number-sidebar">5</div>
+                                    <div class="stage-number-sidebar">4</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">量産前S確認済</div>
                                         <div class="stage-percentage-sidebar">56%</div>
@@ -388,7 +390,7 @@
                                     <div class="stage-count-badge" data-stage="pre_production_s_confirmed">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="first_order" data-filter="all">
-                                    <div class="stage-number-sidebar">6</div>
+                                    <div class="stage-number-sidebar">5</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">初回発注済</div>
                                         <div class="stage-percentage-sidebar">67%</div>
@@ -396,7 +398,7 @@
                                     <div class="stage-count-badge" data-stage="first_order">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="temporary_listing" data-filter="all">
-                                    <div class="stage-number-sidebar">7</div>
+                                    <div class="stage-number-sidebar">6</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">仮出品済</div>
                                         <div class="stage-percentage-sidebar">78%</div>
@@ -404,7 +406,7 @@
                                     <div class="stage-count-badge" data-stage="temporary_listing">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="page_up" data-filter="all">
-                                    <div class="stage-number-sidebar">8</div>
+                                    <div class="stage-number-sidebar">7</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">ページアップ済</div>
                                         <div class="stage-percentage-sidebar">89%</div>
@@ -412,12 +414,20 @@
                                     <div class="stage-count-badge" data-stage="page_up">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="second_lot_ordered" data-filter="all">
-                                    <div class="stage-number-sidebar">9</div>
+                                    <div class="stage-number-sidebar">8</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">2ロット目発注済</div>
                                         <div class="stage-percentage-sidebar">100%</div>
                                     </div>
                                     <div class="stage-count-badge" data-stage="second_lot_ordered">0</div>
+                                </div>
+                                <div class="progress-stage-item-sidebar filterable" data-stage="project_cancelled" data-filter="all">
+                                    <div class="stage-number-sidebar">9</div>
+                                    <div class="stage-info-sidebar">
+                                        <div class="stage-name-sidebar">企画中止</div>
+                                        <div class="stage-percentage-sidebar">100%</div>
+                                    </div>
+                                    <div class="stage-count-badge" data-stage="project_cancelled">0</div>
                                 </div>
                             </div>
                             <div class="text-center mt-2">
@@ -453,6 +463,19 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+}
+
+/* ヘッダーのテキスト色を白に */
+.card-header h6 {
+    color: white !important;
+}
+
+.card-header .text-muted {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.card-header i {
+    color: white !important;
 }
 
 .progress-stage-item-sidebar {
@@ -678,6 +701,10 @@
 
 .stage-number-badge[data-stage="second_lot_ordered"] {
     background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+}
+
+.stage-number-badge[data-stage="project_cancelled"] {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
 }
 
 .timeline {
@@ -1037,7 +1064,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     '初回発注済': 'first_order',
                     '仮出品済': 'temporary_listing',
                     'ページアップ済': 'page_up',
-                    '2ロット目発注済': 'second_lot_ordered'
+                    '2ロット目発注済': 'second_lot_ordered',
+                    '企画中止': 'project_cancelled'
                 };
                 
                 const stageKey = Object.keys(stageMapping).find(key => stageText.includes(key));
@@ -1059,7 +1087,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const stageOrder = [
                     'proposal_pre', 'estimate_completed', 's_creation_approved',
                     'proposal_decision_obtained', 'pre_production_s_confirmed',
-                    'first_order', 'temporary_listing', 'page_up', 'second_lot_ordered'
+                    'first_order', 'temporary_listing', 'page_up', 'second_lot_ordered', 'project_cancelled'
                 ];
                 
                 const currentStageIndex = Math.max(...currentStages.map(stage => stageOrder.indexOf(stage)));

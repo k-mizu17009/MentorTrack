@@ -1,0 +1,527 @@
+{% extends "base.html" %}
+
+{% block title %}メンターコメント追加 - {{ report.mentee.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- 報告内容表示エリア -->
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-file-alt me-2"></i>{{ report.mentee.name }}の報告内容
+                    </h3>
+                    <span class="badge bg-{{ 'success' if report.planning_stage == 'completed' else 'primary' if report.planning_stage == 'ordered' else 'warning' if report.planning_stage == 'proposal_post' else 'secondary' }} stage-badge">
+                        {% if report.planning_stage == 'proposal_pre' %}提案前
+                        {% elif report.planning_stage == 'proposal_post' %}提案済み
+                        {% elif report.planning_stage == 'ordered' %}発注済み
+                        {% elif report.planning_stage == 'completed' %}完了
+                        {% endif %}
+                    </span>
+                </div>
+                <p class="mb-0 mt-2 text-light">{{ report.report_date.strftime('%Y年%m月%d日') }}の報告</p>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-box me-2"></i>代表商品群</h5>
+                        <p class="text-muted">{{ report.product_group }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-star me-2"></i>自己評価</h5>
+                        <span class="badge bg-{{ 'success' if report.self_evaluation == 3 else 'warning' if report.self_evaluation == 2 else 'danger' }} evaluation-badge">
+                            {{ report.self_evaluation }}/3
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h5><i class="fas fa-tasks me-2"></i>今週の進捗</h5>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <pre class="mb-0">{{ report.progress_items }}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h5><i class="fas fa-running me-2"></i>実施した行動</h5>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <pre class="mb-0">{{ report.actions_taken }}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h5><i class="fas fa-lightbulb me-2"></i>気づき・悩み</h5>
+                    <div class="insight-box">
+                        <pre class="mb-0">{{ report.insights_concerns }}</pre>
+                    </div>
+                </div>
+
+                {% if additional_responses %}
+                <div class="mb-4">
+                    <h5><i class="fas fa-question-circle me-2"></i>追加の問いかけ回答</h5>
+                    <div class="card">
+                        <div class="card-body">
+                            {% if additional_responses.time_consuming_task %}
+                            <div class="mb-3">
+                                <h6 class="text-primary">今週、最も時間を使った作業は？</h6>
+                                <p class="text-muted">{{ additional_responses.time_consuming_task }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if additional_responses.difficult_decision %}
+                            <div class="mb-3">
+                                <h6 class="text-primary">今週、最も迷った判断は？</h6>
+                                <p class="text-muted">{{ additional_responses.difficult_decision }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if additional_responses.learned_from_senior %}
+                            <div class="mb-3">
+                                <h6 class="text-primary">今週、先輩から学んだことは？</h6>
+                                <p class="text-muted">{{ additional_responses.learned_from_senior }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if additional_responses.own_decision %}
+                            <div class="mb-3">
+                                <h6 class="text-primary">今週、自分の判断で進めたことは？</h6>
+                                <p class="text-muted">{{ additional_responses.own_decision }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if additional_responses.redid_task %}
+                            <div class="mb-3">
+                                <h6 class="text-primary">今週、やり直したことは？</h6>
+                                <p class="text-muted">{{ additional_responses.redid_task }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- コメント追加フォーム -->
+    <div class="col-lg-5">
+        <!-- AIアシスタント -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-robot me-2"></i>AIメンタリングアシスタント
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-primary">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>ソクラテス式問答法</strong>でメンティの成長を促すコメントをサポートします
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">分析したい観点を選択してください：</label>
+                    <div class="row">
+                        <div class="col-6">
+                            <button type="button" class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="analyzeAspect('growth')">
+                                <i class="fas fa-seedling me-1"></i>成長の可能性
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="analyzeAspect('challenge')">
+                                <i class="fas fa-mountain me-1"></i>課題と挑戦
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="analyzeAspect('reflection')">
+                                <i class="fas fa-mirror me-1"></i>振り返り促進
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="analyzeAspect('action')">
+                                <i class="fas fa-rocket me-1"></i>次のアクション
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="ai-suggestions" class="mb-3" style="display: none;">
+                    <h6 class="text-primary">AI提案：</h6>
+                    <div id="suggestion-content" class="border rounded p-3 bg-light">
+                        <!-- AI提案がここに表示されます -->
+                    </div>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="useSuggestion()">
+                            <i class="fas fa-check me-1"></i>この提案を使用
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="regenerateSuggestion()">
+                            <i class="fas fa-redo me-1"></i>別の提案を生成
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-primary">ソクラテス式質問例：</h6>
+                    <div id="socratic-questions" class="small text-muted">
+                        <div class="mb-2">
+                            <strong>「なぜそう思ったのですか？」</strong> - 思考プロセスの深掘り
+                        </div>
+                        <div class="mb-2">
+                            <strong>「もし別の方法があったらどうしますか？」</strong> - 選択肢の拡大
+                        </div>
+                        <div class="mb-2">
+                            <strong>「この経験から何を学びましたか？」</strong> - 学習の促進
+                        </div>
+                        <div class="mb-2">
+                            <strong>「次回はどのように改善しますか？」</strong> - 成長の方向性
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- コメントフォーム -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-comment me-2"></i>メンターコメント追加
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.comment.label(class="form-label fw-bold") }}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            メンティの成長を促すコメントを記入してください。評価ではなく、対話のきっかけとして活用してください。
+                        </div>
+                        {{ form.comment(class="form-control", id="comment-textarea", rows="6") }}
+                        {% if form.comment.errors %}
+                            <div class="text-danger">
+                                {% for error in form.comment.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('view_report', report_id=report.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>戻る
+                        </a>
+                        {{ form.submit(class="btn btn-success") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Todoリスト（メンター・管理者のみ表示） -->
+    {% if current_user.role in ['mentor', 'admin'] and todo_list %}
+    <div class="col-lg-12 mt-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tasks me-2"></i>{{ report.mentee.name }}の月次面談Todoリスト
+                </h5>
+                <p class="mb-0 mt-1 text-muted small">メンティの目標と進捗を確認してコメントに活用してください</p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- 先輩社員の仕事を奪う -->
+                    {% if todo_list.senior_work_target or todo_list.senior_work_actual %}
+                    <div class="col-md-6">
+                        <h6 class="text-primary mb-2">先輩社員の仕事を奪う</h6>
+                        <div class="todo-item mb-2">
+                            <small class="text-muted">(=先輩社員の商品開発のメンバーにアサインする/「仕入れメンバー」に名前を入れる)</small><br>
+                            {% if todo_list.senior_work_target %}<span class="badge bg-primary me-2">{{ todo_list.senior_work_target }}</span>{% endif %}
+                            {% if todo_list.senior_work_actual %}<span class="badge bg-secondary">{{ todo_list.senior_work_actual }}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- 提案済みで発注済みの商品手配 -->
+                    {% if todo_list.ordered_products or todo_list.ordered_details %}
+                    <div class="col-md-6">
+                        <h6 class="text-success mb-2">■提案済みで発注済みの商品手配</h6>
+                        <div class="todo-item mb-2">
+                            {% if todo_list.ordered_products %}<small class="text-muted">{{ todo_list.ordered_products }}</small><br>{% endif %}
+                            {% if todo_list.ordered_details %}<small class="text-muted">{{ todo_list.ordered_details|replace('\n', '<br>')|safe }}</small>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- 提案済みでまだ発注できていない商品 -->
+                    {% if todo_list.pending_products or todo_list.pending_details %}
+                    <div class="col-md-6">
+                        <h6 class="text-warning mb-2">■提案済みでまだ発注できていない商品</h6>
+                        <div class="todo-item mb-2">
+                            {% if todo_list.pending_products %}<small class="text-muted">{{ todo_list.pending_products }}</small><br>{% endif %}
+                            {% if todo_list.pending_details %}<small class="text-muted">{{ todo_list.pending_details|replace('\n', '<br>')|safe }}</small>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- 未提案の商品手配 -->
+                    {% if todo_list.unproposed_products or todo_list.unproposed_details %}
+                    <div class="col-md-6">
+                        <h6 class="text-info mb-2">■未提案の商品手配</h6>
+                        <div class="todo-item mb-2">
+                            {% if todo_list.unproposed_products %}<small class="text-muted">{{ todo_list.unproposed_products }}</small><br>{% endif %}
+                            {% if todo_list.unproposed_details %}<small class="text-muted">{{ todo_list.unproposed_details|replace('\n', '<br>')|safe }}</small>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        このTodoリストを参考に、より具体的で効果的なコメントを作成してください
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.todo-item {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.todo-item strong {
+    color: #495057;
+}
+</style>
+
+<script>
+let currentAspect = null;
+let currentSuggestion = null;
+
+// 報告データを取得
+const reportData = {
+    menteeName: "{{ report.mentee.name }}",
+    planningStage: "{{ report.planning_stage }}",
+    productGroup: `{{ report.product_group|replace('\n', '\\n')|replace('"', '\\"') }}`,
+    progressItems: `{{ report.progress_items|replace('\n', '\\n')|replace('"', '\\"') }}`,
+    actionsTaken: `{{ report.actions_taken|replace('\n', '\\n')|replace('"', '\\"') }}`,
+    insightsConcerns: `{{ report.insights_concerns|replace('\n', '\\n')|replace('"', '\\"') }}`,
+    selfEvaluation: {{ report.self_evaluation }},
+    additionalResponses: {{ additional_responses|tojson|safe }}
+};
+
+// 観点分析
+function analyzeAspect(aspect) {
+    currentAspect = aspect;
+    showLoading();
+    
+    // シミュレーション（実際のAI APIの代わり）
+    setTimeout(() => {
+        const suggestion = generateSuggestion(aspect);
+        displaySuggestion(suggestion);
+    }, 1000);
+}
+
+// ローディング表示
+function showLoading() {
+    document.getElementById('ai-suggestions').style.display = 'block';
+    document.getElementById('suggestion-content').innerHTML = 
+        '<div class="text-center"><i class="fas fa-spinner fa-spin me-2"></i>分析中...</div>';
+}
+
+// 提案生成（ソクラテス式問答法ベース）
+function generateSuggestion(aspect) {
+    const suggestions = {
+        growth: {
+            title: "成長の可能性を探る",
+            content: generateGrowthSuggestion(),
+            questions: [
+                "{{ report.mentee.name }}さんの報告から、どのような成長の兆しが見えますか？",
+                "今回の経験で、{{ report.mentee.name }}さんが最も学んだことは何だと思いますか？",
+                "{{ report.mentee.name }}さんの強みを活かして、次に挑戦できることは何でしょうか？"
+            ]
+        },
+        challenge: {
+            title: "課題と挑戦を分析",
+            content: generateChallengeSuggestion(),
+            questions: [
+                "{{ report.mentee.name }}さんが直面している課題の根本原因は何でしょうか？",
+                "この課題を乗り越えるために、{{ report.mentee.name }}さんはどのようなスキルを身につける必要がありますか？",
+                "{{ report.mentee.name }}さんが挑戦したいと思える目標は何でしょうか？"
+            ]
+        },
+        reflection: {
+            title: "振り返りを促進",
+            content: generateReflectionSuggestion(),
+            questions: [
+                "{{ report.mentee.name }}さんに、今回の経験を振り返ってもらうために、どのような質問をしますか？",
+                "{{ report.mentee.name }}さんの思考プロセスを深く理解するために、何を聞けばよいでしょうか？",
+                "{{ report.mentee.name }}さんが気づいていない点について、どのように気づかせますか？"
+            ]
+        },
+        action: {
+            title: "次のアクションを提案",
+            content: generateActionSuggestion(),
+            questions: [
+                "{{ report.mentee.name }}さんの成長を加速させるために、次に取り組むべきことは何でしょうか？",
+                "{{ report.mentee.name }}さんが自主的に行動できるように、どのような支援ができますか？",
+                "{{ report.mentee.name }}さんの目標達成のために、具体的なステップは何でしょうか？"
+            ]
+        }
+    };
+    
+    return suggestions[aspect];
+}
+
+// 成長提案の生成
+function generateGrowthSuggestion() {
+    const strengths = [];
+    
+    // 自己評価から成長ポイントを分析
+    if (reportData.selfEvaluation >= 2) {
+        strengths.push("前向きな自己評価");
+    }
+    
+    // 進捗内容から強みを抽出
+    if (reportData.progressItems.includes("完了") || reportData.progressItems.includes("実施")) {
+        strengths.push("実行力");
+    }
+    
+    // 気づき・悩みから成長意欲を分析
+    if (reportData.insightsConcerns.includes("学び") || reportData.insightsConcerns.includes("気づき")) {
+        strengths.push("学習意欲");
+    }
+    
+    let suggestion = `【${reportData.menteeName}さんの成長分析】\n\n`;
+    suggestion += `✅ 確認できた強み：\n`;
+    strengths.forEach(strength => {
+        suggestion += `• ${strength}\n`;
+    });
+    
+    suggestion += `\n🌱 成長の可能性：\n`;
+    suggestion += `• 今回の経験を活かして、より大きな挑戦に取り組めそうです\n`;
+    suggestion += `• 自己評価が高いので、自信を持って次のステップに進めます\n`;
+    suggestion += `• 学習意欲が高いので、新しいスキル習得に積極的です\n\n`;
+    
+    suggestion += `💡 メンタリングのポイント：\n`;
+    suggestion += `• 強みを認めつつ、さらなる成長の機会を提示する\n`;
+    suggestion += `• 具体的な次のステップを一緒に考える\n`;
+    suggestion += `• 成功体験を積み重ねることで自信を深める`;
+    
+    return suggestion;
+}
+
+// 課題提案の生成
+function generateChallengeSuggestion() {
+    let suggestion = `【${reportData.menteeName}さんの課題分析】\n\n`;
+    
+    // 自己評価から課題を分析
+    if (reportData.selfEvaluation <= 2) {
+        suggestion += `⚠️ 自己評価が控えめ：\n`;
+        suggestion += `• もっと自信を持って良い成果を出している可能性があります\n`;
+        suggestion += `• 成果を客観的に評価する視点を養う必要があります\n\n`;
+    }
+    
+    // 気づき・悩みから課題を抽出
+    if (reportData.insightsConcerns.includes("悩み") || reportData.insightsConcerns.includes("困")) {
+        suggestion += `🤔 課題の兆し：\n`;
+        suggestion += `• 悩みを抱えている部分について、具体的な解決策を一緒に考える\n`;
+        suggestion += `• 一人で抱え込まず、相談できる環境を作る\n\n`;
+    }
+    
+    suggestion += `💡 メンタリングのポイント：\n`;
+    suggestion += `• 課題を否定せず、一緒に解決策を考える姿勢を示す\n`;
+    suggestion += `• 小さな成功体験から自信を積み重ねる\n`;
+    suggestion += `• 長期的な視点で成長をサポートする`;
+    
+    return suggestion;
+}
+
+// 振り返り提案の生成
+function generateReflectionSuggestion() {
+    let suggestion = `【${reportData.menteeName}さんの振り返り促進】\n\n`;
+    
+    suggestion += `🔍 振り返りのポイント：\n`;
+    suggestion += `• 今回の経験で最も印象的だったことは何ですか？\n`;
+    suggestion += `• うまくいった要因は何だと思いますか？\n`;
+    suggestion += `• 次回同じような状況になったら、どう改善しますか？\n\n`;
+    
+    suggestion += `💭 深掘り質問例：\n`;
+    suggestion += `• 「なぜそう思ったのですか？」- 思考プロセスの理解\n`;
+    suggestion += `• 「もし別の方法があったらどうしますか？」- 選択肢の拡大\n`;
+    suggestion += `• 「この経験から何を学びましたか？」- 学習の促進\n\n`;
+    
+    suggestion += `💡 メンタリングのポイント：\n`;
+    suggestion += `• 答えを教えるのではなく、一緒に考える\n`;
+    suggestion += `• メンティ自身の気づきを大切にする\n`;
+    suggestion += `• 継続的な振り返りの習慣を身につける`;
+    
+    return suggestion;
+}
+
+// アクション提案の生成
+function generateActionSuggestion() {
+    let suggestion = `【${reportData.menteeName}さんの次のアクション】\n\n`;
+    
+    suggestion += `🚀 推奨アクション：\n`;
+    suggestion += `• 今回の学びを活かした具体的な次のステップを設定\n`;
+    suggestion += `• 短期・中期・長期の目標を明確にする\n`;
+    suggestion += `• 定期的な進捗確認の仕組みを作る\n\n`;
+    
+    suggestion += `📋 具体的な提案：\n`;
+    suggestion += `• 来週の目標を一緒に設定する\n`;
+    suggestion += `• 必要なスキルやリソースを整理する\n`;
+    suggestion += `• 困った時の相談方法を決める\n\n`;
+    
+    suggestion += `💡 メンタリングのポイント：\n`;
+    suggestion += `• メンティ自身が決めた目標をサポートする\n`;
+    suggestion += `• 小さなステップから始める\n`;
+    suggestion += `• 定期的な振り返りと調整を行う`;
+    
+    return suggestion;
+}
+
+// 提案を表示
+function displaySuggestion(suggestion) {
+    currentSuggestion = suggestion;
+    
+    let html = `<h6 class="text-primary">${suggestion.title}</h6>`;
+    html += `<div class="mb-3"><pre style="white-space: pre-wrap; font-size: 0.9em;">${suggestion.content}</pre></div>`;
+    
+    if (suggestion.questions && suggestion.questions.length > 0) {
+        html += `<h6 class="text-secondary">推奨質問：</h6>`;
+        html += `<ul class="small">`;
+        suggestion.questions.forEach(question => {
+            html += `<li class="mb-1">${question}</li>`;
+        });
+        html += `</ul>`;
+    }
+    
+    document.getElementById('suggestion-content').innerHTML = html;
+}
+
+// 提案を使用
+function useSuggestion() {
+    if (currentSuggestion) {
+        const textarea = document.getElementById('comment-textarea');
+        textarea.value = currentSuggestion.content;
+        textarea.focus();
+    }
+}
+
+// 別の提案を生成
+function regenerateSuggestion() {
+    if (currentAspect) {
+        analyzeAspect(currentAspect);
+    }
+}
+</script>
+{% endblock %}

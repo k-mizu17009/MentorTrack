@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}代表商品群編集 - {{ product_group.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>代表商品群編集</h2>
+                <a href="{{ url_for('manage_product_groups', mentee_id=product_group.mentee_id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> 一覧に戻る
+                </a>
+            </div>
+
+            <!-- 編集フォーム -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ product_group.name }}の編集</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    {{ form.name.label(class="form-label") }}
+                                    {{ form.name(class="form-control") }}
+                                    {% if form.name.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.name.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    {{ form.submit(class="btn btn-primary") }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control") }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.description.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- 既存の画像表示 -->
+                        {% if existing_images %}
+                        <div class="form-group mb-3">
+                            <label class="form-label">現在の画像</label>
+                            <div class="row">
+                                {% for image in existing_images %}
+                                <div class="col-md-2 mb-2">
+                                    <div class="position-relative">
+                                        <img src="{{ url_for('uploaded_file', filename=image) }}" 
+                                             class="img-thumbnail w-100" 
+                                             style="height: 100px; object-fit: cover;"
+                                             alt="商品画像">
+                                        <button type="button" 
+                                                class="btn btn-sm btn-danger position-absolute top-0 end-0" 
+                                                style="transform: translate(50%, -50%);"
+                                                onclick="removeImage('{{ image }}')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="form-group mb-3">
+                            {{ form.images.label(class="form-label") }}
+                            {{ form.images(class="form-control") }}
+                            <small class="form-text text-muted">新しい画像を追加できます（PNG, JPG, JPEG, GIF, WebP形式）</small>
+                            {% if form.images.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.images.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function removeImage(filename) {
+    if (confirm('この画像を削除しますか？')) {
+        // 画像削除のAJAXリクエスト
+        fetch(`/product-group/{{ product_group.id }}/remove-image`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                filename: filename
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('エラー: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('エラーが発生しました。');
+        });
+    }
+}
+</script>
+{% endblock %}
