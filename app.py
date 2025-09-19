@@ -1343,18 +1343,34 @@ def new_report(mentee_id):
                     related_id=report.id
                 )
             
-            flash('週次報告が保存されました！', 'success')
-            return redirect(url_for('mentee_dashboard', mentee_id=mentee_id))
+            # Ajaxリクエストかどうかをチェック
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'success': True, 'message': '週次報告が保存されました！'})
+            else:
+                flash('週次報告が保存されました！', 'success')
+                return redirect(url_for('mentee_dashboard', mentee_id=mentee_id))
         except Exception as e:
             db.session.rollback()
-            flash(f'報告の保存中にエラーが発生しました: {str(e)}', 'danger')
+            # Ajaxリクエストかどうかをチェック
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'success': False, 'message': f'報告の保存中にエラーが発生しました: {str(e)}'}), 500
+            else:
+                flash(f'報告の保存中にエラーが発生しました: {str(e)}', 'danger')
+                # フォームの選択肢を再設定
+                product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
+                form.product_group.choices = [(0, '商品群を選択してください')] + [(pg.id, pg.name) for pg in product_groups]
+    else:
+        # バリデーションエラーがある場合
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            # バリデーションエラーの詳細を取得
+            error_messages = []
+            for field, errors in form.errors.items():
+                error_messages.extend(errors)
+            return jsonify({'success': False, 'message': '入力内容にエラーがあります', 'errors': error_messages}), 400
+        else:
             # フォームの選択肢を再設定
             product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
             form.product_group.choices = [(0, '商品群を選択してください')] + [(pg.id, pg.name) for pg in product_groups]
-    else:
-        # バリデーションエラーがある場合、フォームの選択肢を再設定
-        product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
-        form.product_group.choices = [(0, '商品群を選択してください')] + [(pg.id, pg.name) for pg in product_groups]
     
     # Todoリストを取得
     todo_list = MenteeTodoList.query.filter_by(mentee_id=mentee_id).first()
