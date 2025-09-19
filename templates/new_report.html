@@ -337,7 +337,6 @@
                         {% if todo_list %}
                         <div class="todo-grid-modern">
                             <!-- 先輩社員の仕事を奪う -->
-                            {% if todo_list.senior_work_target or todo_list.senior_work_actual %}
                             <div class="todo-item-modern">
                                 <div class="todo-header">
                                     <i class="fas fa-user-tie me-2"></i>
@@ -349,72 +348,76 @@
                                 <div class="todo-badges">
                                     {% if todo_list.senior_work_target %}<span class="badge-modern primary">{{ todo_list.senior_work_target }}</span>{% endif %}
                                     {% if todo_list.senior_work_actual %}<span class="badge-modern secondary">{{ todo_list.senior_work_actual }}</span>{% endif %}
+                                    {% if not todo_list.senior_work_target and not todo_list.senior_work_actual %}
+                                        <span class="badge-modern outline">未設定</span>
+                                    {% endif %}
                                 </div>
                             </div>
-                            {% endif %}
                             
                             <!-- 提案済みで発注済みの商品手配 -->
-                            {% if todo_list.ordered_products or todo_list.ordered_details %}
                             <div class="todo-item-modern">
                                 <div class="todo-header">
                                     <i class="fas fa-check-circle me-2"></i>
                                     <strong>提案済みで発注済みの商品手配</strong>
                                 </div>
-                                {% if todo_list.ordered_products %}<div class="todo-content">{{ todo_list.ordered_products }}</div>{% endif %}
-                                {% if todo_list.ordered_details %}<div class="todo-details">{{ todo_list.ordered_details|replace('\n', '<br>')|safe }}</div>{% endif %}
+                                {% if todo_list.ordered_products or todo_list.ordered_details %}
+                                    {% if todo_list.ordered_products %}<div class="todo-content">{{ todo_list.ordered_products }}</div>{% endif %}
+                                    {% if todo_list.ordered_details %}<div class="todo-details">{{ todo_list.ordered_details|replace('\n', '<br>')|safe }}</div>{% endif %}
+                                {% else %}
+                                    <div class="todo-content text-muted">未設定</div>
+                                {% endif %}
                             </div>
-                            {% endif %}
                             
                             <!-- 提案済みでまだ発注できていない商品 -->
-                            {% if todo_list.pending_products or todo_list.pending_details %}
                             <div class="todo-item-modern">
                                 <div class="todo-header">
                                     <i class="fas fa-clock me-2"></i>
                                     <strong>提案済みでまだ発注できていない商品</strong>
                                 </div>
-                                {% if todo_list.pending_products %}<div class="todo-content">{{ todo_list.pending_products }}</div>{% endif %}
-                                {% if todo_list.pending_details %}<div class="todo-details">{{ todo_list.pending_details|replace('\n', '<br>')|safe }}</div>{% endif %}
+                                {% if todo_list.pending_products or todo_list.pending_details %}
+                                    {% if todo_list.pending_products %}<div class="todo-content">{{ todo_list.pending_products }}</div>{% endif %}
+                                    {% if todo_list.pending_details %}<div class="todo-details">{{ todo_list.pending_details|replace('\n', '<br>')|safe }}</div>{% endif %}
+                                {% else %}
+                                    <div class="todo-content text-muted">未設定</div>
+                                {% endif %}
                             </div>
-                            {% endif %}
                             
                             <!-- 未提案の商品手配 -->
-                            {% if todo_list.unproposed_products or todo_list.unproposed_details %}
                             <div class="todo-item-modern">
                                 <div class="todo-header">
                                     <i class="fas fa-lightbulb me-2"></i>
                                     <strong>未提案の商品手配</strong>
                                 </div>
-                                {% if todo_list.unproposed_products %}<div class="todo-content">{{ todo_list.unproposed_products }}</div>{% endif %}
-                                {% if todo_list.unproposed_details %}<div class="todo-details">{{ todo_list.unproposed_details|replace('\n', '<br>')|safe }}</div>{% endif %}
+                                {% if todo_list.unproposed_products or todo_list.unproposed_details %}
+                                    {% if todo_list.unproposed_products %}<div class="todo-content">{{ todo_list.unproposed_products }}</div>{% endif %}
+                                    {% if todo_list.unproposed_details %}<div class="todo-details">{{ todo_list.unproposed_details|replace('\n', '<br>')|safe }}</div>{% endif %}
+                                {% else %}
+                                    <div class="todo-content text-muted">未設定</div>
+                                {% endif %}
                             </div>
-                            {% endif %}
                         </div>
                         {% else %}
-                        <div class="empty-state">
-                            <i class="fas fa-info-circle fa-3x mb-3"></i>
-                            <h6>Todoリストが設定されていません</h6>
-                            <p class="text-muted">上記のフォームから新しい代表商品群を登録してください</p>
-                            <a href="{{ url_for('manage_todo_list', mentee_id=mentee.id) }}" class="btn btn-primary-modern btn-sm">
-                                <i class="fas fa-plus me-1"></i>Todoリストを設定
+                        <div class="text-center py-4">
+                            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Todoリストが設定されていません</h5>
+                            <p class="text-muted">メンティの目標と進捗を管理するために、Todoリストを設定しましょう。</p>
+                            <a href="{{ url_for('manage_todo_list', mentee_id=mentee.id) }}" class="btn btn-primary-modern">
+                                <i class="fas fa-plus me-2"></i>Todoリストを作成
                             </a>
                         </div>
                         {% endif %}
                         
-                        <div class="todo-actions">
+                        <!-- 管理ボタン -->
+                        <div class="text-center mt-4">
                             {% if todo_list %}
                             <a href="{{ url_for('manage_todo_list', mentee_id=mentee.id) }}" class="btn btn-outline-modern btn-sm">
-                                <i class="fas fa-edit me-1"></i>修正
+                                <i class="fas fa-edit me-2"></i>Todoリストを編集
                             </a>
                             {% else %}
                             <a href="{{ url_for('manage_todo_list', mentee_id=mentee.id) }}" class="btn btn-outline-modern btn-sm">
-                                <i class="fas fa-plus me-1"></i>設定
+                                <i class="fas fa-plus me-2"></i>Todoリストを作成
                             </a>
                             {% endif %}
-                            <small class="todo-hint">
-                                <i class="fas fa-info-circle me-1"></i>
-                                このTodoリストを参考に、代表商品群を記入してください
-                            </small>
-                        </div>
                     </div>
         </div>
     </div>

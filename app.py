@@ -1299,6 +1299,20 @@ def new_report(mentee_id):
         # 代表商品群が登録されていない場合の警告
         if not product_groups:
             flash('代表商品群が登録されていません。先に代表商品群を登録してください。', 'warning')
+        
+        # Todoリストを取得（存在しない場合は作成）
+        todo_list = MenteeTodoList.query.filter_by(mentee_id=mentee_id).first()
+        if not todo_list:
+            todo_list = MenteeTodoList(mentee_id=mentee_id)
+            db.session.add(todo_list)
+            db.session.commit()
+        
+        # デバッグ用：Todoリストの内容を確認
+        print(f"DEBUG: Todoリスト取得 - mentee_id: {mentee_id}")
+        print(f"DEBUG: Todoリスト内容: {todo_list}")
+        if todo_list:
+            print(f"DEBUG: senior_work_target: {todo_list.senior_work_target}")
+            print(f"DEBUG: ordered_products: {todo_list.ordered_products}")
     except Exception as e:
         flash(f'エラーが発生しました: {str(e)}', 'danger')
         return redirect(url_for('my_dashboard'))
@@ -1649,6 +1663,9 @@ def manage_todo_list(mentee_id):
     
     if request.method == 'POST':
         # Todoリストを更新
+        print(f"DEBUG: Todoリスト保存開始 - mentee_id: {mentee_id}")
+        print(f"DEBUG: フォームデータ: {dict(request.form)}")
+        
         todo_list.senior_work_target = request.form.get('senior_work_target', '')
         todo_list.senior_work_actual = request.form.get('senior_work_actual', '')
         todo_list.ordered_products = request.form.get('ordered_products', '')
@@ -1659,7 +1676,11 @@ def manage_todo_list(mentee_id):
         todo_list.unproposed_details = request.form.get('unproposed_details', '')
         todo_list.updated_at = datetime.utcnow()
         
+        print(f"DEBUG: 保存前のTodoリスト: senior_work_target='{todo_list.senior_work_target}', ordered_products='{todo_list.ordered_products}'")
+        
         db.session.commit()
+        
+        print(f"DEBUG: Todoリスト保存完了")
         flash('Todoリストが更新されました！', 'success')
         return redirect(url_for('new_report', mentee_id=mentee_id))
     
