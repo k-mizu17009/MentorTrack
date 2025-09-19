@@ -48,17 +48,48 @@
             </div>
         </div>
 
-            <!-- 期間選択 -->
+            <!-- 期間選択とメンティ切り替え -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">分析期間の選択</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">分析設定</h5>
+                        {% if current_user.role in ['mentor', 'admin'] and all_mentees|length > 1 %}
+                        <div class="mentee-switcher-badge">
+                            <i class="fas fa-users me-1"></i>
+                            <span class="badge bg-primary">{{ all_mentees|length }}名のメンティ</span>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-8">
+                    <div class="row align-items-center">
+                        <!-- メンティ切り替え（メンター・管理者のみ） -->
+                        {% if current_user.role in ['mentor', 'admin'] and all_mentees|length > 1 %}
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <label for="mentee-switcher" class="form-label mb-2">
+                                <i class="fas fa-user-graduate me-1"></i>メンティ選択:
+                            </label>
+                            <select id="mentee-switcher" class="form-select mentee-select">
+                                {% for m in all_mentees %}
+                                <option value="{{ m.id }}" {% if m.id == mentee.id %}selected{% endif %}>
+                                    {{ m.name }}
+                                    {% if m.id == mentee.id %}（現在表示中）{% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- 期間選択 -->
+                        <div class="{% if current_user.role in ['mentor', 'admin'] and all_mentees|length > 1 %}col-md-4{% else %}col-md-8{% endif %} mb-3 mb-md-0">
                             <form method="GET" class="d-flex align-items-center">
-                                <label for="weeks" class="form-label me-3 mb-0">分析期間:</label>
-                                <select name="weeks" id="weeks" class="form-select me-3" style="width: auto;" onchange="this.form.submit()">
+                                {% if current_user.role in ['mentor', 'admin'] %}
+                                <input type="hidden" name="mentee_id" value="{{ mentee.id }}">
+                                {% endif %}
+                                <label for="weeks" class="form-label me-3 mb-0">
+                                    <i class="fas fa-calendar-alt me-1"></i>分析期間:
+                                </label>
+                                <select name="weeks" id="weeks" class="form-select" style="width: auto;" onchange="this.form.submit()">
                                     <option value="4" {% if selected_weeks == 4 %}selected{% endif %}>直近4週間</option>
                                     <option value="8" {% if selected_weeks == 8 %}selected{% endif %}>直近8週間</option>
                                     <option value="12" {% if selected_weeks == 12 %}selected{% endif %}>直近12週間</option>
@@ -67,10 +98,20 @@
                                 </select>
                             </form>
                         </div>
-                        <div class="col-md-4 text-end">
-                            <small class="text-muted">
-                                {{ product_group_progress|length }}個の商品群を分析中
-                            </small>
+                        
+                        <!-- 統計情報 -->
+                        <div class="{% if current_user.role in ['mentor', 'admin'] and all_mentees|length > 1 %}col-md-4{% else %}col-md-4{% endif %} text-end">
+                            <div class="analysis-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-chart-pie me-1 text-primary"></i>
+                                    <span class="stat-number">{{ product_group_progress|length }}</span>
+                                    <small class="text-muted">個の商品群</small>
+                                </div>
+                                <div class="stat-item mt-1">
+                                    <i class="fas fa-user me-1 text-success"></i>
+                                    <span class="stat-name">{{ mentee.name }}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -717,10 +758,264 @@
     background: #17a2b8;
 }
 
+/* メンティ切り替え機能のスタイル */
+.mentee-switcher-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mentee-switcher-badge .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+}
+
+.mentee-select {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.mentee-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25), 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.mentee-select:hover {
+    border-color: #6c757d;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
+}
+
+.mentee-select option {
+    padding: 8px 12px;
+}
+
+.mentee-select option:checked {
+    background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+    color: white;
+}
+
+.mentee-switch-loading {
+    margin-top: 8px;
+    padding: 8px;
+    background: rgba(13, 110, 253, 0.1);
+    border-radius: 6px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 分析統計のスタイル */
+.analysis-stats {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stat-number {
+    font-weight: 700;
+    color: #495057;
+    font-size: 1.1rem;
+}
+
+.stat-name {
+    font-weight: 600;
+    color: #28a745;
+    font-size: 0.9rem;
+}
+
+/* ラベルのアイコンスタイル */
+.form-label i {
+    color: #6c757d;
+    margin-right: 4px;
+}
+
+/* カードヘッダーの改善 */
+.card-header .d-flex {
+    align-items: center;
+}
+
+.card-header h5 {
+    margin: 0;
+    color: #495057;
+    font-weight: 600;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .mentee-switcher-badge {
+        margin-top: 8px;
+    }
+    
+    .analysis-stats {
+        text-align: center !important;
+        margin-top: 15px;
+    }
+    
+    .stat-item {
+        justify-content: center;
+    }
+    
+    .mentee-select {
+        font-size: 0.9rem;
+    }
+}
+
+/* ホバー効果の改善 */
+.mentee-select:hover:not(:focus) {
+    background: linear-gradient(135deg, #fff, #f8f9fa);
+}
+
+/* フォーカス時のアニメーション */
+.mentee-select:focus {
+    animation: focusGlow 0.3s ease-in-out;
+}
+
+@keyframes focusGlow {
+    0% {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 0 0.1rem rgba(13, 110, 253, 0.15), 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    100% {
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25), 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+}
+
+/* ローディング中のスタイル */
+.mentee-select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #f8f9fa;
+}
+
+/* ツールチップのスタイル改善 */
+.tooltip {
+    font-size: 0.8rem;
+}
+
+.tooltip-inner {
+    background: #495057;
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+
 </style>
 
 <script>
+// メンティ切り替え機能
+function initMenteeSwitcher() {
+    const menteeSwitcher = document.getElementById('mentee-switcher');
+    if (!menteeSwitcher) return;
+    
+    menteeSwitcher.addEventListener('change', function() {
+        const selectedMenteeId = this.value;
+        const currentUrl = new URL(window.location.href);
+        const weeks = currentUrl.searchParams.get('weeks') || '12';
+        
+        // ローディング表示
+        showMenteeSwitchLoading(true);
+        
+        // 新しいURLを構築
+        const newUrl = `/mentee/${selectedMenteeId}/product-group-analysis?weeks=${weeks}`;
+        
+        // ページ遷移
+        window.location.href = newUrl;
+    });
+}
+
+// メンティ切り替え時のローディング表示
+function showMenteeSwitchLoading(show) {
+    const menteeSwitcher = document.getElementById('mentee-switcher');
+    const loadingElement = document.getElementById('mentee-switch-loading');
+    
+    if (!menteeSwitcher) return;
+    
+    if (show) {
+        menteeSwitcher.disabled = true;
+        
+        // ローディング要素がない場合は作成
+        if (!loadingElement) {
+            const loading = document.createElement('div');
+            loading.id = 'mentee-switch-loading';
+            loading.className = 'mentee-switch-loading';
+            loading.innerHTML = `
+                <div class="d-flex align-items-center text-primary">
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">読み込み中...</span>
+                    </div>
+                    <small>メンティを切り替え中...</small>
+                </div>
+            `;
+            menteeSwitcher.parentNode.appendChild(loading);
+        } else {
+            loadingElement.style.display = 'block';
+        }
+    } else {
+        menteeSwitcher.disabled = false;
+        if (loadingElement) {
+            loadingElement.style.display = 'none';
+        }
+    }
+}
+
+// メンティ切り替えのキーボードショートカット
+function initMenteeSwitcherKeyboard() {
+    document.addEventListener('keydown', function(e) {
+        // Ctrl + M でメンティ切り替えにフォーカス
+        if (e.ctrlKey && e.key === 'm') {
+            e.preventDefault();
+            const menteeSwitcher = document.getElementById('mentee-switcher');
+            if (menteeSwitcher) {
+                menteeSwitcher.focus();
+                menteeSwitcher.click();
+            }
+        }
+    });
+}
+
+// メンティ切り替えのツールチップ表示
+function initMenteeSwitcherTooltip() {
+    const menteeSwitcher = document.getElementById('mentee-switcher');
+    if (!menteeSwitcher) return;
+    
+    // Bootstrap tooltipを初期化
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        new bootstrap.Tooltip(menteeSwitcher, {
+            title: 'Ctrl + M でフォーカス',
+            placement: 'top',
+            trigger: 'hover'
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // メンティ切り替え機能を初期化
+    initMenteeSwitcher();
+    initMenteeSwitcherKeyboard();
+    initMenteeSwitcherTooltip();
+    
     // 現在のステージをハイライト表示（サイドバー用）
     function highlightCurrentStages() {
         const stageItems = document.querySelectorAll('.progress-stage-item-sidebar');

@@ -1887,11 +1887,17 @@ def product_group_analysis(mentee_id):
     # 全期間の進捗データも取得（比較用）
     all_time_progress = get_product_group_progress(mentee_id, 52)
     
+    # メンター・管理者の場合は全メンティリストを取得
+    all_mentees = []
+    if current_user.role in ['mentor', 'admin']:
+        all_mentees = Mentee.query.order_by(Mentee.name).all()
+    
     return render_template('product_group_analysis.html', 
                          mentee=mentee, 
                          product_group_progress=product_group_progress,
                          all_time_progress=all_time_progress,
-                         selected_weeks=weeks)
+                         selected_weeks=weeks,
+                         all_mentees=all_mentees)
 
 @app.route('/product-group/<int:product_group_id>/details')
 @login_required
