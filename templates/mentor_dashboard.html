@@ -93,24 +93,6 @@
         <div class="sidebar-content">
             <h6 class="sidebar-title">フィルター設定</h6>
             
-            <!-- メンティフィルター -->
-            <div class="mb-3">
-                <label class="form-label small">メンティ選択</label>
-                <select id="mentee-filter" class="form-select" onchange="filterByMentee()">
-                    <option value="">全メンティ</option>
-                    {% for mentee in mentees %}
-                    <option value="{{ mentee.name }}" {% if selected_mentee == mentee.name %}selected{% endif %}>
-                        {{ mentee.name }}
-                    </option>
-                    {% endfor %}
-                </select>
-                <div id="filter-loading" class="text-center mt-2" style="display: none;">
-                    <small class="text-muted">
-                        <i class="fas fa-spinner fa-spin me-1"></i>読み込み中...
-                    </small>
-                </div>
-            </div>
-            
             <!-- 進捗状況フィルター -->
             <div class="mb-3">
                 <label class="form-label small">進捗状況フィルター</label>
@@ -188,46 +170,97 @@
 
     <!-- メインコンテンツエリア -->
     <div class="main-content">
-        <!-- ヒーローセクション -->
-        <div class="hero-section">
-            <div class="hero-background"></div>
-            <div class="hero-content">
-                <div class="hero-title">
-                    <h1 class="hero-main-title">
-                        <span class="title-line">メンター</span>
-                        <span class="title-line">ダッシュボード</span>
-                    </h1>
-                    <p class="hero-subtitle">
-                        <i class="fas fa-sparkles me-2"></i>
-                        メンティの成長を一緒に加速させましょう
-                    </p>
-                </div>
-                <div class="hero-stats">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-users"></i>
+        <!-- 統合ヘッダーセクション -->
+        <div class="unified-header-section">
+            <div class="header-background-effects">
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+            </div>
+            <div class="unified-header-content">
+                <!-- ヘッダーメイン部分（横並びレイアウト） -->
+                <div class="header-main-section">
+                    <!-- 左側：タイトルと統計 -->
+                    <div class="header-left-section">
+                        <div class="hero-title">
+                            <h1 class="hero-main-title">
+                                <span class="title-line">メンター</span>
+                                <span class="title-line">ダッシュボード</span>
+                            </h1>
+                            <p class="hero-subtitle">
+                                <i class="fas fa-sparkles me-2"></i>
+                                メンティの成長を一緒に加速させましょう
+                            </p>
                         </div>
-                        <div class="stat-content">
-                            <span class="stat-number">{{ mentees|length }}</span>
-                            <span class="stat-label">メンティ数</span>
+                        <div class="hero-stats">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <span class="stat-number">{{ mentees|length }}</span>
+                                    <span class="stat-label">メンティ数</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <span class="stat-number">{{ product_group_progress|length }}</span>
+                                    <span class="stat-label">商品群数</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-clipboard-list"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <span class="stat-number">{{ reports|length }}</span>
+                                    <span class="stat-label">報告数</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="stat-content">
-                            <span class="stat-number">{{ product_group_progress|length }}</span>
-                            <span class="stat-label">商品群数</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-clipboard-list"></i>
-                        </div>
-                        <div class="stat-content">
-                            <span class="stat-number">{{ reports|length }}</span>
-                            <span class="stat-label">報告数</span>
+                    
+                    <!-- 右側：メンティ選択フィルター -->
+                    <div class="header-right-section">
+                        <div class="filter-container">
+                            <div class="filter-label">
+                                <div class="label-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span class="label-text">メンティ選択</span>
+                                <div class="label-glow"></div>
+                            </div>
+                            <div class="select-wrapper">
+                                <select id="mentee-filter" class="form-select header-select" onchange="filterByMentee()">
+                                    <option value="">全メンティ</option>
+                                    {% for mentee in mentees %}
+                                    <option value="{{ mentee.name }}" {% if selected_mentee == mentee.name %}selected{% endif %}>
+                                        {{ mentee.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="select-arrow">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="select-glow"></div>
+                            </div>
+                            <div id="filter-loading" class="filter-loading" style="display: none;">
+                                <div class="loading-spinner">
+                                    <i class="fas fa-spinner"></i>
+                                </div>
+                                <span>読み込み中...</span>
+                            </div>
+                            <div class="filter-indicator">
+                                <div class="pulse-ring"></div>
+                                <i class="fas fa-hand-pointer"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -236,63 +269,6 @@
 
         <div class="card modern-card">
             <div class="card-body">
-
-                <!-- 週次サマリー -->
-                <div class="card mb-4 border-info" style="margin-top: 20px;">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-chart-pie me-2"></i>今週の指導サマリー
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row" id="weekly-summary">
-                            <!-- サマリー内容はJavaScriptで動的に生成 -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 今週の注目ポイント -->
-                <div class="card mb-4 border-warning">
-                    <div class="card-header bg-warning text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-star me-2"></i>今週の注目ポイント
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row" id="mentor-alerts">
-                            <!-- アラート内容はJavaScriptで動的に生成 -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- メンティ比較分析 -->
-                {% if mentees|length > 1 %}
-                <div class="card mb-4 border-secondary">
-                    <div class="card-header bg-secondary text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-balance-scale me-2"></i>メンティ比較分析
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row" id="mentee-comparison">
-                            <!-- 比較分析内容はJavaScriptで動的に生成 -->
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- フィルター状態表示 -->
-                <div class="alert alert-info alert-dismissible fade show" id="progress-filter-status" style="display: none;">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-filter me-2"></i>
-                            <span id="progress-filter-status-text"></span>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearProgressFilter()">
-                            <i class="fas fa-undo-alt me-1"></i>フィルター解除
-                        </button>
-                    </div>
-                </div>
 
                 <!-- 商品群別進捗サマリー -->
                 {% if product_group_progress %}
@@ -519,8 +495,7 @@
                                              {% if pg.images %}
                                                  {% set images = pg.images|from_json %}
                                                  {% if images %}
-                                                     data-bs-toggle="tooltip" 
-                                                     title="画像: {{ images|length }}枚"
+                                                     style="background-image: url('{{ url_for('uploaded_file', filename=images[0]) }}');"
                                                  {% endif %}
                                              {% endif %}>
                                             <div class="product-card-header">
@@ -572,6 +547,65 @@
                     </div>
                 </div>
                 {% endif %}
+
+                <!-- 週次サマリー -->
+                <div class="card mb-4 border-info" style="margin-top: 20px;">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>今週の指導サマリー
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="weekly-summary">
+                            <!-- サマリー内容はJavaScriptで動的に生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 今週の注目ポイント -->
+                <div class="card mb-4 border-warning">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-star me-2"></i>今週の注目ポイント
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="mentor-alerts">
+                            <!-- アラート内容はJavaScriptで動的に生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- メンティ比較分析 -->
+                {% if mentees|length > 0 %}
+                <div class="card mb-4 border-secondary">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-balance-scale me-2"></i>メンティ比較分析
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="mentee-comparison">
+                            <!-- 比較分析内容はJavaScriptで動的に生成 -->
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- フィルター状態表示 -->
+                <div class="alert alert-info alert-dismissible fade show" id="progress-filter-status" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-filter me-2"></i>
+                            <span id="progress-filter-status-text"></span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearProgressFilter()">
+                            <i class="fas fa-undo-alt me-1"></i>フィルター解除
+                        </button>
+                    </div>
+                </div>
+
+
 
                 {% if reports %}
                 <h4 class="mb-3">{% if selected_mentee %}{{ selected_mentee }}の{% else %}全メンティの{% endif %}報告一覧</h4>
@@ -632,6 +666,308 @@
 </div>
 
 <style>
+/* 統合ヘッダーのスタイル */
+.unified-header-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    padding: 8px 0;
+    margin-bottom: 15px;
+    border-radius: 15px;
+    box-shadow: 
+        0 8px 20px rgba(102, 126, 234, 0.4),
+        0 3px 8px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.unified-header-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+        linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%);
+    pointer-events: none;
+}
+
+.unified-header-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.header-main-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 0 15px;
+}
+
+.header-left-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.header-right-section {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+}
+
+.unified-header-section:hover {
+    transform: translateY(-2px) scale(1.005);
+    box-shadow: 
+        0 15px 35px rgba(102, 126, 234, 0.5),
+        0 6px 15px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.header-background-effects {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    animation: float 8s ease-in-out infinite;
+}
+
+.particle:nth-child(1) { top: 15%; left: 10%; animation-delay: 0s; }
+.particle:nth-child(2) { top: 25%; left: 85%; animation-delay: 1s; }
+.particle:nth-child(3) { top: 45%; left: 15%; animation-delay: 2s; }
+.particle:nth-child(4) { top: 65%; left: 75%; animation-delay: 3s; }
+.particle:nth-child(5) { top: 75%; left: 25%; animation-delay: 4s; }
+.particle:nth-child(6) { top: 35%; left: 55%; animation-delay: 5s; }
+.particle:nth-child(7) { top: 85%; left: 65%; animation-delay: 6s; }
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.6; }
+    50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+}
+
+.filter-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    position: relative;
+    z-index: 2;
+}
+
+.filter-label {
+    display: flex;
+    align-items: center;
+    position: relative;
+    font-weight: 600;
+    color: white;
+    font-size: 0.9rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.label-icon {
+    position: relative;
+    margin-right: 6px;
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.label-icon i {
+    font-size: 0.95rem;
+    color: #ffd700;
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.label-text {
+    position: relative;
+    z-index: 1;
+}
+
+.label-glow {
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    background: linear-gradient(45deg, rgba(255, 215, 0, 0.3), rgba(255, 119, 198, 0.3));
+    border-radius: 15px;
+    filter: blur(10px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.filter-label:hover .label-glow {
+    opacity: 1;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.select-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.header-select {
+    min-width: 180px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 7px 30px 7px 12px;
+    font-size: 0.85rem;
+    background: rgba(255, 255, 255, 0.95);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+    color: #495057;
+    backdrop-filter: blur(15px);
+    appearance: none;
+    cursor: pointer;
+}
+
+.header-select:focus {
+    border-color: #ffd700;
+    box-shadow: 
+        0 0 0 4px rgba(255, 215, 0, 0.3),
+        0 10px 25px rgba(0, 0, 0, 0.1);
+    outline: none;
+    background: white;
+    transform: scale(1.02);
+}
+
+.header-select:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+    background: white;
+    transform: translateY(-1px);
+}
+
+.select-arrow {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #667eea;
+    font-size: 1rem;
+    pointer-events: none;
+    transition: transform 0.3s ease;
+}
+
+.select-wrapper:hover .select-arrow {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.select-glow {
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(45deg, rgba(102, 126, 234, 0.3), rgba(255, 119, 198, 0.3));
+    border-radius: 18px;
+    filter: blur(8px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.select-wrapper:hover .select-glow {
+    opacity: 1;
+}
+
+.filter-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.filter-indicator {
+    position: relative;
+    color: white;
+    font-size: 1.3rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.filter-indicator:hover {
+    transform: scale(1.1);
+}
+
+.pulse-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    border: 2px solid rgba(255, 215, 0, 0.6);
+    border-radius: 50%;
+    animation: pulse-ring 2s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.4);
+        opacity: 0;
+    }
+}
+
 /* 完了済み商品群のスタイル */
 .completed-card {
     opacity: 0.7;
@@ -923,18 +1259,261 @@
     .sidebar-nav {
         width: 250px;
     }
+    
+    .filter-container {
+        gap: 20px;
+    }
+    
+    .header-select {
+        min-width: 220px;
+        font-size: 1rem;
+        padding: 12px 45px 12px 18px;
+    }
+    
+    .filter-label {
+        font-size: 1.2rem;
+    }
+    
+    .label-text {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .unified-header-section {
+        padding: 8px 0;
+        margin-bottom: 15px;
+        border-radius: 12px;
+    }
+    
+    .header-main-section {
+        flex-direction: column;
+        gap: 10px;
+        padding: 0 12px;
+    }
+    
+    .header-left-section {
+        gap: 6px;
+    }
+    
+    .header-right-section {
+        padding: 6px 10px;
+        border-radius: 10px;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .filter-container {
+        flex-direction: row;
+        gap: 8px;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .header-select {
+        min-width: 160px;
+        flex: 1;
+        max-width: 220px;
+        padding: 6px 25px 6px 10px;
+        font-size: 0.8rem;
+    }
+    
+    .filter-label {
+        font-size: 0.85rem;
+        letter-spacing: 0.2px;
+    }
+    
+    .label-text {
+        font-size: 0.8rem;
+    }
+    
+    .label-icon {
+        padding: 3px;
+        margin-right: 4px;
+    }
+    
+    .label-icon i {
+        font-size: 0.9rem;
+    }
+    
+    .filter-indicator {
+        font-size: 0.9rem;
+    }
+    
+    .hero-main-title {
+        font-size: 1.3rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 0.75rem;
+    }
+    
+    .hero-stats {
+        gap: 6px;
+    }
+    
+    .stat-card {
+        padding: 4px 7px;
+        gap: 4px;
+    }
+    
+    .stat-number {
+        font-size: 0.85rem;
+    }
+    
+    .stat-label {
+        font-size: 0.55rem;
+    }
+    
+    .particle {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .unified-header-section {
+        padding: 6px 0;
+        margin-bottom: 12px;
+        border-radius: 10px;
+    }
+    
+    .header-main-section {
+        gap: 8px;
+        padding: 0 10px;
+    }
+    
+    .header-left-section {
+        gap: 5px;
+    }
+    
+    .header-right-section {
+        padding: 5px 8px;
+        border-radius: 8px;
+    }
+    
+    .filter-container {
+        gap: 6px;
+    }
+    
+    .header-select {
+        min-width: 140px;
+        padding: 5px 20px 5px 8px;
+        font-size: 0.75rem;
+    }
+    
+    .filter-label {
+        font-size: 0.8rem;
+        letter-spacing: 0.1px;
+    }
+    
+    .label-text {
+        font-size: 0.75rem;
+    }
+    
+    .label-icon {
+        padding: 3px;
+        margin-right: 3px;
+    }
+    
+    .label-icon i {
+        font-size: 0.8rem;
+    }
+    
+    .hero-main-title {
+        font-size: 1.2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 0.7rem;
+    }
+    
+    .hero-stats {
+        gap: 4px;
+    }
+    
+    .stat-card {
+        padding: 3px 6px;
+        gap: 3px;
+    }
+    
+    .stat-number {
+        font-size: 0.8rem;
+    }
+    
+    .stat-label {
+        font-size: 0.5rem;
+    }
 }
 
 /* ヒーローセクション */
-.hero-section {
-    position: relative;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 15px;
-    padding: 20px 25px;
-    margin: 0 auto 20px auto;
-    max-width: 1200px;
-    overflow: hidden;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+/* 統合ヘッダー内のヒーロー要素 */
+.hero-title {
+    margin-bottom: 0;
+    text-align: left;
+}
+
+.hero-main-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 4px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    color: white;
+    line-height: 1.1;
+}
+
+.hero-subtitle {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    margin-bottom: 0;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    color: white;
+}
+
+.hero-stats {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.stat-icon {
+    color: #ffd700;
+    font-size: 0.85rem;
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.stat-number {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1;
 }
 
 .hero-background {
@@ -1305,7 +1884,7 @@
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-size 0.4s ease;
     position: relative;
     overflow: hidden;
-    background-size: cover;
+    background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
     min-height: 200px;
@@ -1346,7 +1925,7 @@
     transform: translateY(-8px) scale(1.05);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15), 0 0 0 2px rgba(255, 255, 255, 0.3);
     z-index: 10;
-    background-size: 120%;
+    background-size: contain;
     border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -1690,7 +2269,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // メンティ選択が変更されたときにボタンの状態を更新
     const menteeSelect = document.getElementById('mentee-filter');
     if (menteeSelect) {
-        menteeSelect.addEventListener('change', updateDetailAnalysisButton);
+        menteeSelect.addEventListener('change', function() {
+            updateDetailAnalysisButton();
+            updateMenteeComparison();
+        });
     }
     
     const filterButtons = document.querySelectorAll('input[name="progress-filter"]');
@@ -1761,6 +2343,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // メンティ比較機能
     generateMenteeComparison();
+    
+    // URLパラメータからメンティが選択されている場合の処理
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlMentee = urlParams.get('mentee');
+    if (urlMentee) {
+        const menteeSelect = document.getElementById('mentee-filter');
+        if (menteeSelect) {
+            menteeSelect.value = urlMentee;
+        }
+        // メンティ比較分析を再生成
+        setTimeout(() => {
+            generateMenteeComparison();
+        }, 100);
+    }
     
     // インタラクティブ効果の初期化
     initializeInteractiveEffects();
@@ -2081,14 +2677,44 @@ function generateMenteeComparison() {
     const productGroups = {{ product_group_progress|tojson|safe }};
     const mentees = {{ mentees|tojson|safe }};
     
-    if (mentees.length <= 1) return;
+    // デバッグ用ログ
+    console.log('メンティ比較分析 - データ確認:', {
+        productGroups,
+        mentees,
+        productGroupsLength: productGroups.length
+    });
+    
+    if (mentees.length === 0) return;
+    
+    // 選択されたメンティを取得（URLパラメータまたは選択ボックスから）
+    const menteeSelect = document.getElementById('mentee-filter');
+    let selectedMentee = menteeSelect ? menteeSelect.value : null;
+    
+    // URLパラメータからも取得
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlMentee = urlParams.get('mentee');
+    if (urlMentee && (!selectedMentee || selectedMentee === '')) {
+        selectedMentee = urlMentee;
+    }
+    
+    // 選択されたメンティがいる場合は、そのメンティのみを表示
+    const displayMentees = selectedMentee ? 
+        mentees.filter(mentee => mentee.name === selectedMentee) : 
+        mentees;
+    
+    // デバッグ用ログ
+    console.log('選択されたメンティ:', selectedMentee);
+    console.log('表示するメンティ:', displayMentees);
+    
+    if (displayMentees.length === 0) return;
     
     // メンティ別の統計を計算
-    const menteeStats = mentees.map(mentee => {
+    const menteeStats = displayMentees.map(mentee => {
         const menteeGroups = productGroups.filter(pg => pg.mentee_name === mentee.name);
         const totalGroups = menteeGroups.length;
         const completedGroups = menteeGroups.filter(pg => pg.is_completed).length;
-        const activeGroups = totalGroups - completedGroups;
+        const cancelledGroups = menteeGroups.filter(pg => pg.is_cancelled).length;
+        const activeGroups = totalGroups - completedGroups - cancelledGroups;
         
         // 今月の新規企画数を計算
         const currentMonth = new Date().getMonth();
@@ -2098,44 +2724,72 @@ function generateMenteeComparison() {
             return createdDate.getMonth() === currentMonth && createdDate.getFullYear() === currentYear;
         }).length;
         
+        // デバッグ用ログ
+        console.log(`メンティ ${mentee.name}:`, {
+            totalGroups,
+            completedGroups,
+            cancelledGroups,
+            activeGroups,
+            newProjectsThisMonth,
+            allGroups: menteeGroups
+        });
+        
         
         return {
             name: mentee.name,
             totalGroups,
             completedGroups,
             activeGroups,
+            cancelledGroups,
             newProjectsThisMonth
         };
     });
     
     // 比較表示
+    const columnClass = selectedMentee ? 'col-md-12' : 'col-md-6';
+    
+    // ヘッダータイトルを動的に更新
+    const headerElement = document.querySelector('.card-header h5 .fas.fa-balance-scale').parentElement;
+    if (headerElement && selectedMentee) {
+        headerElement.innerHTML = `<i class="fas fa-user me-2"></i>${selectedMentee}の分析`;
+    } else if (headerElement) {
+        headerElement.innerHTML = '<i class="fas fa-balance-scale me-2"></i>メンティ比較分析';
+    }
+    
     comparisonContainer.innerHTML = menteeStats.map(stat => `
-        <div class="col-md-6 mb-3">
+        <div class="${columnClass} mb-3">
             <div class="card h-100">
                 <div class="card-header">
                     <h6 class="mb-0">${stat.name}</h6>
                 </div>
                 <div class="card-body">
                     <div class="row text-center">
-                        <div class="col-4">
+                        <div class="col-3">
                             <div class="text-primary">
                                 <i class="fas fa-tasks fa-2x mb-2"></i>
                                 <h5>${stat.totalGroups}</h5>
                                 <small>総数</small>
                             </div>
                         </div>
-                        <div class="col-4">
+                        <div class="col-3">
                             <div class="text-success">
                                 <i class="fas fa-check-circle fa-2x mb-2"></i>
                                 <h5>${stat.completedGroups}</h5>
                                 <small>完了</small>
                             </div>
                         </div>
-                        <div class="col-4">
+                        <div class="col-3">
                             <div class="text-warning">
                                 <i class="fas fa-clock fa-2x mb-2"></i>
                                 <h5>${stat.activeGroups}</h5>
                                 <small>進行中</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="text-secondary">
+                                <i class="fas fa-ban fa-2x mb-2"></i>
+                                <h5>${stat.cancelledGroups}</h5>
+                                <small>企画中止</small>
                             </div>
                         </div>
                     </div>
@@ -2177,6 +2831,18 @@ function filterByMentee() {
     
     // ページをリロードしてフィルタリング
     window.location.href = url.toString();
+}
+
+// メンティ比較分析を動的に更新
+function updateMenteeComparison() {
+    const menteeSelect = document.getElementById('mentee-filter');
+    const selectedMentee = menteeSelect ? menteeSelect.value : null;
+    
+    // メンティ比較分析を再生成
+    generateMenteeComparison();
+    
+    // 週次サマリーも更新
+    generateWeeklySummary();
 }
 
 // ページ読み込み時にスクロール位置を復元
