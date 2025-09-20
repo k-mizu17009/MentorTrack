@@ -2963,6 +2963,48 @@ function simplePreview() {
         printWindow.document.close();
         printWindow.focus();
         
+        // プレビュー内でフィルタとメンティ選択を機能させるためのスクリプトを注入
+        try {
+            const initScript = `
+                (function(){
+                    function applyFilter(value){
+                        var active = document.getElementById('active-products');
+                        var completed = document.getElementById('completed-products');
+                        var cancelled = document.getElementById('cancelled-products');
+                        if(!active || !completed || !cancelled){ return; }
+                        active.style.display = (value==='active' || value==='all') ? 'block' : 'none';
+                        completed.style.display = (value==='completed' || value==='all') ? 'block' : 'none';
+                        cancelled.style.display = (value==='cancelled' || value==='all') ? 'block' : 'none';
+                    }
+                    var radios = document.querySelectorAll('input[name="progress-filter"]');
+                    radios.forEach(function(r){
+                        r.addEventListener('change', function(){ applyFilter(this.value); });
+                    });
+                    var checked = document.querySelector('input[name="progress-filter"]:checked');
+                    if(checked){ applyFilter(checked.value); }
+
+                    // プレビューからメンティ選択を反映（親で再読み込み＋自動再プレビュー）
+                    window.filterByMentee = function(){
+                        var select = document.getElementById('mentee-filter');
+                        var mentee = select ? select.value : '';
+                        try {
+                            if (window.opener && !window.opener.closed) {
+                                var url = new URL(window.opener.location.href);
+                                if (mentee) { url.searchParams.set('mentee', mentee); } else { url.searchParams.delete('mentee'); }
+                                url.searchParams.set('auto_preview', '1');
+                                window.opener.location.href = url.toString();
+                                window.close();
+                            }
+                        } catch(e) { console.error(e); }
+                    };
+                })();
+            `;
+            const s = printWindow.document.createElement('script');
+            s.type = 'text/javascript';
+            s.text = initScript;
+            printWindow.document.body.appendChild(s);
+        } catch (e) { console.error('プレビュー初期化エラー', e); }
+        
         console.log('プレビューウィンドウを開きました');
         
     } catch (error) {
@@ -3076,6 +3118,19 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.error('プレビューボタンが見つかりません');
     }
+
+    // URLに auto_preview=1 が付与されている場合は自動でプレビューを開く
+    (function(){
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('auto_preview') === '1') {
+            setTimeout(() => {
+                simplePreview();
+                const url = new URL(window.location);
+                url.searchParams.delete('auto_preview');
+                window.history.replaceState(null, '', url.toString());
+            }, 300);
+        }
+    })();
 
     // シンプルフィルター機能の初期化
     console.log('フィルター初期化を開始します...');
