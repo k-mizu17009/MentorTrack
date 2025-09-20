@@ -273,12 +273,24 @@
             </div>
         </div>
 
+        <!-- データ埋め込み用隠し要素 -->
+        <script type="application/json" id="mentees-data">{{ mentees|tojson|safe }}</script>
+        <script type="application/json" id="product-groups-data">{{ product_group_progress|tojson|safe }}</script>
+
         <div class="card modern-card">
             <div class="card-body">
 
+                <!-- 印刷用ヘッダー（通常は非表示） -->
+                <div class="print-header" style="display: none;">
+                    <h1>商品群別進捗サマリー</h1>
+                    <p>作成日時: <span id="print-date"></span></p>
+                    <p>メンター: {{ current_user.name }}</p>
+                    <p>対象メンティ: <span id="print-mentee">全メンティ</span></p>
+                </div>
+
                 <!-- 商品群別進捗サマリー -->
                 {% if product_group_progress %}
-                <div class="card mb-4">
+                <div class="card mb-4" id="progress-summary-card">
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
@@ -291,6 +303,16 @@
                                 </small>
                             </div>
                             <div class="d-flex gap-2">
+                                <!-- 印刷ボタン -->
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-success btn-sm" id="print-summary-btn" title="ミーティング用配布資料として印刷">
+                                        <i class="fas fa-print me-1"></i>配布資料印刷
+                                    </button>
+                                    <button class="btn btn-outline-success btn-sm" id="preview-summary-btn" title="印刷プレビューを表示">
+                                        <i class="fas fa-eye me-1"></i>プレビュー
+                                    </button>
+                                </div>
+                                
                                 <!-- フィルターボタン -->
                                 <div class="btn-group" role="group" aria-label="フィルター">
                                     <input type="radio" class="btn-check" name="progress-filter" id="progress-active" value="active" checked>
@@ -1202,6 +1224,138 @@
     }
 }
 
+/* 印刷用CSS */
+@media print {
+    /* ページ設定 */
+    @page {
+        size: A4;
+        margin: 1cm;
+    }
+    
+    /* 不要な要素を非表示 */
+    .sidebar-nav,
+    .unified-header-section,
+    .navbar,
+    .footer,
+    .no-print {
+        display: none !important;
+    }
+    
+    /* 印刷時にボタンを非表示（フィルターボタンは除く） */
+    .btn:not(.btn-check):not([for]) {
+        display: none !important;
+    }
+    
+    /* フィルターボタンのラベルも非表示 */
+    .card-header .btn-group {
+        display: none !important;
+    }
+    
+    /* 印刷用ヘッダー */
+    .print-header {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #000;
+    }
+    
+    /* 商品群カードの印刷スタイル */
+    .product-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        margin-bottom: 15px;
+        border: 1px solid #000 !important;
+        background: white !important;
+        box-shadow: none !important;
+    }
+    
+    /* 商品群画像の印刷最適化 */
+    .product-image {
+        max-width: 80px !important;
+        max-height: 80px !important;
+        border: 1px solid #ccc !important;
+    }
+    
+    /* 進捗ステージの印刷スタイル */
+    .badge {
+        border: 1px solid #000 !important;
+        background: white !important;
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+    
+    /* 進捗状況の色分け（白黒印刷対応） */
+    .badge.bg-success::after { content: " [順調]"; }
+    .badge.bg-warning::after { content: " [注意]"; }
+    .badge.bg-danger::after { content: " [停滞]"; }
+    .badge.bg-secondary::after { content: " [完了]"; }
+    
+    /* セクション区切り */
+    .product-group-section {
+        page-break-before: auto;
+    }
+    
+    .product-group-section h6 {
+        page-break-after: avoid;
+        font-weight: bold;
+        font-size: 14pt;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #000;
+        padding-bottom: 5px;
+    }
+    
+    /* カードタイトル */
+    .card-title {
+        font-size: 12pt !important;
+        font-weight: bold !important;
+        color: #000 !important;
+    }
+    
+    /* カードテキスト */
+    .card-text {
+        font-size: 10pt !important;
+        color: #000 !important;
+        line-height: 1.3 !important;
+    }
+    
+    /* 日付情報 */
+    .text-muted {
+        color: #666 !important;
+        font-size: 9pt !important;
+    }
+    
+    /* 全体のフォント調整 */
+    body {
+        font-size: 10pt !important;
+        line-height: 1.2 !important;
+        color: #000 !important;
+        background: white !important;
+    }
+    
+    /* カードレイアウト調整 */
+    .row {
+        margin: 0 !important;
+    }
+    
+    .col-md-6, .col-lg-4 {
+        width: 50% !important;
+        float: left !important;
+        padding: 5px !important;
+    }
+    
+    /* 改ページ制御 */
+    .page-break {
+        page-break-before: always;
+    }
+    
+    /* 印刷時のマージン調整 */
+    .card-body {
+        padding: 10px !important;
+    }
+}
+
 /* 完了済み商品群のスタイル */
 .completed-card {
     opacity: 0.7;
@@ -1222,6 +1376,23 @@
     background-color: rgba(255, 255, 255, 0.2);
     border-color: #fff;
     color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #fff;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-outline-light {
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.btn-outline-light:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
 }
 
 /* 時間ベースの警告レベルスタイル */
@@ -1969,9 +2140,24 @@
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
+.action-btn:active {
+    transform: translateY(-1px) scale(0.98);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
 .action-btn:hover .action-arrow {
     transform: translateX(5px);
     color: #2c3e50;
+}
+
+.action-btn.clicked {
+    animation: buttonClick 0.3s ease;
+}
+
+@keyframes buttonClick {
+    0% { transform: translateY(-3px) scale(1); }
+    50% { transform: translateY(-1px) scale(0.95); }
+    100% { transform: translateY(-3px) scale(1); }
 }
 
 .primary-action .action-icon { background: linear-gradient(135deg, #3498db, #2980b9); }
@@ -2418,6 +2604,120 @@
 </style>
 
 <script>
+// データ取得ヘルパー関数
+function getMenteesData() {
+    try {
+        const element = document.getElementById('mentees-data');
+        return element ? JSON.parse(element.textContent) : [];
+    } catch (error) {
+        console.error('メンティデータの取得に失敗:', error);
+        return [];
+    }
+}
+
+function getProductGroupsData() {
+    try {
+        const element = document.getElementById('product-groups-data');
+        return element ? JSON.parse(element.textContent) : [];
+    } catch (error) {
+        console.error('商品群データの取得に失敗:', error);
+        return [];
+    }
+}
+
+// シンプルな印刷機能
+function simplePrint() {
+    console.log('シンプル印刷機能を実行します');
+    
+    try {
+        // 印刷用ヘッダーの日時を更新
+        const printDate = document.getElementById('print-date');
+        if (printDate) {
+            const now = new Date();
+            const dateStr = now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日 ' +
+                          now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            printDate.textContent = dateStr;
+        }
+        
+        // メンティ選択情報を更新
+        const printMentee = document.getElementById('print-mentee');
+        const menteeSelect = document.getElementById('mentee-filter');
+        if (printMentee && menteeSelect) {
+            const selectedValue = menteeSelect.value;
+            printMentee.textContent = selectedValue && selectedValue !== '' ? selectedValue : '全メンティ';
+        }
+        
+        console.log('印刷ダイアログを開きます');
+        window.print();
+        
+    } catch (error) {
+        console.error('印刷でエラーが発生:', error);
+        alert('印刷でエラーが発生しました: ' + error.message);
+    }
+}
+
+// シンプルなプレビュー機能
+function simplePreview() {
+    console.log('シンプルプレビュー機能を実行します');
+    
+    try {
+        // 印刷用ヘッダーの日時を更新
+        const printDate = document.getElementById('print-date');
+        if (printDate) {
+            const now = new Date();
+            const dateStr = now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日 ' +
+                          now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            printDate.textContent = dateStr;
+        }
+        
+        // 新しいウィンドウでプレビューを開く
+        const printWindow = window.open('', '_blank', 'width=900,height=700');
+        
+        if (!printWindow) {
+            alert('ポップアップがブロックされています。ブラウザの設定でポップアップを許可してください。');
+            return;
+        }
+        
+        // 現在のページのコンテンツをコピー
+        const summaryCard = document.getElementById('progress-summary-card');
+        const printHeader = document.querySelector('.print-header');
+        
+        if (!summaryCard) {
+            alert('印刷対象のコンテンツが見つかりません');
+            printWindow.close();
+            return;
+        }
+        
+        // プレビュー用のシンプルなHTML
+        const previewHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>印刷プレビュー</title>' +
+            '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">' +
+            '<style>body{font-family:Arial,sans-serif;margin:20px;background:#f5f5f5;}' +
+            '.preview-container{max-width:210mm;margin:0 auto;background:white;padding:1cm;box-shadow:0 0 20px rgba(0,0,0,0.1);}' +
+            '.print-header{display:block!important;text-align:center;margin-bottom:20px;padding-bottom:10px;border-bottom:2px solid #000;}' +
+            '.btn{margin:5px;}' +
+            '@media print{@page{size:A4;margin:1cm;}body{background:white;}.preview-toolbar{display:none!important;}.btn{display:none!important;}}' +
+            '</style></head><body>' +
+            '<div class="preview-toolbar" style="text-align:center;margin-bottom:20px;">' +
+            '<button class="btn btn-success" onclick="window.print()">印刷実行</button>' +
+            '<button class="btn btn-secondary" onclick="window.close()">閉じる</button>' +
+            '</div>' +
+            '<div class="preview-container">' +
+            (printHeader ? printHeader.outerHTML : '') +
+            summaryCard.outerHTML +
+            '</div></body></html>';
+        
+        printWindow.document.write(previewHTML);
+        printWindow.document.close();
+        printWindow.focus();
+        
+        console.log('プレビューウィンドウを開きました');
+        
+    } catch (error) {
+        console.error('プレビューでエラーが発生:', error);
+        alert('プレビューでエラーが発生しました: ' + error.message);
+    }
+}
+
 // モダンUI初期化関数
 function initializeModernUI() {
     console.log('Initializing modern UI');
@@ -2509,65 +2809,49 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    const filterButtons = document.querySelectorAll('input[name="progress-filter"]');
-    const activeSection = document.getElementById('active-products');
-    const completedSection = document.getElementById('completed-products');
-    const cancelledSection = document.getElementById('cancelled-products');
+    // 印刷ボタンのイベントリスナーを追加
+    const printBtn = document.getElementById('print-summary-btn');
+    const previewBtn = document.getElementById('preview-summary-btn');
     
-    filterButtons.forEach(button => {
-        button.addEventListener('change', function() {
-            const filterValue = this.value;
-            
-            switch(filterValue) {
-                case 'active':
-                    activeSection.style.display = 'block';
-                    if (completedSection) {
-                        completedSection.style.display = 'none';
-                    }
-                    if (cancelledSection) {
-                        cancelledSection.style.display = 'none';
-                    }
-                    break;
-                case 'completed':
-                    activeSection.style.display = 'none';
-                    if (completedSection) {
-                        completedSection.style.display = 'block';
-                        // 完了済みセクションを展開
-                        const collapse = document.getElementById('completedCollapse');
-                        if (collapse && !collapse.classList.contains('show')) {
-                            const bsCollapse = new bootstrap.Collapse(collapse, {show: true});
-                        }
-                    }
-                    if (cancelledSection) {
-                        cancelledSection.style.display = 'none';
-                    }
-                    break;
-                case 'cancelled':
-                    activeSection.style.display = 'none';
-                    if (completedSection) {
-                        completedSection.style.display = 'none';
-                    }
-                    if (cancelledSection) {
-                        cancelledSection.style.display = 'block';
-                        // 企画中止セクションを展開
-                        const collapse = document.getElementById('cancelled-products-content');
-                        if (collapse && !collapse.classList.contains('show')) {
-                            const bsCollapse = new bootstrap.Collapse(collapse, {show: true});
-                        }
-                    }
-                    break;
-                case 'all':
-                    activeSection.style.display = 'block';
-                    if (completedSection) {
-                        completedSection.style.display = 'block';
-                    }
-                    if (cancelledSection) {
-                        cancelledSection.style.display = 'block';
-                    }
-                    break;
-            }
+    if (printBtn) {
+        printBtn.addEventListener('click', function() {
+            console.log('印刷ボタンがクリックされました（イベントリスナー）');
+            simplePrint();
         });
-    });
+        console.log('印刷ボタンにイベントリスナーを追加しました');
+    } else {
+        console.error('印刷ボタンが見つかりません');
+    }
+    
+    if (previewBtn) {
+        previewBtn.addEventListener('click', function() {
+            console.log('プレビューボタンがクリックされました（イベントリスナー）');
+            simplePreview();
+        });
+        console.log('プレビューボタンにイベントリスナーを追加しました');
+    } else {
+        console.error('プレビューボタンが見つかりません');
+    }
+
+    // シンプルフィルター機能の初期化
+    console.log('フィルター初期化を開始します...');
+    try {
+        initializeSimpleFilter();
+        console.log('フィルター初期化が完了しました');
+    } catch (error) {
+        console.error('フィルター初期化でエラーが発生:', error);
+    }
+    
+    // デバッグ: 初期化後の状態確認
+    setTimeout(() => {
+        console.log('=== 初期化後のデバッグ情報 ===');
+        const buttons = document.querySelectorAll('input[name="progress-filter"]');
+        console.log('フィルターボタン数:', buttons.length);
+        buttons.forEach((btn, i) => {
+            console.log(`ボタン${i+1}: ${btn.id} - イベントリスナー数:`, getEventListeners ? getEventListeners(btn) : 'N/A');
+        });
+        console.log('==============================');
+    }, 2000);
     
     // 指導アラート機能
     generateMentorAlerts();
@@ -2595,6 +2879,37 @@ document.addEventListener('DOMContentLoaded', function() {
     // インタラクティブ効果の初期化
     initializeInteractiveEffects();
     
+    // フィルターのデバッグ情報を表示
+    setTimeout(() => {
+        console.log('=== フィルターデバッグ情報 ===');
+        const filterButtons = document.querySelectorAll('input[name="progress-filter"]');
+        console.log('フィルターボタン数:', filterButtons.length);
+        filterButtons.forEach((btn, i) => {
+            console.log(`ボタン ${i+1}: ${btn.id} = ${btn.value} (checked: ${btn.checked})`);
+        });
+        
+        const sections = ['active-products', 'completed-products', 'cancelled-products'];
+        sections.forEach(id => {
+            const section = document.getElementById(id);
+            console.log(`セクション ${id}:`, section ? 'あり' : 'なし');
+        });
+        console.log('========================');
+        
+        // グローバル関数として利用可能にする
+        window.testFilter = testFilter;
+        window.resetFilters = resetFilters;
+        window.printProgressSummary = printProgressSummary;
+        window.showPrintPreview = showPrintPreview;
+        
+        console.log('デバッグ関数をグローバルに登録しました:');
+        console.log('- testFilter("active") : 進行中のみ表示');
+        console.log('- testFilter("completed") : 完了済みのみ表示');
+        console.log('- testFilter("all") : 全て表示');
+        console.log('- resetFilters() : フィルターリセット');
+        console.log('- printProgressSummary() : 印刷実行');
+        console.log('- showPrintPreview() : プレビュー表示');
+    }, 1000);
+    
     // サイドバースクロール制御
     initializeSidebarScroll();
 });
@@ -2604,6 +2919,12 @@ function initializeInteractiveEffects() {
     // アクションボタンのクリック効果
     document.querySelectorAll('.action-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
+            // クリックアニメーション
+            this.classList.add('clicked');
+            setTimeout(() => {
+                this.classList.remove('clicked');
+            }, 300);
+            
             // リップル効果
             const ripple = document.createElement('span');
             const rect = this.getBoundingClientRect();
@@ -2728,7 +3049,7 @@ function generateMentorAlerts() {
     const alerts = [];
     
     // 商品群データからアラートを生成
-    const productGroups = {{ product_group_progress|tojson|safe }};
+    const productGroups = getProductGroupsData();
     
     // 停滞している商品群（15日以上報告なし）
     const stagnantGroups = productGroups.filter(pg => 
@@ -2838,7 +3159,7 @@ function generateMentorAlerts() {
 // 週次サマリー生成
 function generateWeeklySummary() {
     const summaryContainer = document.getElementById('weekly-summary');
-    const productGroups = {{ product_group_progress|tojson|safe }};
+    const productGroups = getProductGroupsData();
     
     // 統計データを計算
     const totalGroups = productGroups.length;
@@ -2908,8 +3229,8 @@ function generateMenteeComparison() {
     const comparisonContainer = document.getElementById('mentee-comparison');
     if (!comparisonContainer) return;
     
-    const productGroups = {{ product_group_progress|tojson|safe }};
-    const mentees = {{ mentees|tojson|safe }};
+    const productGroups = getProductGroupsData();
+    const mentees = getMenteesData();
     
     // デバッグ用ログ
     console.log('メンティ比較分析 - データ確認:', {
@@ -3100,19 +3421,50 @@ function setupComparisonFilter() {
 
 // セクションへのスクロール機能
 function scrollToSection(sectionId) {
+    console.log('Scrolling to section:', sectionId);
     const section = document.getElementById(sectionId);
+    
     if (section) {
+        // スクロール前にセクションが表示されているか確認
+        const sectionCard = section.closest('.card');
+        if (sectionCard) {
+            sectionCard.style.display = 'block';
+        }
+        
+        // セクションまでスクロール
         section.scrollIntoView({ 
             behavior: 'smooth',
-            block: 'start'
+            block: 'center'
         });
         
         // 視覚的なハイライト効果
-        section.style.transition = 'box-shadow 0.3s ease';
+        section.style.transition = 'all 0.3s ease';
         section.style.boxShadow = '0 0 20px rgba(0, 123, 255, 0.5)';
+        section.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
+        section.style.borderRadius = '8px';
+        
+        // サイドバーのボタンにアクティブ効果
+        const activeBtn = document.querySelector(`[onclick="scrollToSection('${sectionId}')"]`);
+        if (activeBtn) {
+            activeBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+            activeBtn.style.transform = 'translateX(5px)';
+            
+            setTimeout(() => {
+                activeBtn.style.backgroundColor = '';
+                activeBtn.style.transform = '';
+            }, 2000);
+        }
+        
         setTimeout(() => {
             section.style.boxShadow = '';
+            section.style.backgroundColor = '';
         }, 2000);
+        
+        console.log('Successfully scrolled to section:', sectionId);
+    } else {
+        console.error('Section not found:', sectionId);
+        // セクションが見つからない場合は通知
+        alert(`セクション「${sectionId}」が見つかりませんでした`);
     }
 }
 
@@ -3126,14 +3478,20 @@ function filterByProgressStatus(status) {
     
     console.log('Found product cards:', productCards.length);
     
-    // 全てのボタンのアクティブ状態をリセット
-    document.querySelectorAll('.progress-filter-buttons .btn').forEach(btn => {
+    // 全てのフィルターボタンのアクティブ状態をリセット
+    document.querySelectorAll('.progress-filter-buttons .filter-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     
     // クリックされたボタンをアクティブにする
-    if (event && event.target) {
-        event.target.classList.add('active');
+    const activeBtn = document.querySelector(`[onclick="filterByProgressStatus('${status}')"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+        // ボタンにフィードバック効果
+        activeBtn.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            activeBtn.style.transform = '';
+        }, 150);
     }
     
     let visibleCount = 0;
@@ -3234,7 +3592,7 @@ function viewMenteeAnalysis() {
     }
     
     // メンティ名からメンティIDを取得
-    const mentees = {{ mentees|tojson|safe }};
+    const mentees = getMenteesData();
     const mentee = mentees.find(m => m.name === selectedMentee);
     
     if (mentee) {
@@ -3344,7 +3702,7 @@ function updateDetailAnalysisButton() {
 
 // カードから詳細分析ページに遷移
 function viewMenteeAnalysisFromCard(menteeName) {
-    const mentees = {{ mentees|tojson|safe }};
+    const mentees = getMenteesData();
     const mentee = mentees.find(m => m.name === menteeName);
     
     if (mentee) {
@@ -3353,5 +3711,156 @@ function viewMenteeAnalysisFromCard(menteeName) {
         alert('メンティ情報が見つかりません。');
     }
 }
+
+// 旧印刷機能（削除済み）
+
+// 削除された印刷関連の複雑な関数群
+
+// 削除された複雑なフィルター関数群
+
+// シンプルなフィルター機能
+function initializeSimpleFilter() {
+    console.log('=== シンプルフィルター初期化開始 ===');
+    
+    // フィルターボタンを取得
+    const filterButtons = document.querySelectorAll('input[name="progress-filter"]');
+    console.log('フィルターボタン数:', filterButtons.length);
+    
+    // セクションを取得
+    const activeSection = document.getElementById('active-products');
+    const completedSection = document.getElementById('completed-products');
+    const cancelledSection = document.getElementById('cancelled-products');
+    
+    console.log('セクション状況:');
+    console.log('- active-products:', activeSection ? 'OK' : 'NG');
+    console.log('- completed-products:', completedSection ? 'OK' : 'NG');
+    console.log('- cancelled-products:', cancelledSection ? 'OK' : 'NG');
+    
+    if (filterButtons.length === 0) {
+        console.error('フィルターボタンが見つかりません');
+        return;
+    }
+    
+    // 各フィルターボタンにイベントを追加
+    filterButtons.forEach((button, index) => {
+        console.log(`ボタン ${index + 1}: ${button.id} (${button.value})`);
+        
+        button.addEventListener('change', function() {
+            console.log(`--- フィルター変更: ${this.value} ---`);
+            
+            // 全セクションを非表示
+            if (activeSection) {
+                activeSection.style.display = 'none';
+                console.log('active-products を非表示');
+            }
+            if (completedSection) {
+                completedSection.style.display = 'none';
+                console.log('completed-products を非表示');
+            }
+            if (cancelledSection) {
+                cancelledSection.style.display = 'none';
+                console.log('cancelled-products を非表示');
+            }
+            
+            // 選択されたセクションを表示
+            if (this.value === 'active' && activeSection) {
+                activeSection.style.display = 'block';
+                console.log('active-products を表示');
+            } else if (this.value === 'completed' && completedSection) {
+                completedSection.style.display = 'block';
+                console.log('completed-products を表示');
+                // 折りたたみを展開
+                const collapse = completedSection.querySelector('.collapse');
+                if (collapse) {
+                    collapse.classList.add('show');
+                }
+            } else if (this.value === 'cancelled' && cancelledSection) {
+                cancelledSection.style.display = 'block';
+                console.log('cancelled-products を表示');
+                // 折りたたみを展開
+                const collapse = cancelledSection.querySelector('.collapse');
+                if (collapse) {
+                    collapse.classList.add('show');
+                }
+            } else if (this.value === 'all') {
+                if (activeSection) {
+                    activeSection.style.display = 'block';
+                    console.log('active-products を表示');
+                }
+                if (completedSection) {
+                    completedSection.style.display = 'block';
+                    console.log('completed-products を表示');
+                }
+                if (cancelledSection) {
+                    cancelledSection.style.display = 'block';
+                    console.log('cancelled-products を表示');
+                }
+            }
+            
+            console.log('--- フィルター変更完了 ---');
+        });
+    });
+    
+    console.log('=== シンプルフィルター初期化完了 ===');
+}
+
+// 手動フィルターテスト関数（デバッグ用）
+function testFilter(filterValue) {
+    console.log(`手動フィルターテスト: ${filterValue}`);
+    
+    const activeSection = document.getElementById('active-products');
+    const completedSection = document.getElementById('completed-products');
+    const cancelledSection = document.getElementById('cancelled-products');
+    
+    // 全て非表示
+    if (activeSection) activeSection.style.display = 'none';
+    if (completedSection) completedSection.style.display = 'none';
+    if (cancelledSection) cancelledSection.style.display = 'none';
+    
+    // 選択されたものを表示
+    switch(filterValue) {
+        case 'active':
+            if (activeSection) activeSection.style.display = 'block';
+            console.log('進行中セクションを表示しました');
+            break;
+        case 'completed':
+            if (completedSection) completedSection.style.display = 'block';
+            console.log('完了済みセクションを表示しました');
+            break;
+        case 'cancelled':
+            if (cancelledSection) cancelledSection.style.display = 'block';
+            console.log('企画中止セクションを表示しました');
+            break;
+        case 'all':
+            if (activeSection) activeSection.style.display = 'block';
+            if (completedSection) completedSection.style.display = 'block';
+            if (cancelledSection) cancelledSection.style.display = 'block';
+            console.log('全セクションを表示しました');
+            break;
+    }
+}
+
+// フィルター機能の手動リセット（デバッグ用）
+function resetFilters() {
+    console.log('フィルターを手動リセットします');
+    
+    // 全てのフィルターボタンからイベントリスナーを削除
+    const filterButtons = document.querySelectorAll('input[name="progress-filter"]');
+    filterButtons.forEach(button => {
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+    });
+    
+    // フィルターを再初期化
+    initializeSimpleFilter();
+    
+    console.log('フィルターリセット完了');
+}
+
+// 削除された印刷準備関数
+
+// 旧プレビュー機能（削除済み）
+
+// 削除された複雑な関数群
 </script>
 {% endblock %}
