@@ -305,13 +305,10 @@
                                 </small>
                             </div>
                             <div class="d-flex gap-2">
-                                <!-- 印刷ボタン -->
+                                <!-- プレビューボタン（印刷はプレビュー画面から実行） -->
                                 <div class="btn-group" role="group">
-                                    <button class="btn btn-success btn-sm" id="print-summary-btn" title="ミーティング用配布資料として印刷">
-                                        <i class="fas fa-print me-1"></i>配布資料印刷
-                                    </button>
-                                    <button class="btn btn-outline-success btn-sm" id="preview-summary-btn" title="印刷プレビューを表示">
-                                        <i class="fas fa-eye me-1"></i>プレビュー
+                                    <button class="btn btn-success btn-sm" id="preview-summary-btn" title="印刷プレビューを表示">
+                                        <i class="fas fa-eye me-1"></i>プレビュー（印刷含む）
                                     </button>
                                 </div>
                                 
@@ -2529,21 +2526,65 @@
 
 .modern-product-card .card-title {
     color: white !important;
-    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9);
+    text-shadow:
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000,
+         0   -1px 0 #000,
+         0    1px 0 #000,
+        -1px  0    0 #000,
+         1px  0    0 #000;
     font-weight: 800;
     font-size: 1.1rem;
 }
 
 .modern-product-card .card-text {
     color: white !important;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
+    text-shadow:
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000,
+         0   -1px 0 #000,
+         0    1px 0 #000,
+        -1px  0    0 #000,
+         1px  0    0 #000;
     font-weight: 500;
 }
 
 .modern-product-card .text-muted {
     color: rgba(255, 255, 255, 0.95) !important;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
+    text-shadow:
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000,
+         0   -1px 0 #000,
+         0    1px 0 #000,
+        -1px  0    0 #000,
+         1px  0    0 #000;
     font-weight: 500;
+}
+
+/* カード内の全テキストへアウトラインを強制 */
+.modern-product-card .card-body *,
+.modern-product-card .badge span,
+.product-card-header,
+.product-card-header *,
+.product-card-body *,
+.product-info p,
+.product-name {
+    color: #fff !important;
+    text-shadow:
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000,
+         0   -1px 0 #000,
+         0    1px 0 #000,
+        -1px  0    0 #000,
+         1px  0    0 #000;
 }
 
 .modern-product-card .badge {
@@ -2861,6 +2902,8 @@ function simplePreview() {
             '.preview-container{max-width:210mm;margin:0 auto;background:white;padding:1cm;box-shadow:0 0 20px rgba(0,0,0,0.1);}' +
             '.print-header{display:block!important;text-align:center;margin-bottom:20px;padding-bottom:10px;border-bottom:2px solid #000;}' +
             '.btn{margin:5px;}' +
+            /* 画像上テキストのアウトライン（プレビュー専用） */
+            '.image-overlay, .image-overlay small, .image-overlay-title, .image-count-badge, .modern-product-card .card-body *, .product-card-header *, .product-card-body *, .product-info p, .product-name {color:#fff !important;text-shadow:-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000, 1px 0 0 #000;}' +
             '@media print{@page{size:A4;margin:1cm;}body{background:white;}.preview-toolbar{display:none!important;}.btn{display:none!important;}}' +
             '</style></head><body>' +
             '<div class="preview-toolbar" style="text-align:center;margin-bottom:20px;">' +
@@ -2975,19 +3018,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // 印刷ボタンのイベントリスナーを追加
-    const printBtn = document.getElementById('print-summary-btn');
+    // プレビューボタン（印刷含む）のイベントリスナーを追加
     const previewBtn = document.getElementById('preview-summary-btn');
     
-    if (printBtn) {
-        printBtn.addEventListener('click', function() {
-            console.log('印刷ボタンがクリックされました（イベントリスナー）');
-            simplePrint();
-        });
-        console.log('印刷ボタンにイベントリスナーを追加しました');
-    } else {
-        console.error('印刷ボタンが見つかりません');
-    }
+    // 旧印刷ボタンは廃止
     
     if (previewBtn) {
         previewBtn.addEventListener('click', function() {

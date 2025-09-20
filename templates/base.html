@@ -80,6 +80,36 @@
             transform: scale(1.05);
         }
         
+        /* 画像上テキストの視認性向上（白文字＋黒アウトライン） */
+        .text-outline {
+            color: #fff !important;
+            text-shadow:
+                -1px -1px 0 #000,
+                 1px -1px 0 #000,
+                -1px  1px 0 #000,
+                 1px  1px 0 #000,
+                 0   -1px 0 #000,
+                 0    1px 0 #000,
+                -1px  0    0 #000,
+                 1px  0    0 #000;
+        }
+        /* 主要なオーバーレイ要素へ適用 */
+        .image-overlay,
+        .image-overlay small,
+        .image-overlay-title,
+        .image-count-badge {
+            color: #fff !important;
+            text-shadow:
+                -1px -1px 0 #000,
+                 1px -1px 0 #000,
+                -1px  1px 0 #000,
+                 1px  1px 0 #000,
+                 0   -1px 0 #000,
+                 0    1px 0 #000,
+                -1px  0    0 #000,
+                 1px  0    0 #000;
+        }
+        
         /* ヒーロー画像の統一サイズ */
         .hero-image-container {
             width: 200px;
