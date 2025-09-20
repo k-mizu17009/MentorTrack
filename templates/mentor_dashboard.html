@@ -312,27 +312,20 @@
                                     </button>
                                 </div>
                                 
-                                <!-- フィルターボタン -->
-                                <div class="btn-group" role="group" aria-label="フィルター">
-                                    <input type="radio" class="btn-check" name="progress-filter" id="progress-active" value="active" checked>
-                                    <label class="btn btn-outline-light btn-sm" for="progress-active">
+                                <!-- 進捗フィルタボタン（カード内セクションの表示切替のみ） -->
+                                <div class="btn-group" role="group" aria-label="セクションフィルター">
+                                    <button type="button" class="btn btn-outline-light btn-sm" id="btn-filter-active">
                                         <i class="fas fa-play me-1"></i>進行中のみ
-                                    </label>
-                                    
-                                    <input type="radio" class="btn-check" name="progress-filter" id="progress-completed" value="completed">
-                                    <label class="btn btn-outline-light btn-sm" for="progress-completed">
+                                    </button>
+                                    <button type="button" class="btn btn-outline-light btn-sm" id="btn-filter-completed">
                                         <i class="fas fa-check me-1"></i>完了済みのみ
-                                    </label>
-                                    
-                                    <input type="radio" class="btn-check" name="progress-filter" id="progress-cancelled" value="cancelled">
-                                    <label class="btn btn-outline-light btn-sm" for="progress-cancelled">
+                                    </button>
+                                    <button type="button" class="btn btn-outline-light btn-sm" id="btn-filter-cancelled">
                                         <i class="fas fa-ban me-1"></i>企画中止のみ
-                                    </label>
-                                    
-                                    <input type="radio" class="btn-check" name="progress-filter" id="progress-all" value="all">
-                                    <label class="btn btn-outline-light btn-sm" for="progress-all">
+                                    </button>
+                                    <button type="button" class="btn btn-outline-light btn-sm" id="btn-filter-all">
                                         <i class="fas fa-list me-1"></i>すべて表示
-                                    </label>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -2903,15 +2896,8 @@ function simplePreview() {
         }
         
         // プレビュー用のシンプルなHTML
-        const menteesForPreview = (function(){
-            try { return getMenteesData(); } catch(e) { return []; }
-        })();
-        const currentSelectedMentee = (function(){
-            try { const sel = document.getElementById('mentee-filter'); return sel ? sel.value : ''; } catch(e) { return ''; }
-        })();
-        const menteeOptionsHtml = ['<option value="">全メンティ</option>']
-            .concat(menteesForPreview.map(m => `<option value="${m.name}" ${currentSelectedMentee===m.name ? 'selected' : ''}>${m.name}</option>`))
-            .join('');
+        // プレビューではフィルタを提供しない
+        const menteeOptionsHtml = '';
         const previewHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>印刷プレビュー</title>' +
             '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">' +
             '<style>' +
@@ -2962,9 +2948,7 @@ function simplePreview() {
             '<div class="preview-toolbar" style="text-align:center;margin-bottom:20px;">' +
             '<button class="btn btn-success" onclick="window.print()">印刷実行</button>' +
             '<button class="btn btn-secondary" onclick="window.close()">閉じる</button>' +
-            '<span class="ms-3">対象メンティ:</span>' +
-            '<select id="preview-mentee-filter" class="form-select d-inline-block w-auto ms-2">' + menteeOptionsHtml + '</select>' +
-            '<button id="apply-mentee-to-parent" class="btn btn-outline-primary btn-sm ms-2">親に適用</button>' +
+            '' +
             '</div>' +
             '<div class="preview-container">' +
             (printHeader ? printHeader.outerHTML : '') +
@@ -2975,74 +2959,7 @@ function simplePreview() {
         printWindow.document.close();
         printWindow.focus();
         
-        // プレビュー内でフィルタとメンティ選択を機能させるためのスクリプトを注入
-        try {
-            const initScript = `
-                (function(){
-                    function applyFilter(value){
-                        var active = document.getElementById('active-products');
-                        var completed = document.getElementById('completed-products');
-                        var cancelled = document.getElementById('cancelled-products');
-                        if(!active || !completed || !cancelled){ return; }
-                        active.style.display = (value==='active' || value==='all') ? 'block' : 'none';
-                        completed.style.display = (value==='completed' || value==='all') ? 'block' : 'none';
-                        cancelled.style.display = (value==='cancelled' || value==='all') ? 'block' : 'none';
-                    }
-                    var radios = document.querySelectorAll('input[name="progress-filter"]');
-                    radios.forEach(function(r){
-                        r.addEventListener('change', function(){ applyFilter(this.value); });
-                    });
-                    var checked = document.querySelector('input[name="progress-filter"]:checked');
-                    if(checked){ applyFilter(checked.value); }
-
-                    // プレビューからメンティ選択を反映（親のみ再読み込み。プレビューは閉じない）
-                    var pSelect = document.getElementById('preview-mentee-filter');
-                    function applyMenteeToParent(mentee){
-                        try {
-                            if (window.opener && !window.opener.closed) {
-                                var url = new URL(window.opener.location.href);
-                                if (mentee) { url.searchParams.set('mentee', mentee); } else { url.searchParams.delete('mentee'); }
-                                // 自動プレビューは行わず、親のみ更新
-                                window.opener.location.href = url.toString();
-                            }
-                        } catch(e) { console.error(e); }
-                    }
-                    function applyMenteeFilterInPreview(mentee){
-                        // ヘッダー表示更新
-                        var pm = document.getElementById('print-mentee');
-                        if (pm) { pm.textContent = mentee ? mentee : '全メンティ'; }
-                        // カードのメンティでフィルタ（全表示→条件適用）
-                        try {
-                            var cards = document.querySelectorAll('.product-card');
-                            cards.forEach(function(card){
-                                var cardMentee = (card.getAttribute('data-mentee')||'').trim();
-                                var show = !mentee || mentee === '' || cardMentee === mentee;
-                                card.style.display = show ? 'block' : 'none';
-                                card.style.opacity = show ? '1' : '0.3';
-                            });
-                        } catch(e) { console.warn('プレビュー内メンティフィルタで例外:', e); }
-                    }
-                    if (pSelect) {
-                        // ヘッダーの表示を更新
-                        var pm = document.getElementById('print-mentee');
-                        if (pm) { pm.textContent = pSelect.value ? pSelect.value : '全メンティ'; }
-                        // ドロップダウン変更ではプレビューは閉じず、明示ボタンで反映
-                        var applyBtn = document.getElementById('apply-mentee-to-parent');
-                        if (applyBtn) {
-                            applyBtn.addEventListener('click', function(){
-                                var value = pSelect.value;
-                                applyMenteeToParent(value);
-                                applyMenteeFilterInPreview(value);
-                            });
-                        }
-                    }
-                })();
-            `;
-            const s = printWindow.document.createElement('script');
-            s.type = 'text/javascript';
-            s.text = initScript;
-            printWindow.document.body.appendChild(s);
-        } catch (e) { console.error('プレビュー初期化エラー', e); }
+        // プレビューでは追加スクリプトなし（安定性重視）
         
         console.log('プレビューウィンドウを開きました');
         
@@ -3160,25 +3077,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 以前の自動プレビューはUX低下のため廃止
 
-    // シンプルフィルター機能の初期化
-    console.log('フィルター初期化を開始します...');
+    // セクション表示切替フィルタ（進行中/完了/中止/すべて）
     try {
-        initializeSimpleFilter();
-        console.log('フィルター初期化が完了しました');
-    } catch (error) {
-        console.error('フィルター初期化でエラーが発生:', error);
-    }
-    
-    // デバッグ: 初期化後の状態確認
-    setTimeout(() => {
-        console.log('=== 初期化後のデバッグ情報 ===');
-        const buttons = document.querySelectorAll('input[name="progress-filter"]');
-        console.log('フィルターボタン数:', buttons.length);
-        buttons.forEach((btn, i) => {
-            console.log(`ボタン${i+1}: ${btn.id} - イベントリスナー数:`, getEventListeners ? getEventListeners(btn) : 'N/A');
-        });
-        console.log('==============================');
-    }, 2000);
+        const activeSection = document.getElementById('active-products');
+        const completedSection = document.getElementById('completed-products');
+        const cancelledSection = document.getElementById('cancelled-products');
+
+        const btnActive = document.getElementById('btn-filter-active');
+        const btnCompleted = document.getElementById('btn-filter-completed');
+        const btnCancelled = document.getElementById('btn-filter-cancelled');
+        const btnAll = document.getElementById('btn-filter-all');
+
+        function showSections({active, completed, cancelled}) {
+            if (activeSection) activeSection.style.display = active ? 'block' : 'none';
+            if (completedSection) {
+                completedSection.style.display = completed ? 'block' : 'none';
+                const c = completedSection.querySelector('.collapse');
+                if (c) { c.classList.add('show'); c.style.display='block'; c.style.height='auto'; }
+            }
+            if (cancelledSection) {
+                cancelledSection.style.display = cancelled ? 'block' : 'none';
+                const c2 = cancelledSection.querySelector('.collapse');
+                if (c2) { c2.classList.add('show'); c2.style.display='block'; c2.style.height='auto'; }
+            }
+        }
+
+        btnActive && btnActive.addEventListener('click', () => showSections({active:true, completed:false, cancelled:false}));
+        btnCompleted && btnCompleted.addEventListener('click', () => showSections({active:false, completed:true, cancelled:false}));
+        btnCancelled && btnCancelled.addEventListener('click', () => showSections({active:false, completed:false, cancelled:true}));
+        btnAll && btnAll.addEventListener('click', () => showSections({active:true, completed:true, cancelled:true}));
+    } catch (e) { /* no-op */ }
     
     // 指導アラート機能
     generateMentorAlerts();
@@ -3206,36 +3134,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // インタラクティブ効果の初期化
     initializeInteractiveEffects();
     
-    // フィルターのデバッグ情報を表示
-    setTimeout(() => {
-        console.log('=== フィルターデバッグ情報 ===');
-        const filterButtons = document.querySelectorAll('input[name="progress-filter"]');
-        console.log('フィルターボタン数:', filterButtons.length);
-        filterButtons.forEach((btn, i) => {
-            console.log(`ボタン ${i+1}: ${btn.id} = ${btn.value} (checked: ${btn.checked})`);
-        });
-        
-        const sections = ['active-products', 'completed-products', 'cancelled-products'];
-        sections.forEach(id => {
-            const section = document.getElementById(id);
-            console.log(`セクション ${id}:`, section ? 'あり' : 'なし');
-        });
-        console.log('========================');
-        
-        // グローバル関数として利用可能にする
-        window.testFilter = testFilter;
-        window.resetFilters = resetFilters;
-        window.printProgressSummary = printProgressSummary;
-        window.showPrintPreview = showPrintPreview;
-        
-        console.log('デバッグ関数をグローバルに登録しました:');
-        console.log('- testFilter("active") : 進行中のみ表示');
-        console.log('- testFilter("completed") : 完了済みのみ表示');
-        console.log('- testFilter("all") : 全て表示');
-        console.log('- resetFilters() : フィルターリセット');
-        console.log('- printProgressSummary() : 印刷実行');
-        console.log('- showPrintPreview() : プレビュー表示');
-    }, 1000);
+    // デバッグ用ログ登録は撤去
     
     // サイドバースクロール制御
     initializeSidebarScroll();
@@ -4109,157 +4008,8 @@ function viewMenteeAnalysisFromCard(menteeName) {
 // 削除された複雑なフィルター関数群
 
 // シンプルなフィルター機能
-function initializeSimpleFilter() {
-    console.log('=== シンプルフィルター初期化開始 ===');
-    
-    // フィルターボタンを取得
-    const filterButtons = document.querySelectorAll('input[name="progress-filter"]');
-    console.log('フィルターボタン数:', filterButtons.length);
-    
-    // セクションを取得
-    const activeSection = document.getElementById('active-products');
-    const completedSection = document.getElementById('completed-products');
-    const cancelledSection = document.getElementById('cancelled-products');
-    
-    console.log('セクション状況:');
-    console.log('- active-products:', activeSection ? 'OK' : 'NG');
-    console.log('- completed-products:', completedSection ? 'OK' : 'NG');
-    console.log('- cancelled-products:', cancelledSection ? 'OK' : 'NG');
-    
-    if (filterButtons.length === 0) {
-        console.error('フィルターボタンが見つかりません');
-        return;
-    }
-    
-    // 各フィルターボタンにイベントを追加
-    filterButtons.forEach((button, index) => {
-        console.log(`ボタン ${index + 1}: ${button.id} (${button.value})`);
-        
-        button.addEventListener('change', function() {
-            console.log(`--- フィルター変更: ${this.value} ---`);
-            // 進捗状態フィルタの影響をリセット（個別カードを全表示）
-            try {
-                const allCards = document.querySelectorAll('.product-card');
-                allCards.forEach(card => { card.style.display = 'block'; card.style.opacity = '1'; });
-                // サイドバーの状態ボタンのアクティブ表示を解除
-                document.querySelectorAll('.progress-filter-buttons .filter-btn').forEach(btn => btn.classList.remove('active'));
-                const statusAlert = document.getElementById('progress-filter-status');
-                if (statusAlert) statusAlert.style.display = 'none';
-            } catch (e) { console.warn('カード表示のリセットで例外:', e); }
-            
-            // 全セクションを非表示
-            if (activeSection) {
-                activeSection.style.display = 'none';
-                console.log('active-products を非表示');
-            }
-            if (completedSection) {
-                completedSection.style.display = 'none';
-                console.log('completed-products を非表示');
-            }
-            if (cancelledSection) {
-                cancelledSection.style.display = 'none';
-                console.log('cancelled-products を非表示');
-            }
-            
-            // 選択されたセクションを表示
-            if (this.value === 'active' && activeSection) {
-                activeSection.style.display = 'block';
-                console.log('active-products を表示');
-            } else if (this.value === 'completed' && completedSection) {
-                completedSection.style.display = 'block';
-                console.log('completed-products を表示');
-                // 折りたたみを展開
-                const collapse = completedSection.querySelector('.collapse');
-                if (collapse) {
-                    collapse.classList.add('show');
-                }
-            } else if (this.value === 'cancelled' && cancelledSection) {
-                cancelledSection.style.display = 'block';
-                console.log('cancelled-products を表示');
-                // 折りたたみを展開
-                const collapse = cancelledSection.querySelector('.collapse');
-                if (collapse) {
-                    collapse.classList.add('show');
-                }
-            } else if (this.value === 'all') {
-                if (activeSection) {
-                    activeSection.style.display = 'block';
-                    console.log('active-products を表示');
-                }
-                if (completedSection) {
-                    completedSection.style.display = 'block';
-                    console.log('completed-products を表示');
-                }
-                if (cancelledSection) {
-                    cancelledSection.style.display = 'block';
-                    console.log('cancelled-products を表示');
-                }
-            }
-            
-            console.log('--- フィルター変更完了 ---');
-        });
-    });
-    
-    console.log('=== シンプルフィルター初期化完了 ===');
-}
+// 旧シンプルフィルター初期化は撤去
 
-// 手動フィルターテスト関数（デバッグ用）
-function testFilter(filterValue) {
-    console.log(`手動フィルターテスト: ${filterValue}`);
-    
-    const activeSection = document.getElementById('active-products');
-    const completedSection = document.getElementById('completed-products');
-    const cancelledSection = document.getElementById('cancelled-products');
-    
-    // 全て非表示
-    if (activeSection) activeSection.style.display = 'none';
-    if (completedSection) completedSection.style.display = 'none';
-    if (cancelledSection) cancelledSection.style.display = 'none';
-    
-    // 選択されたものを表示
-    switch(filterValue) {
-        case 'active':
-            if (activeSection) activeSection.style.display = 'block';
-            console.log('進行中セクションを表示しました');
-            break;
-        case 'completed':
-            if (completedSection) completedSection.style.display = 'block';
-            console.log('完了済みセクションを表示しました');
-            break;
-        case 'cancelled':
-            if (cancelledSection) cancelledSection.style.display = 'block';
-            console.log('企画中止セクションを表示しました');
-            break;
-        case 'all':
-            if (activeSection) activeSection.style.display = 'block';
-            if (completedSection) completedSection.style.display = 'block';
-            if (cancelledSection) cancelledSection.style.display = 'block';
-            console.log('全セクションを表示しました');
-            break;
-    }
-}
-
-// フィルター機能の手動リセット（デバッグ用）
-function resetFilters() {
-    console.log('フィルターを手動リセットします');
-    
-    // 全てのフィルターボタンからイベントリスナーを削除
-    const filterButtons = document.querySelectorAll('input[name="progress-filter"]');
-    filterButtons.forEach(button => {
-        const newButton = button.cloneNode(true);
-        button.parentNode.replaceChild(newButton, button);
-    });
-    
-    // フィルターを再初期化
-    initializeSimpleFilter();
-    
-    console.log('フィルターリセット完了');
-}
-
-// 削除された印刷準備関数
-
-// 旧プレビュー機能（削除済み）
-
-// 削除された複雑な関数群
+// 旧フィルター系のデバッグ関数・リセット関数は撤去
 </script>
 {% endblock %}
