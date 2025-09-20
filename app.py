@@ -1773,11 +1773,22 @@ def edit_product_group(product_group_id):
         # 既存の画像と新しい画像を結合
         all_images = existing_images + new_images
         
+        # 代表商品群名の変更前後を保持
+        old_name = product_group.name
+        new_name = form.name.data
+
         # 代表商品群を更新
-        product_group.name = form.name.data
+        product_group.name = new_name
         product_group.description = form.description.data
         product_group.images = json.dumps(all_images) if all_images else None
-        
+
+        # 紐づく週次報告の product_group 名称を一括更新（表示から消えないよう同期）
+        if old_name != new_name:
+            WeeklyReport.query.filter_by(
+                mentee_id=product_group.mentee_id,
+                product_group=old_name
+            ).update({WeeklyReport.product_group: new_name})
+
         db.session.commit()
         flash('代表商品群が更新されました！', 'success')
         return redirect(url_for('manage_product_groups', mentee_id=product_group.mentee_id))
