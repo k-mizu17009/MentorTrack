@@ -105,39 +105,6 @@
                     </div>
                 </div>
 
-                {% if report.mentor_comments %}
-                <div class="mb-4">
-                    <h5><i class="fas fa-comment me-2"></i>メンターコメント</h5>
-                    {% for comment in report.mentor_comments %}
-                    <div class="card border-primary mb-2">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <small class="text-muted">
-                                    <i class="fas fa-user me-1"></i>{{ comment.mentor.username }}
-                                </small>
-                                <small class="text-muted">
-                                    {{ comment.created_at.strftime('%Y年%m月%d日 %H:%M') }}
-                                </small>
-                            </div>
-                            <pre class="mb-0">{{ comment.comment }}</pre>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
-
-                {% if current_user.role in ['mentor', 'admin'] %}
-                <div class="mb-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5><i class="fas fa-comment-dots me-2"></i>メンターコメント</h5>
-                        <a href="{{ url_for('add_mentor_comment', report_id=report.id) }}" class="btn btn-outline-success btn-sm">
-                            <i class="fas fa-comment me-1"></i>
-                            {% if report.mentor_comments %}コメントを編集{% else %}コメントを追加{% endif %}
-                        </a>
-                    </div>
-                </div>
-                {% endif %}
-
                 {% if report.additional_responses %}
                 <div class="mb-4">
                     <h5><i class="fas fa-question-circle me-2"></i>追加の問いかけ回答</h5>
@@ -201,6 +168,33 @@
                 </div>
                 {% endif %}
 
+                {% if report.mentor_comments %}
+                <div class="mb-4">
+                    <h5><i class="fas fa-comment me-2"></i>メンターコメント</h5>
+                    {% for comment in report.mentor_comments %}
+                    <div class="card border-primary mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>{{ comment.mentor.username }}
+                                </small>
+                                <small class="text-muted">
+                                    {{ comment.created_at.strftime('%Y年%m月%d日 %H:%M') }}
+                                </small>
+                            </div>
+                            <pre class="mb-0">{{ comment.comment }}</pre>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if current_user.role in ['mentor', 'admin'] %}
+                <div class="mb-4">
+                    <h5><i class="fas fa-comment-dots me-2"></i>メンターコメント</h5>
+                </div>
+                {% endif %}
+
                 {% if previous_report %}
                 <div class="mb-4">
                     <h5><i class="fas fa-chart-line me-2"></i>前週との比較</h5>
@@ -260,30 +254,38 @@
                     <a href="{{ url_for('mentee_dashboard', mentee_id=report.mentee.id) }}" class="btn btn-primary">
                         <i class="fas fa-arrow-left me-2"></i>ダッシュボードに戻る
                     </a>
+                    {% if current_user.role in ['mentor', 'admin'] %}
+                    <a href="{{ url_for('add_mentor_comment', report_id=report.id) }}" class="btn btn-success ms-2">
+                        <i class="fas fa-comment me-2"></i>
+                        {% if report.mentor_comments %}コメントを編集{% else %}コメントを追加{% endif %}
+                    </a>
+                    {% endif %}
+                    {% if current_user.role == 'mentee' %}
                     <a href="{{ url_for('generate_daily_report', weekly_report_id=report.id) }}" class="btn btn-info ms-2">
                         <i class="fas fa-file-alt me-2"></i>日報を生成
                     </a>
                     <a href="{{ url_for('new_report', mentee_id=report.mentee.id) }}" class="btn btn-outline-primary ms-2">
                         <i class="fas fa-plus me-2"></i>新しい報告を作成
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
         </div>
         
-        <!-- 右サイドバー：進捗ステージ一覧 -->
+        <!-- 右サイドバー：企画ステージ一覧 -->
         <div class="col-lg-3">
             <div class="card mb-4 sticky-top" style="top: 20px;">
                 <div class="card-header">
                     <h6 class="mb-0">
-                        <i class="fas fa-list-ol me-2"></i>進捗ステージ一覧
+                        <i class="fas fa-project-diagram me-2"></i>企画ステージ一覧
                     </h6>
                     <small class="text-white">現在のステージ: <strong>{{ get_stage_display_name(report.planning_stage) }}</strong></small>
                 </div>
                 <div class="card-body p-2">
                     <div class="progress-stages-sidebar">
                         <div class="progress-stage-item-sidebar" data-stage="proposal_pre">
-                            <div class="stage-number-sidebar">1</div>
+                            <div class="stage-number-sidebar">0</div>
                             <div class="stage-info-sidebar">
                                 <div class="stage-name-sidebar">提案前</div>
                                 <div class="stage-percentage-sidebar">11%</div>
@@ -296,9 +298,9 @@
                         </div>
                         
                         <div class="progress-stage-item-sidebar" data-stage="estimate_completed">
-                            <div class="stage-number-sidebar">2</div>
+                            <div class="stage-number-sidebar">1</div>
                             <div class="stage-info-sidebar">
-                                <div class="stage-name-sidebar">見積書対応済</div>
+                                <div class="stage-name-sidebar">見積書対応</div>
                                 <div class="stage-percentage-sidebar">22%</div>
                             </div>
                             <div class="stage-status-sidebar">
@@ -309,9 +311,9 @@
                         </div>
                         
                         <div class="progress-stage-item-sidebar" data-stage="s_creation_approved">
-                            <div class="stage-number-sidebar">3</div>
+                            <div class="stage-number-sidebar">2</div>
                             <div class="stage-info-sidebar">
-                                <div class="stage-name-sidebar">S作成承認済</div>
+                                <div class="stage-name-sidebar">サンプル承認</div>
                                 <div class="stage-percentage-sidebar">33%</div>
                             </div>
                             <div class="stage-status-sidebar">
@@ -322,9 +324,9 @@
                         </div>
                         
                         <div class="progress-stage-item-sidebar" data-stage="proposal_decision_obtained">
-                            <div class="stage-number-sidebar">4</div>
+                            <div class="stage-number-sidebar">3</div>
                             <div class="stage-info-sidebar">
-                                <div class="stage-name-sidebar">提案決裁取得済</div>
+                                <div class="stage-name-sidebar">提案決裁</div>
                                 <div class="stage-percentage-sidebar">44%</div>
                             </div>
                             <div class="stage-status-sidebar">
@@ -335,9 +337,9 @@
                         </div>
                         
                         <div class="progress-stage-item-sidebar" data-stage="pre_production_s_confirmed">
-                            <div class="stage-number-sidebar">5</div>
+                            <div class="stage-number-sidebar">4</div>
                             <div class="stage-info-sidebar">
-                                <div class="stage-name-sidebar">量産前S確認済</div>
+                                <div class="stage-name-sidebar">量産前サンプル</div>
                                 <div class="stage-percentage-sidebar">56%</div>
                             </div>
                             <div class="stage-status-sidebar">
@@ -348,9 +350,9 @@
                         </div>
                         
                         <div class="progress-stage-item-sidebar" data-stage="first_order">
-                            <div class="stage-number-sidebar">6</div>
+                            <div class="stage-number-sidebar">5</div>
                             <div class="stage-info-sidebar">
-                                <div class="stage-name-sidebar">初回発注済</div>
+                                <div class="stage-name-sidebar">初回発注</div>
                                 <div class="stage-percentage-sidebar">67%</div>
                             </div>
                             <div class="stage-status-sidebar">
@@ -361,9 +363,9 @@
                         </div>
                         
                         <div class="progress-stage-item-sidebar" data-stage="temporary_listing">
-                            <div class="stage-number-sidebar">7</div>
+                            <div class="stage-number-sidebar">6</div>
                             <div class="stage-info-sidebar">
-                                <div class="stage-name-sidebar">仮出品済</div>
+                                <div class="stage-name-sidebar">仮出品</div>
                                 <div class="stage-percentage-sidebar">78%</div>
                             </div>
                             <div class="stage-status-sidebar">
@@ -374,9 +376,9 @@
                         </div>
                         
                         <div class="progress-stage-item-sidebar" data-stage="page_up">
-                            <div class="stage-number-sidebar">8</div>
+                            <div class="stage-number-sidebar">7</div>
                             <div class="stage-info-sidebar">
-                                <div class="stage-name-sidebar">ページアップ済</div>
+                                <div class="stage-name-sidebar">ページアップ</div>
                                 <div class="stage-percentage-sidebar">89%</div>
                             </div>
                             <div class="stage-status-sidebar">
@@ -387,13 +389,26 @@
                         </div>
                         
                         <div class="progress-stage-item-sidebar" data-stage="second_lot_ordered">
-                            <div class="stage-number-sidebar">9</div>
+                            <div class="stage-number-sidebar">8</div>
                             <div class="stage-info-sidebar">
-                                <div class="stage-name-sidebar">2ロット目発注済</div>
+                                <div class="stage-name-sidebar">2ロット目発注</div>
                                 <div class="stage-percentage-sidebar">100%</div>
                             </div>
                             <div class="stage-status-sidebar">
                                 {% if report.planning_stage == 'second_lot_ordered' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="progress-stage-item-sidebar" data-stage="project_cancelled">
+                            <div class="stage-number-sidebar">9</div>
+                            <div class="stage-info-sidebar">
+                                <div class="stage-name-sidebar">企画中止</div>
+                                <div class="stage-percentage-sidebar">100%</div>
+                            </div>
+                            <div class="stage-status-sidebar">
+                                {% if report.planning_stage == 'project_cancelled' %}
                                     <i class="fas fa-check-circle text-success"></i>
                                 {% endif %}
                             </div>
@@ -407,7 +422,7 @@
 </div>
 
 <style>
-/* サイドバー用進捗ステージ一覧のスタイリング */
+/* サイドバー用企画ステージ一覧のスタイリング */
 .progress-stages-sidebar {
     display: flex;
     flex-direction: column;
