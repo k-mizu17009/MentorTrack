@@ -184,8 +184,8 @@
             <div class="unified-header-content">
                 <!-- ヘッダーメイン部分（横並びレイアウト） -->
                 <div class="header-main-section">
-                    <!-- 左側：タイトルと統計 -->
-                    <div class="header-left-section">
+                    <!-- 左側：タイトル -->
+                    <div class="header-title-section">
                         <div class="hero-title">
                             <h1 class="hero-main-title">
                                 <span class="title-line">メンター</span>
@@ -196,39 +196,45 @@
                                 メンティの成長を一緒に加速させましょう
                             </p>
                         </div>
+                    </div>
+                    
+                    <!-- 中央：統計カード -->
+                    <div class="header-stats-section">
                         <div class="hero-stats">
-                            <div class="stat-card">
-                                <div class="stat-icon">
-                                    <i class="fas fa-users"></i>
+                            <div class="stats-grid">
+                                <div class="stat-card primary">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <span class="stat-number">{{ mentees|length }}</span>
+                                        <span class="stat-label">メンティ数</span>
+                                    </div>
                                 </div>
-                                <div class="stat-content">
-                                    <span class="stat-number">{{ mentees|length }}</span>
-                                    <span class="stat-label">メンティ数</span>
+                                <div class="stat-card success">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <span class="stat-number">{{ product_group_progress|length }}</span>
+                                        <span class="stat-label">商品群数</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon">
-                                    <i class="fas fa-chart-line"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <span class="stat-number">{{ product_group_progress|length }}</span>
-                                    <span class="stat-label">商品群数</span>
-                                </div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon">
-                                    <i class="fas fa-clipboard-list"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <span class="stat-number">{{ reports|length }}</span>
-                                    <span class="stat-label">報告数</span>
+                                <div class="stat-card info">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-clipboard-list"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <span class="stat-number">{{ reports|length }}</span>
+                                        <span class="stat-label">報告数</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
                     <!-- 右側：メンティ選択フィルター -->
-                    <div class="header-right-section">
+                    <div class="header-filter-section">
                         <div class="filter-container">
                             <div class="filter-label">
                                 <div class="label-icon">
@@ -708,19 +714,31 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 15px;
+    gap: 20px;
     padding: 0 15px;
+    min-height: 120px;
 }
 
-.header-left-section {
-    flex: 1;
+.header-title-section {
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     gap: 8px;
+    min-width: 280px;
+    align-self: flex-start;
 }
 
-.header-right-section {
-    flex-shrink: 0;
+.header-stats-section {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    align-self: center;
+}
+
+.header-filter-section {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -730,6 +748,8 @@
     backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+    min-width: 250px;
+    align-self: center;
 }
 
 .unified-header-section:hover {
@@ -776,10 +796,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 12px;
     flex-wrap: nowrap;
     position: relative;
     z-index: 2;
+    padding: 4px;
 }
 
 .filter-label {
@@ -787,11 +808,15 @@
     align-items: center;
     position: relative;
     font-weight: 600;
-    color: white;
+    color: white !important;
     font-size: 0.9rem;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
     letter-spacing: 0.3px;
     white-space: nowrap;
+}
+
+.filter-label .label-text {
+    color: white !important;
 }
 
 .label-icon {
@@ -845,18 +870,19 @@
 }
 
 .header-select {
-    min-width: 180px;
+    min-width: 200px;
     border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 8px;
-    padding: 7px 30px 7px 12px;
-    font-size: 0.85rem;
-    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    padding: 10px 35px 10px 15px;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.98);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-weight: 600;
     color: #495057;
     backdrop-filter: blur(15px);
     appearance: none;
     cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .header-select:focus {
@@ -965,6 +991,214 @@
     100% {
         transform: translate(-50%, -50%) scale(1.4);
         opacity: 0;
+    }
+}
+
+/* 統計カードのスタイル */
+.hero-stats {
+    margin-top: 0;
+}
+
+.stats-grid {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    min-height: 50px;
+    min-width: 110px;
+    flex-shrink: 0;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    transition: opacity 0.3s ease;
+    opacity: 0;
+    z-index: 0;
+}
+
+.stat-card:hover::before {
+    opacity: 1;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px) scale(1.02);
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card.primary {
+    border-left: 3px solid #4f8ef7;
+}
+
+.stat-card.success {
+    border-left: 3px solid #28a745;
+}
+
+.stat-card.info {
+    border-left: 3px solid #17a2b8;
+}
+
+.stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.stat-icon i {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-grow: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.stat-number {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.85);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 1200px) {
+    .header-main-section {
+        gap: 15px;
+    }
+    
+    .header-title-section {
+        min-width: 240px;
+    }
+    
+    .header-stats-section {
+        padding: 0 10px;
+    }
+    
+    .stats-grid {
+        gap: 10px;
+    }
+    
+    .stat-card {
+        min-width: 100px;
+        padding: 8px 10px;
+    }
+    
+    .stat-number {
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .header-main-section {
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+    }
+    
+    .header-title-section {
+        text-align: center;
+        min-width: auto;
+    }
+    
+    .header-stats-section {
+        width: 100%;
+        padding: 0;
+    }
+    
+    .stats-grid {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .header-filter-section {
+        width: 100%;
+        max-width: 400px;
+        min-width: auto;
+    }
+    
+    .header-select {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .stat-card {
+        width: 100%;
+        max-width: 200px;
+        justify-content: center;
+        text-align: center;
+        min-width: auto;
+    }
+    
+    .stat-number {
+        font-size: 1.3rem;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-main-section {
+        gap: 15px;
+    }
+    
+    .stat-card {
+        padding: 8px 12px;
+        min-height: 45px;
     }
 }
 
