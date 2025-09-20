@@ -335,22 +335,27 @@
                 <!-- サイドバー -->
                 <div class="col-lg-3">
                     <!-- 企画ステージ一覧 -->
-                    <div class="card mb-4 sticky-top" style="top: 20px;">
-                        <div class="card-header">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-list-ol me-2"></i>企画ステージ一覧
+                    <div class="card mb-4 sticky-top modern-stage-card" style="top: 20px;">
+                        <div class="card-header modern-stage-header">
+                            <div class="stage-header-content">
+                                <h6 class="stage-header-title">
+                                    <i class="fas fa-project-diagram me-2"></i>企画ステージ一覧
                                 </h6>
-                                <button class="btn btn-sm btn-outline-secondary" id="reset-filter" title="フィルターをリセット">
-                                    <i class="fas fa-undo-alt"></i>
-                                </button>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="current-stage-display">
+                                        <i class="fas fa-filter me-1"></i>
+                                        <span class="current-stage-text">クリックで絞り込み</span>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-light" id="reset-filter" title="フィルターをリセット">
+                                        <i class="fas fa-undo-alt"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <small class="text-muted">クリックで絞り込み</small>
                         </div>
-                        <div class="card-body p-2">
+                        <div class="card-body modern-stage-body">
                             <div class="progress-stages-sidebar">
                                 <div class="progress-stage-item-sidebar filterable" data-stage="proposal_pre" data-filter="all">
-                                    <div class="stage-number-sidebar">1</div>
+                                    <div class="stage-number-sidebar">0</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">提案前</div>
                                         <div class="stage-percentage-sidebar">11%</div>
@@ -358,7 +363,7 @@
                                     <div class="stage-count-badge" data-stage="proposal_pre">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="estimate_completed" data-filter="all">
-                                    <div class="stage-number-sidebar">2</div>
+                                    <div class="stage-number-sidebar">1</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">見積書対応</div>
                                         <div class="stage-percentage-sidebar">22%</div>
@@ -366,7 +371,7 @@
                                     <div class="stage-count-badge" data-stage="estimate_completed">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="s_creation_approved" data-filter="all">
-                                    <div class="stage-number-sidebar">3</div>
+                                    <div class="stage-number-sidebar">2</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">サンプル承認</div>
                                         <div class="stage-percentage-sidebar">33%</div>
@@ -374,7 +379,7 @@
                                     <div class="stage-count-badge" data-stage="s_creation_approved">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="proposal_decision_obtained" data-filter="all">
-                                    <div class="stage-number-sidebar">4</div>
+                                    <div class="stage-number-sidebar">3</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">提案決裁</div>
                                         <div class="stage-percentage-sidebar">44%</div>
@@ -382,7 +387,7 @@
                                     <div class="stage-count-badge" data-stage="proposal_decision_obtained">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="pre_production_s_confirmed" data-filter="all">
-                                    <div class="stage-number-sidebar">5</div>
+                                    <div class="stage-number-sidebar">4</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">量産前サンプル</div>
                                         <div class="stage-percentage-sidebar">56%</div>
@@ -390,7 +395,7 @@
                                     <div class="stage-count-badge" data-stage="pre_production_s_confirmed">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="first_order" data-filter="all">
-                                    <div class="stage-number-sidebar">6</div>
+                                    <div class="stage-number-sidebar">5</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">初回発注</div>
                                         <div class="stage-percentage-sidebar">67%</div>
@@ -398,7 +403,7 @@
                                     <div class="stage-count-badge" data-stage="first_order">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="temporary_listing" data-filter="all">
-                                    <div class="stage-number-sidebar">7</div>
+                                    <div class="stage-number-sidebar">6</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">仮出品</div>
                                         <div class="stage-percentage-sidebar">78%</div>
@@ -406,7 +411,7 @@
                                     <div class="stage-count-badge" data-stage="temporary_listing">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="page_up" data-filter="all">
-                                    <div class="stage-number-sidebar">8</div>
+                                    <div class="stage-number-sidebar">7</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">ページアップ</div>
                                         <div class="stage-percentage-sidebar">89%</div>
@@ -414,7 +419,7 @@
                                     <div class="stage-count-badge" data-stage="page_up">0</div>
                                 </div>
                                 <div class="progress-stage-item-sidebar filterable" data-stage="second_lot_ordered" data-filter="all">
-                                    <div class="stage-number-sidebar">9</div>
+                                    <div class="stage-number-sidebar">7</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">2ロット目発注</div>
                                         <div class="stage-percentage-sidebar">100%</div>

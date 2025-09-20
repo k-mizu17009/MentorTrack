@@ -275,14 +275,19 @@
         
         <!-- 右サイドバー：企画ステージ一覧 -->
         <div class="col-lg-3">
-            <div class="card mb-4 sticky-top" style="top: 20px;">
-                <div class="card-header">
-                    <h6 class="mb-0">
-                        <i class="fas fa-project-diagram me-2"></i>企画ステージ一覧
-                    </h6>
-                    <small class="text-white">現在のステージ: <strong>{{ get_stage_display_name(report.planning_stage) }}</strong></small>
+            <div class="card mb-4 sticky-top modern-stage-card" style="top: 20px;">
+                <div class="card-header modern-stage-header">
+                    <div class="stage-header-content">
+                        <h6 class="stage-header-title">
+                            <i class="fas fa-route me-2"></i>企画ステージ一覧
+                        </h6>
+                        <div class="current-stage-display">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            <span class="current-stage-text">{{ get_stage_display_name(report.planning_stage) }}</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body p-2">
+                <div class="card-body modern-stage-body">
                     <div class="progress-stages-sidebar">
                         <div class="progress-stage-item-sidebar" data-stage="proposal_pre">
                             <div class="stage-number-sidebar">0</div>
@@ -422,89 +427,34 @@
 </div>
 
 <style>
-/* サイドバー用企画ステージ一覧のスタイリング */
-.progress-stages-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.progress-stage-item-sidebar {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    padding: 4px 6px;
-    transition: all 0.3s ease;
-    position: relative;
-    text-align: center;
-}
-
-.progress-stage-item-sidebar:hover {
-    background: #e9ecef;
-    border-color: #007bff;
-    transform: translateY(-1px);
-}
-
-/* 現在のステージをハイライト */
+/* 現在のステージをハイライト（ページ固有） */
 .progress-stage-item-sidebar[data-stage="{{ report.planning_stage }}"] {
-    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-    border-color: #2196f3;
-    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    color: white;
+    transform: translateX(8px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
-.stage-number-sidebar {
-    background: #007bff;
-    color: white;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.6rem;
-    font-weight: bold;
-    margin-bottom: 2px;
-    flex-shrink: 0;
+.progress-stage-item-sidebar[data-stage="{{ report.planning_stage }}"]::before {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    width: 6px;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+}
+
+.progress-stage-item-sidebar[data-stage="{{ report.planning_stage }}"] .stage-name-sidebar,
+.progress-stage-item-sidebar[data-stage="{{ report.planning_stage }}"] .stage-percentage-sidebar {
+    color: white !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* 現在のステージの番号をハイライト */
 .progress-stage-item-sidebar[data-stage="{{ report.planning_stage }}"] .stage-number-sidebar {
-    background: #2196f3;
-    box-shadow: 0 0 6px rgba(33, 150, 243, 0.4);
-}
-
-.stage-info-sidebar {
-    flex: 1;
-    min-width: 0;
-    width: 100%;
-}
-
-.stage-name-sidebar {
-    font-size: 0.6rem;
-    font-weight: 600;
-    color: #495057;
-    line-height: 1.1;
-    margin-bottom: 1px;
-    word-break: break-all;
-}
-
-.stage-percentage-sidebar {
-    font-size: 0.5rem;
-    color: #6c757d;
-    font-weight: 500;
-}
-
-.stage-status-sidebar {
-    width: 12px;
-    height: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    margin-top: 2px;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #333;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.8);
+    font-weight: 900;
 }
 
 /* スマートレイアウト用のカードスタイル */

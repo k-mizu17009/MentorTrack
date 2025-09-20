@@ -237,16 +237,16 @@ class LoginForm(FlaskForm):
 
 class WeeklyReportForm(FlaskForm):
     planning_stage = SelectField('企画ステージ', 
-                                choices=[('proposal_pre', '0.提案前'), 
-                                        ('estimate_completed', '1.見積書対応'), 
-                                        ('s_creation_approved', '2.サンプル承認'), 
-                                        ('proposal_decision_obtained', '3.提案決裁'),
-                                        ('pre_production_s_confirmed', '4.量産前サンプル'),
-                                        ('first_order', '5.初回発注'),
-                                        ('temporary_listing', '6.仮出品'),
-                                        ('page_up', '7.ページアップ'),
-                                        ('second_lot_ordered', '8.2ロット目発注'),
-                                        ('project_cancelled', '9.企画中止')],
+                                choices=[('proposal_pre', '提案前'), 
+                                        ('estimate_completed', '見積書対応'), 
+                                        ('s_creation_approved', 'サンプル承認'), 
+                                        ('proposal_decision_obtained', '提案決裁'),
+                                        ('pre_production_s_confirmed', '量産前サンプル'),
+                                        ('first_order', '初回発注'),
+                                        ('temporary_listing', '仮出品'),
+                                        ('page_up', 'ページアップ'),
+                                        ('second_lot_ordered', '2ロット目発注'),
+                                        ('project_cancelled', '企画中止')],
                                 validators=[DataRequired()])
     
     product_group = SelectField('代表商品群', 
@@ -884,18 +884,18 @@ def get_product_group_progress(mentee_id, weeks=16):
     return list(product_groups.values())
 
 def get_stage_display_name(stage):
-    """企画ステージの表示名を取得（企画ステージフォームの表示形式に合わせる）"""
+    """企画ステージの表示名を取得（統一された表示形式）"""
     stage_names = {
-        'proposal_pre': '0.提案前',
-        'estimate_completed': '1.見積書対応',
-        's_creation_approved': '2.サンプル承認',
-        'proposal_decision_obtained': '3.提案決裁',
-        'pre_production_s_confirmed': '4.量産前サンプル',
-        'first_order': '5.初回発注',
-        'temporary_listing': '6.仮出品',
-        'page_up': '7.ページアップ',
-        'second_lot_ordered': '8.2ロット目発注',
-        'project_cancelled': '9.企画中止'
+        'proposal_pre': '提案前',
+        'estimate_completed': '見積書対応',
+        's_creation_approved': 'サンプル承認',
+        'proposal_decision_obtained': '提案決裁',
+        'pre_production_s_confirmed': '量産前サンプル',
+        'first_order': '初回発注',
+        'temporary_listing': '仮出品',
+        'page_up': 'ページアップ',
+        'second_lot_ordered': '2ロット目発注',
+        'project_cancelled': '企画中止'
     }
     return stage_names.get(stage, stage)
 
