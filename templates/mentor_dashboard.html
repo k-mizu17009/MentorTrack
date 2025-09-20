@@ -35,7 +35,7 @@
                     </div>
                 </button>
                 
-                <button class="action-btn success-action" onclick="scrollToSection('active-products')">
+                <button class="action-btn success-action" onclick="showActiveSection()">
                     <div class="action-icon">
                         <i class="fas fa-play"></i>
                     </div>
@@ -3597,6 +3597,41 @@ function scrollToSection(sectionId) {
             sectionCard.style.display = 'block';
         }
         
+        // クイックアクション時は表示状態を安全にリセット
+        try {
+            // 進行中セクションへ移動する場合は、表示を必ず有効化
+            if (sectionId === 'active-products') {
+                const activeSection = document.getElementById('active-products');
+                const completedSection = document.getElementById('completed-products');
+                const cancelledSection = document.getElementById('cancelled-products');
+
+                if (activeSection) activeSection.style.display = 'block';
+                if (completedSection) completedSection.style.display = 'none';
+                if (cancelledSection) cancelledSection.style.display = 'none';
+
+                // 個々のカードがスタイルで非表示になっている場合に備え、進行中カードを表示
+                document.querySelectorAll('.product-card[data-status="active"]').forEach(card => {
+                    card.style.display = 'block';
+                    card.style.opacity = '1';
+                });
+
+                // ラジオフィルターの状態を合わせる
+                const activeRadio = document.getElementById('progress-active');
+                if (activeRadio) {
+                    activeRadio.checked = true;
+                    // フィルター初期化がある場合は再適用
+                    if (typeof initializeSimpleFilter === 'function') {
+                        // 既存のリスナー重複を避けるため軽く再初期化
+                        try { resetFilters && resetFilters(); } catch (e) {}
+                    }
+                }
+
+                // 進捗フィルター状態アラートが出ていたら閉じる
+                const filterStatus = document.getElementById('progress-filter-status');
+                if (filterStatus) filterStatus.style.display = 'none';
+            }
+        } catch (e) { /* no-op */ }
+
         // セクションまでスクロール
         section.scrollIntoView({ 
             behavior: 'smooth',
@@ -3632,6 +3667,34 @@ function scrollToSection(sectionId) {
         // セクションが見つからない場合は通知
         alert(`セクション「${sectionId}」が見つかりませんでした`);
     }
+}
+
+// クイックアクション専用: 進行中セクションを必ず表示
+function showActiveSection() {
+    try {
+        const activeSection = document.getElementById('active-products');
+        const completedSection = document.getElementById('completed-products');
+        const cancelledSection = document.getElementById('cancelled-products');
+
+        if (activeSection) activeSection.style.display = 'block';
+        if (completedSection) completedSection.style.display = 'none';
+        if (cancelledSection) cancelledSection.style.display = 'none';
+
+        document.querySelectorAll('.product-card[data-status="active"]').forEach(card => {
+            card.style.display = 'block';
+            card.style.opacity = '1';
+        });
+
+        const activeRadio = document.getElementById('progress-active');
+        if (activeRadio) activeRadio.checked = true;
+
+        const filterStatus = document.getElementById('progress-filter-status');
+        if (filterStatus) filterStatus.style.display = 'none';
+
+        if (activeSection) {
+            activeSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    } catch (e) {}
 }
 
 // 進捗状況によるフィルタリング機能
