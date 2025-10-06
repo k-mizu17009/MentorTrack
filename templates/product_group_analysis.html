@@ -189,16 +189,21 @@
                                         <h6 class="mb-0">
                                             <span class="stage-number-badge me-2" data-stage="{{ pg.current_stage }}">
                                                 {% set stage_number_mapping = {
-                                                    'proposal_pre': 0,
-                                                    'estimate_completed': 1,
-                                                    's_creation_approved': 2,
-                                                    'proposal_decision_obtained': 3,
-                                                    'pre_production_s_confirmed': 4,
-                                                    'first_order': 5,
-                                                    'temporary_listing': 6,
-                                                    'page_up': 7,
-                                                    'second_lot_ordered': 8,
-                                                    'project_cancelled': 9
+                                                    's0': '0',
+                                                    's1': '1',
+                                                    's2': '2',
+                                                    's3': '3',
+                                                    's4': '4',
+                                                    's5': '5',
+                                                    's6': '6',
+                                                    's7': '7',
+                                                    's8.1': '8.1',
+                                                    's8.2': '8.2',
+                                                    's9': '9',
+                                                    's10': '10',
+                                                    's11': '11',
+                                                    's12': '12',
+                                                    's13': '13'
                                                 } %}
                                                 {{ stage_number_mapping.get(pg.current_stage, '?') }}
                                             </span>
@@ -242,27 +247,13 @@
                                     <div class="mb-2">
                                         <div class="d-flex justify-content-between align-items-center mb-1">
                                             <small class="text-muted">進捗状況</small>
-                                            <small class="text-muted">
-                                                {% set stage_progress = {
-                                                    'proposal_pre': 11, 
-                                                    'estimate_completed': 22, 
-                                                    's_creation_approved': 33, 
-                                                    'proposal_decision_obtained': 44, 
-                                                    'pre_production_s_confirmed': 56, 
-                                                    'first_order': 67, 
-                                                    'temporary_listing': 78, 
-                                                    'page_up': 89, 
-                                                    'second_lot_ordered': 100,
-                                                    'project_cancelled': 100
-                                                } %}
-                                                {{ stage_progress.get(pg.current_stage, 0) }}%
-                                            </small>
+                                            <small class="text-muted">{{ get_stage_progress_percentage(pg.current_stage) }}%</small>
                                         </div>
                                         <div class="progress" style="height: 8px;">
                                             <div class="progress-bar bg-{{ get_progress_status_info(pg.progress_status).class }}" 
                                                  role="progressbar" 
-                                                 style="width: {{ stage_progress.get(pg.current_stage, 0) }}%"
-                                                 aria-valuenow="{{ stage_progress.get(pg.current_stage, 0) }}" 
+                                                 style="width: {{ get_stage_progress_percentage(pg.current_stage) }}%"
+                                                 aria-valuenow="{{ get_stage_progress_percentage(pg.current_stage) }}" 
                                                  aria-valuemin="0" 
                                                  aria-valuemax="100">
                                             </div>
@@ -354,85 +345,125 @@
                         </div>
                         <div class="card-body modern-stage-body">
                             <div class="progress-stages-sidebar">
-                                <div class="progress-stage-item-sidebar filterable" data-stage="proposal_pre" data-filter="all">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s0" data-filter="all">
                                     <div class="stage-number-sidebar">0</div>
                                     <div class="stage-info-sidebar">
-                                        <div class="stage-name-sidebar">提案前</div>
-                                        <div class="stage-percentage-sidebar">11%</div>
+                                        <div class="stage-name-sidebar">提案前の準備</div>
+                                        <div class="stage-percentage-sidebar">0%</div>
                                     </div>
-                                    <div class="stage-count-badge" data-stage="proposal_pre">0</div>
+                                    <div class="stage-count-badge" data-stage="s0">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar filterable" data-stage="estimate_completed" data-filter="all">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s1" data-filter="all">
                                     <div class="stage-number-sidebar">1</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">見積書対応</div>
-                                        <div class="stage-percentage-sidebar">22%</div>
+                                        <div class="stage-percentage-sidebar">8%</div>
                                     </div>
-                                    <div class="stage-count-badge" data-stage="estimate_completed">0</div>
+                                    <div class="stage-count-badge" data-stage="s1">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar filterable" data-stage="s_creation_approved" data-filter="all">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s2" data-filter="all">
                                     <div class="stage-number-sidebar">2</div>
                                     <div class="stage-info-sidebar">
-                                        <div class="stage-name-sidebar">サンプル承認</div>
-                                        <div class="stage-percentage-sidebar">33%</div>
+                                        <div class="stage-name-sidebar">サンプル承認＆作成依頼</div>
+                                        <div class="stage-percentage-sidebar">16%</div>
                                     </div>
-                                    <div class="stage-count-badge" data-stage="s_creation_approved">0</div>
+                                    <div class="stage-count-badge" data-stage="s2">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar filterable" data-stage="proposal_decision_obtained" data-filter="all">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s3" data-filter="all">
                                     <div class="stage-number-sidebar">3</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">提案決裁</div>
-                                        <div class="stage-percentage-sidebar">44%</div>
+                                        <div class="stage-percentage-sidebar">24%</div>
                                     </div>
-                                    <div class="stage-count-badge" data-stage="proposal_decision_obtained">0</div>
+                                    <div class="stage-count-badge" data-stage="s3">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar filterable" data-stage="pre_production_s_confirmed" data-filter="all">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s4" data-filter="all">
                                     <div class="stage-number-sidebar">4</div>
                                     <div class="stage-info-sidebar">
-                                        <div class="stage-name-sidebar">量産前サンプル</div>
-                                        <div class="stage-percentage-sidebar">56%</div>
+                                        <div class="stage-name-sidebar">量産前サンプル確認</div>
+                                        <div class="stage-percentage-sidebar">32%</div>
                                     </div>
-                                    <div class="stage-count-badge" data-stage="pre_production_s_confirmed">0</div>
+                                    <div class="stage-count-badge" data-stage="s4">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar filterable" data-stage="first_order" data-filter="all">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s5" data-filter="all">
                                     <div class="stage-number-sidebar">5</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">初回発注</div>
-                                        <div class="stage-percentage-sidebar">67%</div>
+                                        <div class="stage-percentage-sidebar">48%</div>
                                     </div>
-                                    <div class="stage-count-badge" data-stage="first_order">0</div>
+                                    <div class="stage-count-badge" data-stage="s5">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar filterable" data-stage="temporary_listing" data-filter="all">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s6" data-filter="all">
                                     <div class="stage-number-sidebar">6</div>
                                     <div class="stage-info-sidebar">
-                                        <div class="stage-name-sidebar">仮出品</div>
-                                        <div class="stage-percentage-sidebar">78%</div>
+                                        <div class="stage-name-sidebar">梱包表記の作成</div>
+                                        <div class="stage-percentage-sidebar">56%</div>
                                     </div>
-                                    <div class="stage-count-badge" data-stage="temporary_listing">0</div>
+                                    <div class="stage-count-badge" data-stage="s6">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar filterable" data-stage="page_up" data-filter="all">
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s7" data-filter="all">
                                     <div class="stage-number-sidebar">7</div>
                                     <div class="stage-info-sidebar">
-                                        <div class="stage-name-sidebar">ページアップ</div>
-                                        <div class="stage-percentage-sidebar">89%</div>
+                                        <div class="stage-name-sidebar">説明書の作成</div>
+                                        <div class="stage-percentage-sidebar">64%</div>
                                     </div>
-                                    <div class="stage-count-badge" data-stage="page_up">0</div>
+                                    <div class="stage-count-badge" data-stage="s7">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar filterable" data-stage="second_lot_ordered" data-filter="all">
-                                    <div class="stage-number-sidebar">7</div>
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s8_1" data-filter="all">
+                                    <div class="stage-number-sidebar">8.1</div>
+                                    <div class="stage-info-sidebar">
+                                        <div class="stage-name-sidebar">ドレイメモ入力</div>
+                                        <div class="stage-percentage-sidebar">72%</div>
+                                    </div>
+                                    <div class="stage-count-badge" data-stage="s8_1">0</div>
+                                </div>
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s8_2" data-filter="all">
+                                    <div class="stage-number-sidebar">8.2</div>
+                                    <div class="stage-info-sidebar">
+                                        <div class="stage-name-sidebar">現地検品手配</div>
+                                        <div class="stage-percentage-sidebar">80%</div>
+                                    </div>
+                                    <div class="stage-count-badge" data-stage="s8_2">0</div>
+                                </div>
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s9" data-filter="all">
+                                    <div class="stage-number-sidebar">9</div>
+                                    <div class="stage-info-sidebar">
+                                        <div class="stage-name-sidebar">仮出品</div>
+                                        <div class="stage-percentage-sidebar">88%</div>
+                                    </div>
+                                    <div class="stage-count-badge" data-stage="s9">0</div>
+                                </div>
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s10" data-filter="all">
+                                    <div class="stage-number-sidebar">10</div>
+                                    <div class="stage-info-sidebar">
+                                        <div class="stage-name-sidebar">ページアップ確認</div>
+                                        <div class="stage-percentage-sidebar">92%</div>
+                                    </div>
+                                    <div class="stage-count-badge" data-stage="s10">0</div>
+                                </div>
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s11" data-filter="all">
+                                    <div class="stage-number-sidebar">11</div>
+                                    <div class="stage-info-sidebar">
+                                        <div class="stage-name-sidebar">日本での初回入荷の検品</div>
+                                        <div class="stage-percentage-sidebar">96%</div>
+                                    </div>
+                                    <div class="stage-count-badge" data-stage="s11">0</div>
+                                </div>
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s12" data-filter="all">
+                                    <div class="stage-number-sidebar">12</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">2ロット目発注</div>
                                         <div class="stage-percentage-sidebar">100%</div>
                                     </div>
-                                    <div class="stage-count-badge" data-stage="second_lot_ordered">0</div>
+                                    <div class="stage-count-badge" data-stage="s12">0</div>
                                 </div>
-                                <div class="progress-stage-item-sidebar filterable" data-stage="project_cancelled" data-filter="all">
-                                    <div class="stage-number-sidebar">9</div>
+                                <div class="progress-stage-item-sidebar filterable" data-stage="s13" data-filter="all">
+                                    <div class="stage-number-sidebar">13</div>
                                     <div class="stage-info-sidebar">
                                         <div class="stage-name-sidebar">企画中止</div>
                                         <div class="stage-percentage-sidebar">100%</div>
                                     </div>
-                                    <div class="stage-count-badge" data-stage="project_cancelled">0</div>
+                                    <div class="stage-count-badge" data-stage="s13">0</div>
                                 </div>
                             </div>
                             <div class="text-center mt-2">
@@ -1104,16 +1135,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 const stageText = badge.textContent.trim();
                 // ステージ名を抽出（表示名から内部名に変換）
                 const stageMapping = {
-                    '提案前': 'proposal_pre',
-                    '見積書対応': 'estimate_completed',
-                    'サンプル承認': 's_creation_approved',
-                    '提案決裁': 'proposal_decision_obtained',
-                    '量産前サンプル': 'pre_production_s_confirmed',
-                    '初回発注': 'first_order',
-                    '仮出品': 'temporary_listing',
-                    'ページアップ': 'page_up',
-                    '2ロット目発注': 'second_lot_ordered',
-                    '企画中止': 'project_cancelled'
+                    '提案前の準備': 's0',
+                    '見積書対応': 's1',
+                    'サンプル承認＆作成依頼': 's2',
+                    '提案決裁': 's3',
+                    '量産前サンプル確認': 's4',
+                    '初回発注': 's5',
+                    '梱包表記の作成': 's6',
+                    '説明書の作成': 's7',
+                    'ドレイメモ入力': 's8_1',
+                    '現地検品手配': 's8_2',
+                    '仮出品': 's9',
+                    'ページアップ確認': 's10',
+                    '日本での初回入荷の検品': 's11',
+                    '2ロット目発注': 's12',
+                    '企画中止': 's13'
                 };
                 
                 const stageKey = Object.keys(stageMapping).find(key => stageText.includes(key));
@@ -1133,9 +1169,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 // 完了済みステージの判定（現在のステージより前のステージ）
                 const stageOrder = [
-                    'proposal_pre', 'estimate_completed', 's_creation_approved',
-                    'proposal_decision_obtained', 'pre_production_s_confirmed',
-                    'first_order', 'temporary_listing', 'page_up', 'second_lot_ordered', 'project_cancelled'
+                    's0','s1','s2','s3','s4','s5','s6','s7','s8_1','s8_2','s9','s10','s11','s12','s13'
                 ];
                 
                 const currentStageIndex = Math.max(...currentStages.map(stage => stageOrder.indexOf(stage)));
@@ -1173,7 +1207,7 @@ function initStageFilter() {
         resetFilterBtn: resetFilterBtn
     });
     
-    // ステージごとの商品群数をカウント
+        // ステージごとの商品群数をカウント（新コードs0〜s13で集計）
     function updateStageCounts() {
         const stageCounts = {};
         
@@ -1199,9 +1233,23 @@ function initStageFilter() {
                 const stageKey = stageNumberBadge.getAttribute('data-stage');
                 console.log(`カウント対象商品群${index + 1}のステージ: "${stageKey}"`);
                 
-                if (stageKey) {
-                    stageCounts[stageKey] = (stageCounts[stageKey] || 0) + 1;
-                    console.log(`ステージ${stageKey}のカウント: ${stageCounts[stageKey]}`);
+                // 旧コードから新コードへの正規化（テンプレ内JS側）
+                const alias = {
+                    'proposal_pre': 's0',
+                    'estimate_completed': 's1',
+                    's_creation_approved': 's2',
+                    'proposal_decision_obtained': 's3',
+                    'pre_production_s_confirmed': 's4',
+                    'first_order': 's5',
+                    'temporary_listing': 's9',
+                    'page_up': 's10',
+                    'second_lot_ordered': 's12',
+                    'project_cancelled': 's13'
+                };
+                const normKey = alias[stageKey] || stageKey;
+                if (normKey) {
+                    stageCounts[normKey] = (stageCounts[normKey] || 0) + 1;
+                    console.log(`ステージ${normKey}のカウント: ${stageCounts[normKey]}`);
                 }
             } else {
                 console.log(`カウント対象商品群${index + 1}: ステージ番号バッジが見つからない`);
@@ -1288,16 +1336,21 @@ function initStageFilter() {
         // フィルター状態を表示
         if (selectedStage !== 'all') {
             const stageNames = {
-                'proposal_pre': '提案前',
-                'estimate_completed': '見積書対応',
-                's_creation_approved': 'サンプル承認',
-                'proposal_decision_obtained': '提案決裁',
-                'pre_production_s_confirmed': '量産前サンプル',
-                'first_order': '初回発注',
-                'temporary_listing': '仮出品',
-                'page_up': 'ページアップ',
-                'second_lot_ordered': '2ロット目発注',
-                'project_cancelled': '企画中止'
+                's0': '提案前の準備',
+                's1': '見積書対応',
+                's2': 'サンプル承認＆作成依頼',
+                's3': '提案決裁',
+                's4': '量産前サンプル確認',
+                's5': '初回発注',
+                's6': '梱包表記の作成',
+                's7': '説明書の作成',
+                's8_1': 'ドレイメモ入力',
+                's8_2': '現地検品手配',
+                's9': '仮出品',
+                's10': 'ページアップ確認',
+                's11': '日本での初回入荷の検品',
+                's12': '2ロット目発注',
+                's13': '企画中止'
             };
             
             // 安全にカウントを取得

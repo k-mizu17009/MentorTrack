@@ -247,17 +247,24 @@ class LoginForm(FlaskForm):
     submit = SubmitField('ログイン')
 
 class WeeklyReportForm(FlaskForm):
-    planning_stage = SelectField('企画ステージ', 
-                                choices=[('proposal_pre', '提案前'), 
-                                        ('estimate_completed', '見積書対応'), 
-                                        ('s_creation_approved', 'サンプル承認'), 
-                                        ('proposal_decision_obtained', '提案決裁'),
-                                        ('pre_production_s_confirmed', '量産前サンプル'),
-                                        ('first_order', '初回発注'),
-                                        ('temporary_listing', '仮出品'),
-                                        ('page_up', 'ページアップ'),
-                                        ('second_lot_ordered', '2ロット目発注'),
-                                        ('project_cancelled', '企画中止')],
+    planning_stage = SelectField('企画ステージ',
+                                choices=[
+                                    ('s0', '提案前の準備'),
+                                    ('s1', '見積書対応'),
+                                    ('s2', 'サンプル承認＆作成依頼'),
+                                    ('s3', '提案決裁'),
+                                    ('s4', '量産前サンプル確認'),
+                                    ('s5', '初回発注'),
+                                    ('s6', '梱包表記の作成'),
+                                    ('s7', '説明書の作成'),
+                                    ('s8.1', 'ドレイメモ入力'),
+                                    ('s8.2', '現地検品手配'),
+                                    ('s9', '仮出品'),
+                                    ('s10', 'ページアップ確認'),
+                                    ('s11', '日本での初回入荷の検品'),
+                                    ('s12', '2ロット目発注'),
+                                    ('s13', '企画中止')
+                                ],
                                 validators=[DataRequired()])
     
     product_group = SelectField('代表商品群', 
@@ -448,6 +455,24 @@ def parse_json_with_fallback(text):
         except Exception:
             return {}
 
+def normalize_stage(stage: str) -> str:
+    """旧ステージコードを新ステージコード(s0~s13)へ正規化"""
+    if not stage:
+        return stage
+    aliases = {
+        'proposal_pre': 's0',
+        'estimate_completed': 's1',
+        's_creation_approved': 's2',
+        'proposal_decision_obtained': 's3',
+        'pre_production_s_confirmed': 's4',
+        'first_order': 's5',
+        'temporary_listing': 's9',
+        'page_up': 's10',
+        'second_lot_ordered': 's12',
+        'project_cancelled': 's13',
+    }
+    return aliases.get(stage, stage)
+
 def generate_daily_report_from_weekly(weekly_report, report_date=None):
     """
     週次報告データから日報を自動生成する関数（品質重視版）
@@ -583,17 +608,23 @@ def generate_outlook_text(planning_stage, product_group, insights):
     """
     来週への展望を自然に生成
     """
+    planning_stage = normalize_stage(planning_stage)
     outlook_templates = {
-        'second_lot_ordered': f"{product_group}の企画が完了しました。次の商品群の企画に取り組み、さらなる成長を目指します。",
-        'page_up': f"{product_group}の販売開始に向けて、マーケティング活動を強化し、売上向上に努めます。",
-        'first_order': f"{product_group}の初回発注を完了し、品質管理と販売準備を進めます。",
-        'temporary_listing': f"{product_group}の仮出品に向けて、商品の品質確認と発注準備を着実に進めます。",
-        'pre_production_s_confirmed': f"{product_group}の量産前確認を完了し、次のステップに向けた準備を進めます。",
-        'proposal_decision_obtained': f"{product_group}の提案決裁を取得し、量産準備に取り組みます。",
-        's_creation_approved': f"{product_group}のサンプル承認を取得し、提案決裁に向けて進めます。",
-        'estimate_completed': f"{product_group}の見積書対応を完了し、サンプル承認に向けて進めます。",
-        'proposal_pre': f"{product_group}の企画を進め、見積書対応に向けて準備を進めます。",
-        'project_cancelled': f"{product_group}の企画は中止となりました。他の商品群の企画に集中し、新たな機会を探ります。"
+        's12': f"{product_group}の企画が完了しました。次の商品群の企画に取り組み、さらなる成長を目指します。",
+        's10': f"{product_group}の販売開始に向けて、マーケティング活動を強化し、売上向上に努めます。",
+        's5': f"{product_group}の初回発注を完了し、品質管理と販売準備を進めます。",
+        's9': f"{product_group}の仮出品に向けて、商品の品質確認と発注準備を着実に進めます。",
+        's4': f"{product_group}の量産前サンプル確認を完了し、次のステップに向けた準備を進めます。",
+        's3': f"{product_group}の提案決裁を取得し、量産準備に取り組みます。",
+        's2': f"{product_group}のサンプル承認と作成依頼を完了し、提案決裁に向けて進めます。",
+        's1': f"{product_group}の見積書対応を完了し、サンプル承認に向けて進めます。",
+        's0': f"{product_group}の企画を進め、見積書対応に向けて準備を進めます。",
+        's13': f"{product_group}の企画は中止となりました。他の商品群の企画に集中し、新たな機会を探ります。",
+        's6': f"{product_group}の梱包表記作成を進め、品質・法令要件を満たすよう整備します。",
+        's7': f"{product_group}の説明書作成を進め、ユーザー理解向上を図ります。",
+        's8_1': f"{product_group}のドレイメモ入力を完了し、物流手配の精度を上げます。",
+        's8_2': f"{product_group}の現地検品手配を進め、品質面のリスクを低減します。",
+        's11': f"{product_group}の日本到着後の初回入荷検品を着実に進めます。"
     }
     
     base_outlook = outlook_templates.get(planning_stage, f"{product_group}の企画を進め、次のステップに向けて準備を進めます。")
@@ -625,7 +656,7 @@ def get_product_group_latest_stages(mentee_id):
             # ステージの日本語名を取得（企画ステージフォームの表示形式に合わせる）
             product_group_stages[pg.id] = {
                 'name': pg.name,
-                'latest_stage': latest_report.planning_stage,
+                'latest_stage': normalize_stage(latest_report.planning_stage),
                 'latest_stage_name': get_stage_display_name(latest_report.planning_stage),
                 'last_report_date': latest_report.report_date.strftime('%Y年%m月%d日'),
                 'has_reports': True
@@ -721,17 +752,23 @@ def generate_enhanced_outlook(planning_stage, product_group, insights):
     """
     来週への展望をより自然で具体的な表現で生成
     """
+    planning_stage = normalize_stage(planning_stage)
     outlook_templates = {
-        'second_lot_ordered': f"{product_group}の企画が完了しました。次の商品群の企画に取り組み、さらなる成長を目指します。",
-        'page_up': f"{product_group}の販売開始に向けて、マーケティング活動を強化し、売上向上に努めます。",
-        'first_order': f"{product_group}の初回発注を完了し、品質管理と販売準備を進めます。",
-        'temporary_listing': f"{product_group}の仮出品に向けて、商品の品質確認と発注準備を着実に進めます。",
-        'pre_production_s_confirmed': f"{product_group}の量産前確認を完了し、次のステップに向けた準備を進めます。",
-        'proposal_decision_obtained': f"{product_group}の提案決裁を取得し、量産準備に取り組みます。",
-        's_creation_approved': f"{product_group}のサンプル承認を取得し、提案決裁に向けて進めます。",
-        'estimate_completed': f"{product_group}の見積書対応を完了し、サンプル承認に向けて進めます。",
-        'proposal_pre': f"{product_group}の企画を進め、見積書対応に向けて準備を進めます。",
-        'project_cancelled': f"{product_group}の企画は中止となりました。他の商品群の企画に集中し、新たな機会を探ります。"
+        's12': f"{product_group}の企画が完了しました。次の商品群の企画に取り組み、さらなる成長を目指します。",
+        's10': f"{product_group}の販売開始に向けて、マーケティング活動を強化し、売上向上に努めます。",
+        's5': f"{product_group}の初回発注を完了し、品質管理と販売準備を進めます。",
+        's9': f"{product_group}の仮出品に向けて、商品の品質確認と発注準備を着実に進めます。",
+        's4': f"{product_group}の量産前サンプル確認を完了し、次のステップに向けた準備を進めます。",
+        's3': f"{product_group}の提案決裁を取得し、量産準備に取り組みます。",
+        's2': f"{product_group}のサンプル承認と作成依頼を完了し、提案決裁に向けて進めます。",
+        's1': f"{product_group}の見積書対応を完了し、サンプル承認に向けて進めます。",
+        's0': f"{product_group}の企画を進め、見積書対応に向けて準備を進めます。",
+        's13': f"{product_group}の企画は中止となりました。他の商品群の企画に集中し、新たな機会を探ります。",
+        's6': f"{product_group}の梱包表記作成を進め、品質・法令要件を満たすよう整備します。",
+        's7': f"{product_group}の説明書作成を進め、ユーザー理解向上を図ります。",
+        's8_1': f"{product_group}のドレイメモ入力を完了し、物流手配の精度を上げます。",
+        's8_2': f"{product_group}の現地検品手配を進め、品質面のリスクを低減します。",
+        's11': f"{product_group}の日本到着後の初回入荷検品を着実に進めます。"
     }
     
     base_outlook = outlook_templates.get(planning_stage, f"{product_group}の企画を進め、次のステップに向けて準備を進めます。")
@@ -860,7 +897,7 @@ def get_product_group_progress(mentee_id, weeks=16):
         product_groups[product_group_name]['reports'].append({
             'id': report.id,
             'date': report.report_date,
-            'stage': report.planning_stage,
+            'stage': normalize_stage(report.planning_stage),
             'self_evaluation': report.self_evaluation
         })
         
@@ -875,11 +912,11 @@ def get_product_group_progress(mentee_id, weeks=16):
             latest_report = pg_data['reports'][0]
             pg_data['current_stage'] = latest_report['stage']
             
-            # 完了ステージかどうかを判定
-            pg_data['is_completed'] = latest_report['stage'] == 'second_lot_ordered'
+            # 完了ステージかどうかを判定（2ロット目発注で完了）
+            pg_data['is_completed'] = normalize_stage(latest_report['stage']) == 's12'
             
             # 企画中止かどうかを判定
-            pg_data['is_cancelled'] = latest_report['stage'] == 'project_cancelled'
+            pg_data['is_cancelled'] = normalize_stage(latest_report['stage']) == 's13'
             
             # 現在のステージにいる期間を計算
             current_stage_start = latest_report['date']
@@ -940,17 +977,23 @@ def get_product_group_progress(mentee_id, weeks=16):
 
 def get_stage_display_name(stage):
     """企画ステージの表示名を取得（統一された表示形式）"""
+    stage = normalize_stage(stage)
     stage_names = {
-        'proposal_pre': '提案前',
-        'estimate_completed': '見積書対応',
-        's_creation_approved': 'サンプル承認',
-        'proposal_decision_obtained': '提案決裁',
-        'pre_production_s_confirmed': '量産前サンプル',
-        'first_order': '初回発注',
-        'temporary_listing': '仮出品',
-        'page_up': 'ページアップ',
-        'second_lot_ordered': '2ロット目発注',
-        'project_cancelled': '企画中止'
+        's0': '提案前の準備',
+        's1': '見積書対応',
+        's2': 'サンプル承認＆作成依頼',
+        's3': '提案決裁',
+        's4': '量産前サンプル確認',
+        's5': '初回発注',
+        's6': '梱包表記の作成',
+        's7': '説明書の作成',
+        's8_1': 'ドレイメモ入力',
+        's8_2': '現地検品手配',
+        's9': '仮出品',
+        's10': 'ページアップ確認',
+        's11': '日本での初回入荷の検品',
+        's12': '2ロット目発注',
+        's13': '企画中止'
     }
     return stage_names.get(stage, stage)
 
@@ -978,17 +1021,23 @@ def render_markdown(text):
 
 def get_stage_progress_percentage(stage):
     """企画ステージの進捗パーセンテージを取得"""
+    stage = normalize_stage(stage)
     stage_percentages = {
-        'proposal_pre': 11,
-        'estimate_completed': 22,
-        's_creation_approved': 33,
-        'proposal_decision_obtained': 44,
-        'pre_production_s_confirmed': 56,
-        'first_order': 67,
-        'temporary_listing': 78,
-        'page_up': 89,
-        'second_lot_ordered': 100,
-        'project_cancelled': 100
+        's0': 0,
+        's1': 8,
+        's2': 16,
+        's3': 24,
+        's4': 32,
+        's5': 48,
+        's6': 56,
+        's7': 64,
+        's8_1': 72,
+        's8_2': 80,
+        's9': 88,
+        's10': 92,
+        's11': 96,
+        's12': 100,
+        's13': 100
     }
     return stage_percentages.get(stage, 0)
 
