@@ -12,6 +12,8 @@ import uuid
 from werkzeug.utils import secure_filename
 import re
 import markdown
+from dotenv import load_dotenv
+import ast
 
 # AI機能のためのインポート（オプション）
 try:
@@ -22,21 +24,30 @@ except ImportError:
     AI_AVAILABLE = False
     print("AI機能を使用するには transformers と torch をインストールしてください")
 
+load_dotenv()
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mentortrack.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-change-me')
+
+# データベース設定（環境変数優先、未設定時は instance/mentortrack.db を絶対パスで使用）
+database_url = os.environ.get('DATABASE_URL')
+if database_url:
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+else:
+    # Flaskの instance_path はアプリルートからの絶対パス
+    os.makedirs(app.instance_path, exist_ok=True)
+    instance_db_path = os.path.join(app.instance_path, 'mentortrack.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + instance_db_path
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # 画像アップロード設定
-UPLOAD_FOLDER = 'static/uploads/product_groups'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
+app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_PRODUCT_GROUPS_DIR', 'static/uploads/product_groups')
+app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('MAX_CONTENT_LENGTH_MB', '16')) * 1024 * 1024
 
 # アップロードフォルダを作成
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -271,10 +282,11 @@ class WeeklyReportForm(FlaskForm):
     insights_concerns = TextAreaField('気づき・悩み', 
                                      render_kw={'rows': 4, 'placeholder': '今週感じた気づきや悩みを自由に記述してください'})
     
-    self_evaluation = RadioField('自己評価', 
-                                choices=[(1, '☆ - 思うように進まなかった'), 
-                                        (2, '☆☆ - まあまあ進んだ'), 
-                                        (3, '☆☆☆ - とても順調に進んだ')],
+    self_evaluation = RadioField('自己評価',
+                                choices=[(1, '☆ - 思うように進まなかった'),
+                                         (2, '☆☆ - まあまあ進んだ'),
+                                         (3, '☆☆☆ - とても順調に進んだ')],
+                                coerce=int,
                                 validators=[DataRequired()])
     
     # 追加の問いかけ
@@ -424,6 +436,18 @@ def allowed_file(filename):
     """アップロード可能なファイルかチェック"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def parse_json_with_fallback(text):
+    """JSONを優先し、失敗時はliteral_evalで辞書へ変換する"""
+    if not text:
+        return {}
+    try:
+        return json.loads(text)
+    except Exception:
+        try:
+            return ast.literal_eval(text)
+        except Exception:
+            return {}
+
 def generate_daily_report_from_weekly(weekly_report, report_date=None):
     """
     週次報告データから日報を自動生成する関数（品質重視版）
@@ -443,9 +467,12 @@ def generate_daily_report_from_weekly(weekly_report, report_date=None):
     additional_responses = {}
     if weekly_report.additional_responses:
         try:
-            additional_responses = eval(weekly_report.additional_responses)
-        except:
-            additional_responses = {}
+            additional_responses = json.loads(weekly_report.additional_responses)
+        except json.JSONDecodeError:
+            try:
+                additional_responses = ast.literal_eval(weekly_report.additional_responses)
+            except Exception:
+                additional_responses = {}
     
     # 企画ステージの日本語名を取得（企画ステージフォームの表示形式に合わせる）
     stage_name = get_stage_display_name(planning_stage)
@@ -754,6 +781,34 @@ def create_notification(user_id, title, message, notification_type, related_id=N
     db.session.commit()
     return notification
 
+def delete_mentee_dependencies(mentee):
+    """メンティに紐づくデータを安全に削除（カスケード考慮、画像も物理削除）"""
+    # 日報
+    daily_reports = DailyReport.query.filter_by(mentee_id=mentee.id).all()
+    for dr in daily_reports:
+        db.session.delete(dr)
+
+    # 週次報告（インスタンス削除で MentorComment のカスケードを有効化）
+    weekly_reports = WeeklyReport.query.filter_by(mentee_id=mentee.id).all()
+    for wr in weekly_reports:
+        db.session.delete(wr)
+
+    # Todo リスト
+    todo = MenteeTodoList.query.filter_by(mentee_id=mentee.id).first()
+    if todo:
+        db.session.delete(todo)
+
+    # 商品群（画像の物理削除も行う）
+    product_groups = ProductGroup.query.filter_by(mentee_id=mentee.id).all()
+    for pg in product_groups:
+        if pg.images:
+            try:
+                image_filenames = json.loads(pg.images)
+                delete_uploaded_files(image_filenames)
+            except Exception:
+                pass
+        db.session.delete(pg)
+
 def get_product_group_progress(mentee_id, weeks=16):
     """商品群別の進捗状況を取得（4か月=16週間の開発期間を想定）"""
     from datetime import datetime, timedelta
@@ -904,14 +959,16 @@ def render_markdown(text):
     if not text:
         return ""
     try:
-        # デバッグ用ログ
-        print(f"Rendering markdown text: {text[:100]}...")
+        # デバッグ用ログ（環境で制御）
+        if app.debug or os.environ.get('APP_DEBUG_LOGS') == '1':
+            print(f"Rendering markdown text: {text[:100]}...")
         
         # マークダウンをHTMLに変換
         html = markdown.markdown(text, extensions=['extra', 'codehilite', 'tables'])
         
-        # デバッグ用ログ
-        print(f"Rendered HTML: {html[:100]}...")
+        # デバッグ用ログ（環境で制御）
+        if app.debug or os.environ.get('APP_DEBUG_LOGS') == '1':
+            print(f"Rendered HTML: {html[:100]}...")
         
         return html
     except Exception as e:
@@ -1071,18 +1128,20 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        print(f"ログイン試行: メール={form.email.data}")
+        if app.debug or os.environ.get('APP_DEBUG_LOGS') == '1':
+            print(f"ログイン試行: メール={form.email.data}")
         user = User.query.filter_by(email=form.email.data).first()
-        print(f"ユーザーが見つかった: {user is not None}")
-        if user:
-            print(f"ユーザー名: {user.username}")
-            print(f"パスワードハッシュ: {user.password_hash[:50]}...")
-            password_check = user.check_password(form.password.data)
-            print(f"パスワードチェック結果: {password_check}")
+        if app.debug or os.environ.get('APP_DEBUG_LOGS') == '1':
+            print(f"ユーザーが見つかった: {user is not None}")
+            if user:
+                print(f"ユーザー名: {user.username}")
         
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
+            # オープンリダイレクト対策: 内部URLのみ許可
+            if next_page and not next_page.startswith('/'):
+                next_page = None
             flash(f'ようこそ、{user.username}さん！', 'success')
             return redirect(next_page) if next_page else redirect(url_for('index'))
         else:
@@ -1219,15 +1278,17 @@ def admin_delete_user(user_id):
     try:
         user = User.query.get_or_404(user_id)
         
-        # 関連するメンティレコードも削除
+        # 関連するメンティレコードも削除（依存データを含めて安全に）
         mentee = Mentee.query.filter_by(user_id=user_id).first()
         if mentee:
-            # メンティの報告も削除
-            WeeklyReport.query.filter_by(mentee_id=mentee.id).delete()
+            delete_mentee_dependencies(mentee)
             db.session.delete(mentee)
         
         # メンターコメントも削除
         MentorComment.query.filter_by(mentor_id=user_id).delete()
+        
+        # 通知も削除
+        Notification.query.filter_by(user_id=user_id).delete()
         
         # ユーザーを削除
         db.session.delete(user)
@@ -1259,8 +1320,8 @@ def admin_delete_mentee(mentee_id):
     try:
         mentee = Mentee.query.get_or_404(mentee_id)
         
-        # 関連する報告を削除
-        WeeklyReport.query.filter_by(mentee_id=mentee_id).delete()
+        # 関連データを安全に削除
+        delete_mentee_dependencies(mentee)
         
         # メンティを削除
         db.session.delete(mentee)
@@ -1347,7 +1408,7 @@ def new_report(mentee_id):
                 actions_taken="",  # 統合により空文字列に設定
                 insights_concerns=form.insights_concerns.data,
                 self_evaluation=form.self_evaluation.data,
-                additional_responses=str(additional_responses),
+                additional_responses=json.dumps(additional_responses, ensure_ascii=False),
                 week_start=week_start
             )
             
@@ -1431,10 +1492,7 @@ def view_report(report_id):
     
     # 追加の問いかけ回答をパース
     import ast
-    try:
-        additional_responses = ast.literal_eval(report.additional_responses) if report.additional_responses else {}
-    except (ValueError, SyntaxError, TypeError):
-        additional_responses = {}
+    additional_responses = parse_json_with_fallback(report.additional_responses)
     
     return render_template('view_report.html', report=report, previous_report=previous_report, additional_responses=additional_responses, product_group=product_group)
 
@@ -1487,10 +1545,7 @@ def add_mentor_comment(report_id):
     
     # 追加の問いかけ回答をパース
     import ast
-    try:
-        additional_responses = ast.literal_eval(report.additional_responses) if report.additional_responses else {}
-    except (ValueError, SyntaxError, TypeError):
-        additional_responses = {}
+    additional_responses = parse_json_with_fallback(report.additional_responses)
     
     # Todoリストを取得
     todo_list = MenteeTodoList.query.filter_by(mentee_id=report.mentee_id).first()
@@ -2119,7 +2174,8 @@ if __name__ == '__main__':
     
     # 本番環境かどうかを環境変数で判定
     import os
-    debug_mode = os.environ.get('FLASK_ENV') != 'production'
+    debug_mode = os.environ.get('FLASK_DEBUG', '0') == '1' or os.environ.get('FLASK_ENV') != 'production'
     port = int(os.environ.get('PORT', 5000))
+    host = os.environ.get('BIND_HOST', '0.0.0.0')
     
-    app.run(debug=debug_mode, host='0.0.0.0', port=port)
+    app.run(debug=debug_mode, host=host, port=port)
