@@ -205,7 +205,7 @@
                                         <div class="product-group-image-container">
                                             {% set image_list = pg.images|from_json if pg.images is string else pg.images %}
                                             {% if image_list and image_list|length > 0 %}
-                                                <img src="/uploads/product_groups/{{ image_list[0] }}" 
+                                                <img src="{{ url_for('uploaded_file', filename=image_list[0]) }}" 
                                                      alt="{{ pg.name }}" 
                                                      class="product-group-image"
                                                      onerror="this.style.display='none';">
@@ -286,7 +286,7 @@
                                             <div class="product-group-image-container">
                                                 {% set image_list = pg.images|from_json if pg.images is string else pg.images %}
                                                 {% if image_list and image_list|length > 0 %}
-                                                    <img src="/uploads/product_groups/{{ image_list[0] }}" 
+                                                    <img src="{{ url_for('uploaded_file', filename=image_list[0]) }}" 
                                                          alt="{{ pg.name }}" 
                                                          class="product-group-image"
                                                          onerror="this.style.display='none';">
@@ -356,7 +356,7 @@
                                         <div class="product-group-image-container">
                                             {% set image_list = pg.images|from_json if pg.images is string else pg.images %}
                                             {% if image_list and image_list|length > 0 %}
-                                                <img src="/uploads/product_groups/{{ image_list[0] }}" 
+                                                <img src="{{ url_for('uploaded_file', filename=image_list[0]) }}" 
                                                      alt="{{ pg.name }}" 
                                                      class="product-group-image"
                                                      onerror="this.style.display='none';">

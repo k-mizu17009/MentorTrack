@@ -961,7 +961,6 @@ def get_product_group_progress(mentee_id, weeks=16):
                     pg_data['progress_status'] = 'warning'
                     pg_data['time_warning_level'] = 1
                 elif weeks_since_start < 12:
-                    # 8-11週間：オレンジ（中程度警告）
                     pg_data['progress_status'] = 'warning'
                     pg_data['time_warning_level'] = 2
                 elif weeks_since_start < 16:

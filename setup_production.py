@@ -8,6 +8,10 @@ import sys
 import subprocess
 import shutil
 from pathlib import Path
+from dotenv import load_dotenv
+
+# .env を読み込む（存在する場合）
+load_dotenv()
 
 def check_python_version():
     """Pythonバージョンをチェック"""
@@ -62,13 +66,16 @@ def install_requirements():
         return False
 
 def setup_directories():
-    """必要なディレクトリを作成"""
+    """必要なディレクトリを作成（環境変数対応）"""
+    upload_product_groups_dir = os.environ.get("UPLOAD_PRODUCT_GROUPS_DIR", "static/uploads/product_groups")
+    upload_reports_dir = os.environ.get("UPLOAD_REPORTS_DIR", "static/uploads/reports")
+
     directories = [
         "instance",
-        "static/uploads/product_groups",
-        "static/uploads/reports"
+        upload_product_groups_dir,
+        upload_reports_dir,
     ]
-    
+
     for directory in directories:
         Path(directory).mkdir(parents=True, exist_ok=True)
         print(f"✅ ディレクトリを作成: {directory}")

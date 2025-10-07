@@ -50,6 +50,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="card-body-modern">
                 <form id="report-form" method="POST">
                     {{ form.hidden_tag() }}
@@ -171,6 +172,29 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- 企画ステージ一覧（代表商品群の直下） -->
+                    <div class="form-section" id="horizontal-stage-list">
+                        <div class="section-header">
+                            <h4 class="section-title">
+                                <i class="fas fa-route me-2"></i>企画ステージ一覧
+                            </h4>
+                            <p class="section-description">企画ステージのイメージを横に並べています</p>
+                        </div>
+                        {% set stage_codes = ['s0','s1','s2','s3','s4','s5','s6','s7','s8_1','s8_2','s9','s10','s11','s12','s13'] %}
+                        {% set stage_number_map = {
+                            's0': '0', 's1': '1', 's2': '2', 's3': '3', 's4': '4', 's5': '5', 's6': '6', 's7': '7',
+                            's8_1': '8.1', 's8_2': '8.2', 's9': '9', 's10': '10', 's11': '11', 's12': '12', 's13': '13'
+                        } %}
+                        <div class="stage-chips-container" id="stage-chips">
+                            {% for code in stage_codes %}
+                            <div class="stage-chip" data-stage="{{ code }}">
+                                <span class="stage-chip-number">{{ stage_number_map.get(code, '?') }}</span>
+                                <span class="stage-chip-text">{{ get_stage_display_name(code) }}</span>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
 
@@ -434,9 +458,10 @@
 }
 
 .hero-section .container {
-    max-width: calc(100% - 400px); /* サイドバー分を除いた幅 */
+    /* サイドバーに被らないよう余白を確保 */
     margin-left: 0;
     padding-left: 2rem;
+    padding-right: 22rem; /* サイドバー幅(約300px)+余白 分を右側に確保 */
 }
 
 .hero-section::before {
@@ -978,7 +1003,7 @@
     }
 }
 
-/* メインコンテンツのマージン調整 */
+/* メインコンテンツのマージン調整（サイドバー分を右に余白） */
 .main-form-content {
     margin-right: calc(300px + 3rem); /* サイドバー幅 + 余白を確保 */
     padding-left: 0;
@@ -1196,6 +1221,7 @@ textarea.form-control {
         max-width: 100%; /* レスポンシブ時は全幅 */
         margin-left: auto;
         padding-left: 2rem;
+        padding-right: 1rem; /* モバイルでは右余白を縮小して被り回避 */
     }
     
     .hero-title-section {
@@ -1299,6 +1325,59 @@ textarea.form-control {
     margin-top: 0.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
+}
+
+/* 横並びステージチップ */
+.stage-chips-container {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 8px;
+}
+
+.stage-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #dee2e6;
+    background: #ffffff;
+    color: #495057;
+    border-radius: 20px;
+    padding: 6px 10px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.stage-chip:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+    transform: translateY(-1px);
+}
+
+.stage-chip.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+}
+
+.stage-chip-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(102, 126, 234, 0.15);
+    color: #667eea;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.stage-chip.active .stage-chip-number {
+    background: rgba(255,255,255,0.25);
+    color: #fff;
 }
 
 .stage-info-card:hover {
@@ -1483,6 +1562,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const latestStageName = document.getElementById('latest-stage-name');
     const lastReportDate = document.getElementById('last-report-date');
     const stageInfoNote = document.getElementById('stage-info-note');
+    const stageChips = document.querySelectorAll('#stage-chips .stage-chip');
     
     // 商品群データを取得
     let productGroupsData = {};
@@ -1570,7 +1650,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (images && images.length > 0) {
                 // 1枚目の画像を表示
                 const firstImage = images[0];
-                const imageUrl = `/uploads/product_groups/${firstImage}`;
+                const imageUrl = `{{ url_for('uploaded_file', filename='__REPLACE__') }}`.replace('__REPLACE__', firstImage);
                 console.log('画像URL:', imageUrl);
                 console.log('画像データ:', images);
                 
@@ -1639,6 +1719,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // 表示のみ（クリックしても何もしない）
+
     // フォーム送信時のバリデーション
     const form = document.querySelector('form');
     if (form) {

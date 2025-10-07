@@ -24,7 +24,7 @@
                         {% set images = product_group.images|from_json %}
                         {% if images %}
                             <div class="registered-image-container">
-                                <img src="{{ url_for('static', filename='uploads/product_groups/' + images[0]) }}" 
+                                <img src="{{ url_for('uploaded_file', filename=images[0]) }}" 
                                      alt="{{ report.product_group }}" 
                                      class="registered-image-thumbnail">
                                 <div class="image-overlay-title">

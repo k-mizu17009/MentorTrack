@@ -221,7 +221,7 @@
                                         {% set image_list = pg.images|from_json %}
                                         {% if image_list and image_list|length > 0 %}
                                         <div class="text-center mb-2">
-                                            <img src="{{ url_for('static', filename='uploads/product_groups/' + image_list[0]) }}" 
+                                            <img src="{{ url_for('uploaded_file', filename=image_list[0]) }}" 
                                                  class="img-fluid rounded" 
                                                  style="max-height: 80px; max-width: 100%; object-fit: contain;"
                                                  alt="{{ pg.name }}の画像">
