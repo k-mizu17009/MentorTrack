@@ -1398,9 +1398,20 @@ def new_report(mentee_id):
         
         form = WeeklyReportForm()
         
-        # 代表商品群の選択肢を動的に設定
+        # 表示切替（完了/中止も表示 = show_all=1）
+        show_all = request.args.get('show_all', '0') == '1'
+        
+        # 代表商品群の選択肢を動的に設定（デフォルトは進行中のみ表示）
         product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
-        form.product_group.choices = [(0, '商品群を選択してください')] + [(pg.id, pg.name) for pg in product_groups]
+        product_group_stages_map = get_product_group_latest_stages(mentee_id)
+
+        def is_completed_or_cancelled(pg):
+            info = product_group_stages_map.get(pg.id) if isinstance(product_group_stages_map, dict) else None
+            latest = normalize_stage(info.get('latest_stage')) if info and info.get('latest_stage') else None
+            return latest in ['s12', 's13']
+
+        selectable_groups = product_groups if show_all else [pg for pg in product_groups if not is_completed_or_cancelled(pg)]
+        form.product_group.choices = [(0, '商品群を選択してください')] + [(pg.id, pg.name) for pg in selectable_groups]
         
         # 代表商品群が登録されていない場合の警告
         if not product_groups:
@@ -1487,9 +1498,11 @@ def new_report(mentee_id):
                 return jsonify({'success': False, 'message': f'報告の保存中にエラーが発生しました: {str(e)}'}), 500
             else:
                 flash(f'報告の保存中にエラーが発生しました: {str(e)}', 'danger')
-                # フォームの選択肢を再設定
+                # フィルタ状態を維持して再設定
                 product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
-                form.product_group.choices = [(0, '商品群を選択してください')] + [(pg.id, pg.name) for pg in product_groups]
+                product_group_stages_map = get_product_group_latest_stages(mentee_id)
+                selectable_groups = product_groups if show_all else [pg for pg in product_groups if not is_completed_or_cancelled(pg)]
+                form.product_group.choices = [(0, '商品群を選択してください')] + [(pg.id, pg.name) for pg in selectable_groups]
     else:
         # バリデーションエラーがある場合
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -1501,7 +1514,9 @@ def new_report(mentee_id):
         else:
             # フォームの選択肢を再設定
             product_groups = ProductGroup.query.filter_by(mentee_id=mentee_id).all()
-            form.product_group.choices = [(0, '商品群を選択してください')] + [(pg.id, pg.name) for pg in product_groups]
+            product_group_stages_map = get_product_group_latest_stages(mentee_id)
+            selectable_groups = product_groups if show_all else [pg for pg in product_groups if not is_completed_or_cancelled(pg)]
+            form.product_group.choices = [(0, '商品群を選択してください')] + [(pg.id, pg.name) for pg in selectable_groups]
     
     # Todoリストを取得
     todo_list = MenteeTodoList.query.filter_by(mentee_id=mentee_id).first()
@@ -1512,7 +1527,7 @@ def new_report(mentee_id):
     # 商品群ごとの最新の進捗ステージを取得
     product_group_stages = get_product_group_latest_stages(mentee_id)
     
-    return render_template('new_report.html', form=form, mentee=mentee, todo_list=todo_list, product_groups=product_groups, product_group_stages=product_group_stages)
+    return render_template('new_report.html', form=form, mentee=mentee, todo_list=todo_list, product_groups=product_groups, product_group_stages=product_group_stages, show_all=show_all)
 
 @app.route('/report/<int:report_id>')
 @login_required

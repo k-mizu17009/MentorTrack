@@ -100,6 +100,12 @@
                                         {{ form.product_group(class="form-select-modern", id="product-group-select") }}
                                         <i class="fas fa-chevron-down select-icon"></i>
                                     </div>
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" id="show-all-toggle" {% if show_all %}checked{% endif %}>
+                                        <label class="form-check-label" for="show-all-toggle">
+                                            完了/中止も表示
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -1720,6 +1726,57 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // 表示のみ（クリックしても何もしない）
+
+    // 完了/中止の表示切替（URLクエリで制御）
+    const showAllToggle = document.getElementById('show-all-toggle');
+    if (showAllToggle) {
+        function isCompletedOrCancelled(id) {
+            const stages = productGroupStagesData || {};
+            const info = stages[String(id)];
+            const latest = info && info.latest_stage ? info.latest_stage : null;
+            return latest === 's12' || latest === 's13';
+        }
+        function rebuildProductGroupOptions(showAll) {
+            if (!productGroupSelect) return;
+            const prev = productGroupSelect.value;
+            // 保持しているスクロール位置を維持
+            const scrollY = window.scrollY;
+            // 先頭のプレースホルダ
+            productGroupSelect.innerHTML = '';
+            const placeholder = document.createElement('option');
+            placeholder.value = '0';
+            placeholder.textContent = '商品群を選択してください';
+            productGroupSelect.appendChild(placeholder);
+            // 既存データ順に反映
+            const groups = productGroupsData || {};
+            Object.keys(groups).forEach((id) => {
+                if (!showAll && isCompletedOrCancelled(id)) return;
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = groups[id].name;
+                productGroupSelect.appendChild(opt);
+            });
+            // 選択状態を可能であれば維持
+            if (prev && Array.from(productGroupSelect.options).some(o => o.value === prev)) {
+                productGroupSelect.value = prev;
+            } else {
+                productGroupSelect.value = '0';
+            }
+            // URLクエリを更新（リロードしない）
+            const url = new URL(window.location.href);
+            if (showAll) url.searchParams.set('show_all', '1');
+            else url.searchParams.delete('show_all');
+            history.replaceState(null, '', url.toString());
+            // スクロール位置復元
+            window.scrollTo({ top: scrollY });
+        }
+        // 初期同期（URLクエリに合わせる）
+        rebuildProductGroupOptions(showAllToggle.checked);
+        // 切替時に即時反映（リロードなし）
+        showAllToggle.addEventListener('change', function() {
+            rebuildProductGroupOptions(this.checked);
+        });
+    }
 
     // フォーム送信時のバリデーション
     const form = document.querySelector('form');
