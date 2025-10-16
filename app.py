@@ -221,9 +221,6 @@ class RegistrationForm(FlaskForm):
     confirm_password = PasswordField('パスワード確認', 
                                    validators=[DataRequired(), EqualTo('password')],
                                    render_kw={'placeholder': 'パスワードを再入力してください'})
-    role = SelectField('役割', 
-                      choices=[('mentee', 'メンティ'), ('mentor', 'メンター'), ('admin', '管理者')],
-                      validators=[DataRequired()])
     submit = SubmitField('登録')
 
     def validate_username(self, username):
@@ -1145,23 +1142,23 @@ def register():
     
     form = RegistrationForm()
     if form.validate_on_submit():
+        # 新規登録は常にメンティとして作成
         user = User(
             username=form.username.data,
             email=form.email.data,
-            role=form.role.data
+            role='mentee'
         )
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.flush()  # ユーザーIDを取得するためにflush
         
-        # メンティの場合、メンティレコードも作成
-        if form.role.data == 'mentee':
-            mentee = Mentee(
-                name=form.username.data,  # 初期値としてユーザー名を使用
-                email=form.email.data,
-                user_id=user.id
-            )
-            db.session.add(mentee)
+        # メンティレコードも作成
+        mentee = Mentee(
+            name=form.username.data,  # 初期値としてユーザー名を使用
+            email=form.email.data,
+            user_id=user.id
+        )
+        db.session.add(mentee)
         
         db.session.commit()
         flash('アカウントが作成されました！ログインしてください。', 'success')
